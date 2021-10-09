@@ -20,7 +20,7 @@
     <ClInclude Include="ISD.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_MemorySteam.h">
+    <ClInclude Include="ISD_MemoryReadSteam.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

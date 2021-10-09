@@ -6,7 +6,7 @@
 #include <locale>      
 
 #include "ISD.h"
-#include "ISD_MemorySteam.h"
+#include "ISD_MemoryReadSteam.h"
 
 using namespace ISD;
 using std::pair;
@@ -52,8 +52,8 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 
 	// create the file name from the uuid
 	uint8 top_byte = (uuid.Data1 >> 24) & 0xff;
-	std::wstring dir_name = uint8_to_hex_wstring( top_byte );
-	std::wstring file_name = uuid_to_hex_wstring( uuid ) + L".dat";
+	std::wstring dir_name = value_to_hex_wstring( top_byte );
+	std::wstring file_name = value_to_hex_wstring( uuid ) + L".dat";
 	std::wstring file_path = path + L"\\" + file_name;
 	
 	// open the file

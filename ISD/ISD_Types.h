@@ -52,17 +52,26 @@ namespace ISD
 	// widens utf-8 char string to wstring
 	std::wstring widen( const std::string &str );
 
-	// creates words from big-endian raw byte values
-	template <class T> T word_from_big_endian( uint8 *src );
-	template <> inline uint16 word_from_big_endian<uint16>( uint8 *src ) { return (uint16(src[0]) << 8) | uint16(src[1]); }
-	template <> inline uint32 word_from_big_endian<uint32>( uint8 *src ) { return (uint32(word_from_big_endian<uint16>( &src[0] )) << 16) | uint32(word_from_big_endian<uint16>( &src[2] )); }
-	template <> inline uint64 word_from_big_endian<uint64>( uint8 *src ) { return (uint64(word_from_big_endian<uint32>( &src[0] )) << 32) | uint64(word_from_big_endian<uint32>( &src[4] ));	}
+	// creates values from big-endian raw 2, 4 or 8 byte data (template implemented for uint16, uint32 and uint64)
+	template <class T> T value_from_bigendian( const uint8 *src ) { static_assert(false, "value_from_bigendian template can only be used with uint16, uint32 or uint64"); }
+	template <> inline uint16 value_from_bigendian<uint16>( const uint8 *src ) { return (uint16(src[0]) << 8) | uint16(src[1]); }
+	template <> inline uint32 value_from_bigendian<uint32>( const uint8 *src ) { return (uint32(value_from_bigendian<uint16>( &src[0] )) << 16) | uint32(value_from_bigendian<uint16>( &src[2] )); }
+	template <> inline uint64 value_from_bigendian<uint64>( const uint8 *src ) { return (uint64(value_from_bigendian<uint32>( &src[0] )) << 32) | uint64(value_from_bigendian<uint32>( &src[4] )); }
+
+	// creates big-endian raw 2, 4 or 8 byte data from values (template implemented for uint16, uint32 and uint64)
+	template <class T> void bigendian_from_value( uint8 *dst, T value ) { static_assert(false, "bigendian_from_value template can only be used with uint16, uint32 or uint64"); }
+	template <> inline void bigendian_from_value<uint16>( uint8 *dst , uint16 value ) { dst[0] = uint8((value >> 8) & 0xff); dst[1] = uint8(value & 0xff); }
+	template <> inline void bigendian_from_value<uint32>( uint8 *dst , uint32 value ) { bigendian_from_value<uint16>( &dst[0] , uint16((value >> 16) & 0xffff) ); bigendian_from_value<uint16>( &dst[2] , uint16(value & 0xffff) ); }
+	template <> inline void bigendian_from_value<uint64>( uint8 *dst , uint64 value ) { bigendian_from_value<uint32>( &dst[0] , uint32((value >> 32) & 0xffffffff) ); bigendian_from_value<uint32>( &dst[4] , uint32(value & 0xffffffff) ); }
 
 	// creates a wstring from an array of bytes, in order
-	std::wstring uint8_to_hex_wstring( uint8 value );
-	std::wstring uint16_to_hex_wstring( uint16 value );
-	std::wstring uint32_to_hex_wstring( uint32 value );
-	std::wstring uuid_to_hex_wstring( UUID value );
+	std::wstring bytes_to_hex_wstring( const void *bytes, size_t count );
+	template <class T> std::wstring value_to_hex_wstring( T value ) { static_assert(false, "value_to_hex_wstring template can only be used with defined values, not a generic type T"); }
+	template <> std::wstring value_to_hex_wstring<uint8>( uint8 value );
+	template <> std::wstring value_to_hex_wstring<uint16>( uint16 value );
+	template <> std::wstring value_to_hex_wstring<uint32>( uint32 value );
+	template <> std::wstring value_to_hex_wstring<uint64>( uint64 value );
+	template <> std::wstring value_to_hex_wstring<UUID>( UUID value );
 
 	// converts file path in wstring to an absolute or full file path 
 	std::wstring full_path( const std::wstring &path );
@@ -115,7 +124,7 @@ namespace ISD
 		*pB = tmp;
 		}
 
-	template <class T> void swap_byte_order( T *dest );
+	template <class T> void swap_byte_order( T *dest ) { static_assert(false, "swap_byte_order template can only be used with uint16, uint32 or uint64"); }
 	template<> inline void swap_byte_order<uint16>( uint16 *dest )
 		{
 		swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[1] );
@@ -132,7 +141,7 @@ namespace ISD
 		swap_bytes( &((uint8 *)dest)[2], &((uint8 *)dest)[5] );
 		swap_bytes( &((uint8 *)dest)[3], &((uint8 *)dest)[4] );
 		}
-	template <class T> void swap_byte_order( T *dest , size_t count );
+	template <class T> void swap_byte_order( T *dest , size_t count ) { static_assert(false, "swap_byte_order template can only be used with uint16, uint32 or uint64"); }
 	template<> inline void swap_byte_order<uint16>( uint16 *dest , size_t count )
 		{
 		for( size_t i = 0; i < count; ++i )
@@ -161,4 +170,5 @@ namespace ISD
 			++dest;
 			}
 		}
+
 	};

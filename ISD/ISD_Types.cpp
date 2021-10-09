@@ -30,13 +30,13 @@ namespace ISD
 	// writes array of bytes to string of hex values. the hex values will be
 	// in the same order as the bytes, so if you need to convert a litte-endian
 	// word into hex, be sure to flip the byte order before.
-	static std::wstring bytes_to_hex_wstring( const void *bytes, uint size )
+	std::wstring bytes_to_hex_wstring( const void *bytes, size_t count )
 		{
 		static const wchar_t hexchars[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
 		std::wstring ret;
 		const uint8 *p = (const uint8 *)bytes;
-		for( uint i = 0; i < size; ++i )
+		for( size_t i = 0; i < count; ++i )
 			{
 			ret += hexchars[((*p) >> 4) & 0xf]; // high nibble
 			ret += hexchars[(*p) & 0xf]; // low nibble
@@ -45,81 +45,44 @@ namespace ISD
 		return ret;
 		}
 
-	std::wstring uint8_to_hex_wstring( uint8 value )
+
+	template <> std::wstring value_to_hex_wstring<uint8>( uint8 value )
 		{
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uint16_to_hex_wstring( uint16 value )
+	template <> std::wstring value_to_hex_wstring<uint16>( uint16 value )
 		{
-#ifdef LITTLE_ENDIAN
-		swap_byte_order( &value );
-#endif//LITTLE_ENDIAN
+		bigendian_from_value( (uint8*)&value, value ); // in-place make sure big endian
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uint32_to_hex_wstring( uint32 value )
+	template <> std::wstring value_to_hex_wstring<uint32>( uint32 value )
 		{
-#ifdef LITTLE_ENDIAN
-		swap_byte_order( &value );
-#endif//LITTLE_ENDIAN
+		bigendian_from_value( (uint8*)&value, value ); // in-place make sure big endian
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uint64_to_hex_wstring( uint64 value )
+	template <> std::wstring value_to_hex_wstring<uint64>( uint64 value )
 		{
-#ifdef LITTLE_ENDIAN
-		swap_byte_order( &value );
-#endif//LITTLE_ENDIAN
+		bigendian_from_value( (uint8*)&value, value ); // in-place make sure big endian
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uuid_to_hex_wstring( UUID value )
+	template <> std::wstring value_to_hex_wstring<UUID>( UUID value )
 		{
 		std::wstring ret;
 
-		ret += uint32_to_hex_wstring( value.Data1 );
+		ret += value_to_hex_wstring<uint32>( value.Data1 );
 		ret += L"-";
-		ret += uint16_to_hex_wstring( value.Data2 );
+		ret += value_to_hex_wstring<uint16>( value.Data2 );
 		ret += L"-";
-		ret += uint16_to_hex_wstring( value.Data3 );
+		ret += value_to_hex_wstring<uint16>( value.Data3 );
 		ret += L"-";
 		ret += bytes_to_hex_wstring( value.Data4 , 2 );
 		ret += L"-";
 		ret += bytes_to_hex_wstring( &value.Data4[2] , 6 );
 
-		return ret;
-		}
-
-	uint16 flip_byte_order_uint16( uint16 value )
-		{
-		uint16 ret;
-		((uint8 *)&ret)[0] = ((uint8 *)&value)[1];
-		((uint8 *)&ret)[1] = ((uint8 *)&value)[0];
-		return ret;
-		}
-
-	uint32 flip_byte_order_uint32( uint32 value )
-		{
-		uint32 ret;
-		((uint8 *)&ret)[0] = ((uint8 *)&value)[3];
-		((uint8 *)&ret)[1] = ((uint8 *)&value)[2];		
-		((uint8 *)&ret)[2] = ((uint8 *)&value)[1];		
-		((uint8 *)&ret)[3] = ((uint8 *)&value)[0];
-		return ret;
-		}
-			
-	uint64 flip_byte_order_uint64( uint64 value )
-		{
-		uint64 ret;
-		((uint8 *)&ret)[0] = ((uint8 *)&value)[7];
-		((uint8 *)&ret)[1] = ((uint8 *)&value)[6];		
-		((uint8 *)&ret)[2] = ((uint8 *)&value)[5];		
-		((uint8 *)&ret)[3] = ((uint8 *)&value)[4];
-		((uint8 *)&ret)[4] = ((uint8 *)&value)[3];
-		((uint8 *)&ret)[5] = ((uint8 *)&value)[2];		
-		((uint8 *)&ret)[6] = ((uint8 *)&value)[1];		
-		((uint8 *)&ret)[7] = ((uint8 *)&value)[0];
 		return ret;
 		}
 

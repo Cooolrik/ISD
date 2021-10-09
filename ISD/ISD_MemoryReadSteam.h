@@ -6,11 +6,13 @@
 
 namespace ISD
 	{
-	// memory read stream is a wrapper around a read-only memory area.
+	// Memory read stream is a wrapper around a read-only memory area.
 	// The stream is used to read structured values, and automatically 
-	// does byte order swapping and reads in more complex types than
+	// does byte order swapping. It can read in more complex types than
 	// just plain old data (POD) types, such as std::string, UUIDs and
-	// std::vector of the above types.
+	// std::vectors of the above types.
+	// Caveat: The stream is NOT thread safe, and should be accessed by 
+	// only one thread at a time.
 	class MemoryReadStream
 		{
 		private:
@@ -19,8 +21,10 @@ namespace ISD
 			uint64 DataPosition = 0;
 			bool FlipByteOrder = false; // true if we should flip BE to LE or LE to BE
 
+			// read raw bytes from the memory stream
 			uint64 ReadRawData( void *dest, uint64 count );
 
+			// read 1,2,4 or 8 byte values and make sure they are in the correct byte order
 			template <class T> uint64 ReadValues( T *dest, uint64 count );
 			template <> uint64 ReadValues<uint8>( uint8 *dest, uint64 count );
 
@@ -137,12 +141,13 @@ namespace ISD
 		return this->FlipByteOrder; 
 		}
 
-	void MemoryReadStream::SetFlipByteOrder( bool value )
+	inline void MemoryReadStream::SetFlipByteOrder( bool value )
 		{
 		this->FlipByteOrder = value;
 		}
 
 	// read one item of data
+	template <class T> T MemoryReadStream::Read() { static_assert(false, "MemoryReadStream::Read<T>(), invalid template type T, use the implemented types"); }
 	template <> inline int8 MemoryReadStream::Read<int8>() { int8 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline int16 MemoryReadStream::Read<int16>() { int16 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline int32 MemoryReadStream::Read<int32>() { int32 dest = 0; this->Read( &dest, 1 ); return dest; }
@@ -185,9 +190,9 @@ namespace ISD
 				return i; // could not read further, return number of succesful reads
 
 			// assign to the values
-			dest[i].Data1 = word_from_big_endian<uint32>( &rawbytes[0] );
-			dest[i].Data2 = word_from_big_endian<uint16>( &rawbytes[4] );
-			dest[i].Data3 = word_from_big_endian<uint16>( &rawbytes[6] );
+			dest[i].Data1 = value_from_bigendian<uint32>( &rawbytes[0] );
+			dest[i].Data2 = value_from_bigendian<uint16>( &rawbytes[4] );
+			dest[i].Data3 = value_from_bigendian<uint16>( &rawbytes[6] );
 			memcpy( dest[i].Data4, &rawbytes[8], 8 );
 			}
 

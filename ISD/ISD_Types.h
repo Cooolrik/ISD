@@ -52,11 +52,17 @@ namespace ISD
 	// widens utf-8 char string to wstring
 	std::wstring widen( const std::string &str );
 
+	// creates words from big-endian raw byte values
+	template <class T> T word_from_big_endian( uint8 *src );
+	template <> inline uint16 word_from_big_endian<uint16>( uint8 *src ) { return (uint16(src[0]) << 8) | uint16(src[1]); }
+	template <> inline uint32 word_from_big_endian<uint32>( uint8 *src ) { return (uint32(word_from_big_endian<uint16>( &src[0] )) << 16) | uint32(word_from_big_endian<uint16>( &src[2] )); }
+	template <> inline uint64 word_from_big_endian<uint64>( uint8 *src ) { return (uint64(word_from_big_endian<uint32>( &src[0] )) << 32) | uint64(word_from_big_endian<uint32>( &src[4] ));	}
+
 	// creates a wstring from an array of bytes, in order
-	std::wstring uint8_to_hex_string( uint8 value );
-	std::wstring uint16_to_hex_string( uint16 value );
-	std::wstring uint32_to_hex_string( uint32 value );
-	std::wstring uuid_to_hex_string( UUID value );
+	std::wstring uint8_to_hex_wstring( uint8 value );
+	std::wstring uint16_to_hex_wstring( uint16 value );
+	std::wstring uint32_to_hex_wstring( uint32 value );
+	std::wstring uuid_to_hex_wstring( UUID value );
 
 	// converts file path in wstring to an absolute or full file path 
 	std::wstring full_path( const std::wstring &path );
@@ -101,5 +107,58 @@ namespace ISD
 				}
 		};
 
+	// swap byte order on one or multiple words
+	inline void swap_bytes( uint8 *pA, uint8 *pB )
+		{
+		uint8 tmp = *pA;
+		*pA = *pB;
+		*pB = tmp;
+		}
 
+	template <class T> void swap_byte_order( T *dest );
+	template<> inline void swap_byte_order<uint16>( uint16 *dest )
+		{
+		swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[1] );
+		}
+	template<> inline void swap_byte_order<uint32>( uint32 *dest )
+		{
+		swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[3] );
+		swap_bytes( &((uint8 *)dest)[1], &((uint8 *)dest)[2] );
+		}
+	template<> inline void swap_byte_order<uint64>( uint64 *dest )
+		{
+		swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[7] );
+		swap_bytes( &((uint8 *)dest)[1], &((uint8 *)dest)[6] );
+		swap_bytes( &((uint8 *)dest)[2], &((uint8 *)dest)[5] );
+		swap_bytes( &((uint8 *)dest)[3], &((uint8 *)dest)[4] );
+		}
+	template <class T> void swap_byte_order( T *dest , size_t count );
+	template<> inline void swap_byte_order<uint16>( uint16 *dest , size_t count )
+		{
+		for( size_t i = 0; i < count; ++i )
+			{
+			swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[1] );
+			++dest;
+			}
+		}
+	template<> inline void swap_byte_order<uint32>( uint32 *dest , size_t count )
+		{
+		for( size_t i = 0; i < count; ++i )
+			{
+			swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[3] );
+			swap_bytes( &((uint8 *)dest)[1], &((uint8 *)dest)[2] );
+			++dest;
+			}
+		}
+	template<> inline void swap_byte_order<uint64>( uint64 *dest , size_t count )
+		{
+		for( size_t i = 0; i < count; ++i )
+			{
+			swap_bytes( &((uint8 *)dest)[0], &((uint8 *)dest)[7] );
+			swap_bytes( &((uint8 *)dest)[1], &((uint8 *)dest)[6] );
+			swap_bytes( &((uint8 *)dest)[2], &((uint8 *)dest)[5] );
+			swap_bytes( &((uint8 *)dest)[3], &((uint8 *)dest)[4] );
+			++dest;
+			}
+		}
 	};

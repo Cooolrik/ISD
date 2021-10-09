@@ -27,8 +27,10 @@ namespace ISD
 		return ret;
 		}
 
-
-	static std::wstring bytes_to_hex_string( const void *bytes, uint size )
+	// writes array of bytes to string of hex values. the hex values will be
+	// in the same order as the bytes, so if you need to convert a litte-endian
+	// word into hex, be sure to flip the byte order before.
+	static std::wstring bytes_to_hex_wstring( const void *bytes, uint size )
 		{
 		static const wchar_t hexchars[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
@@ -43,49 +45,48 @@ namespace ISD
 		return ret;
 		}
 
-
-	std::wstring uint8_to_hex_string( uint8 value )
+	std::wstring uint8_to_hex_wstring( uint8 value )
 		{
-		return bytes_to_hex_string( &value, sizeof(value) );
+		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uint16_to_hex_string( uint16 value )
-		{
-#ifdef LITTLE_ENDIAN
-		value = flip_byte_order_uint16( value );
-#endif//LITTLE_ENDIAN
-		return bytes_to_hex_string( &value, sizeof(value) );
-		}
-
-	std::wstring uint32_to_hex_string( uint32 value )
+	std::wstring uint16_to_hex_wstring( uint16 value )
 		{
 #ifdef LITTLE_ENDIAN
-		value = flip_byte_order_uint32( value );
+		swap_byte_order( &value );
 #endif//LITTLE_ENDIAN
-		return bytes_to_hex_string( &value, sizeof(value) );
+		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uint64_to_hex_string( uint64 value )
+	std::wstring uint32_to_hex_wstring( uint32 value )
 		{
 #ifdef LITTLE_ENDIAN
-		value = flip_byte_order_uint64( value );
+		swap_byte_order( &value );
 #endif//LITTLE_ENDIAN
-		return bytes_to_hex_string( &value, sizeof(value) );
+		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	std::wstring uuid_to_hex_string( UUID value )
+	std::wstring uint64_to_hex_wstring( uint64 value )
+		{
+#ifdef LITTLE_ENDIAN
+		swap_byte_order( &value );
+#endif//LITTLE_ENDIAN
+		return bytes_to_hex_wstring( &value, sizeof(value) );
+		}
+
+	std::wstring uuid_to_hex_wstring( UUID value )
 		{
 		std::wstring ret;
 
-		ret += uint32_to_hex_string( value.Data1 );
+		ret += uint32_to_hex_wstring( value.Data1 );
 		ret += L"-";
-		ret += uint16_to_hex_string( value.Data2 );
+		ret += uint16_to_hex_wstring( value.Data2 );
 		ret += L"-";
-		ret += uint16_to_hex_string( value.Data3 );
+		ret += uint16_to_hex_wstring( value.Data3 );
 		ret += L"-";
-		ret += bytes_to_hex_string( value.Data4 , 2 );
+		ret += bytes_to_hex_wstring( value.Data4 , 2 );
 		ret += L"-";
-		ret += bytes_to_hex_string( &value.Data4[2] , 6 );
+		ret += bytes_to_hex_wstring( &value.Data4[2] , 6 );
 
 		return ret;
 		}

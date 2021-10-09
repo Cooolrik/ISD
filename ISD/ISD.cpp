@@ -6,6 +6,7 @@
 #include <locale>      
 
 #include "ISD.h"
+#include "ISD_MemorySteam.h"
 
 using namespace ISD;
 using std::pair;
@@ -51,8 +52,8 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 
 	// create the file name from the uuid
 	uint8 top_byte = (uuid.Data1 >> 24) & 0xff;
-	std::wstring dir_name = uint8_to_hex_string( top_byte );
-	std::wstring file_name = uuid_to_hex_string( uuid ) + L".dat";
+	std::wstring dir_name = uint8_to_hex_wstring( top_byte );
+	std::wstring file_name = uuid_to_hex_wstring( uuid ) + L".dat";
 	std::wstring file_path = path + L"\\" + file_name;
 	
 	// open the file
@@ -102,19 +103,13 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 	
 	::CloseHandle( file_handle );
 
-	// read the header
-	FileDataHeader *header = (FileDataHeader *)buffer;
-#ifdef LITTLE_ENDIAN
-	header->Uuid.Data1 = flip_byte_order_uint32( header->Uuid.Data1 );
-	header->Uuid.Data2 = flip_byte_order_uint16( header->Uuid.Data2 );
-	header->Uuid.Data3 = flip_byte_order_uint16( header->Uuid.Data3 );
-	header->Type = flip_byte_order_uint32( header->Type );
-#endif//LITTLE_ENDIAN
-
-
+//	// read the header
+//	MemoryStream *pstream = new MemoryStream( buffer , total_bytes_to_read , false );
+//
+//	UUID uuid = pstream->Read<UUID>();
+//
 	return (DWORD)Status::Ok;
 	}
-
 
 Status EntityLoader::AsyncLoadEntity( const UUID &uuid )
 	{

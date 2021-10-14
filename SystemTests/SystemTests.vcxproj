@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{08081d96-a1eb-4916-b496-0c78c75b811b}</ProjectGuid>
-    <RootNamespace>ISDTest</RootNamespace>
+    <RootNamespace>SystemTests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -143,12 +143,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="safe_thread_map_test.cpp" />
+    <ClCompile Include="SystemTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ISD\ISD.vcxproj">
       <Project>{4d13e31b-e498-4995-aafb-ea352c2729bf}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SystemTests.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

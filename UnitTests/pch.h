@@ -1,18 +1,9 @@
 // ISD Copyright (c) 2021 Ulrik Lindahl
 // Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
 
+#ifndef PCH_H
+#define PCH_H
 
-#pragma once
+// add headers that you want to pre-compile here
 
-#include "ISD_Types.h"
-
-namespace ISD
-	{
-	
-
-
-
-
-
-
-	};
+#endif //PCH_H

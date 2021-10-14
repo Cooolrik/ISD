@@ -81,6 +81,7 @@
     <ClInclude Include="ISD.h" />
     <ClInclude Include="ISD_Blob.h" />
     <ClInclude Include="ISD_MemoryReadSteam.h" />
+    <ClInclude Include="ISD_MemoryWriteSteam.h" />
     <ClInclude Include="ISD_Types.h" />
   </ItemGroup>
   <ItemGroup>

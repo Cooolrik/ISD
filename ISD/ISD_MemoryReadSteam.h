@@ -1,3 +1,6 @@
+// ISD Copyright (c) 2021 Ulrik Lindahl
+// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
+
 #pragma once
 
 #include "ISD_Types.h"
@@ -84,13 +87,15 @@ namespace ISD
 		// cap the end position
 		uint64 end_pos = this->DataPosition + count;
 		if( end_pos > this->DataSize )
+			{
 			end_pos = this->DataSize;
+			count = end_pos - this->DataPosition;
+			}
 
 		// copy the data and move the position
-		uint64 memcount = end_pos - this->DataPosition;
-		memcpy( dest, &this->Data[this->DataPosition], memcount );
+		memcpy( dest, &this->Data[this->DataPosition], count );
 		this->DataPosition = end_pos;
-		return memcount;
+		return count;
 		}
 
 	template <class T> inline uint64 MemoryReadStream::ReadValues( T *dest, uint64 count )
@@ -129,13 +134,11 @@ namespace ISD
 		return true;
 		}
 
-	// if at EOF return true
 	inline bool MemoryReadStream::IsEOF() const 
 		{ 
 		return this->DataPosition >= this->DataSize; 
 		}
 
-	// true if stream flips byte order
 	inline bool MemoryReadStream::GetFlipByteOrder() const 
 		{ 
 		return this->FlipByteOrder; 
@@ -205,7 +208,7 @@ namespace ISD
 		for( uint i = 0; i < count; ++i )
 			{
 			// read string length
-			uint strl = 0;
+			uint64 strl = 0;
 			if( this->Read( &strl, 1 ) != 1 )
 				return i; // failed reading, at end of stream, so return number of successful reads
 
@@ -216,7 +219,8 @@ namespace ISD
 
 			// assign to string directly from the data.
 			// NOTE ON CODE: this is OK since we have already checked the bounds, and this is a string of bytes, so no endianness issues arise
-			dest[i].assign( (const char*)this->Data, (size_t)strl );
+			dest[i].assign( (const char*)(&this->Data[this->DataPosition]), strl );
+			this->DataPosition += strl;
 			}
 
 		return count; // all OK

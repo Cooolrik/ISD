@@ -3,7 +3,11 @@
   <ItemGroup>
     <Filter Include="Source Files">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx;h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
@@ -11,28 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ISD_Blob.h">
+    <ClCompile Include="safe_thread_map_test.cpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_Types.h">
+    </ClCompile>
+    <ClCompile Include="SystemTests.cpp">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_MemoryReadSteam.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_MemoryWriteSteam.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ISD.cpp">
+    <ClInclude Include="SystemTests.h">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ISD_Types.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    </ClInclude>
   </ItemGroup>
 </Project>

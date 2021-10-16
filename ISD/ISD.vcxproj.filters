@@ -23,7 +23,7 @@
     <ClInclude Include="ISD_MemoryReadStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_MemoryWriteSteam.h">
+    <ClInclude Include="ISD_MemoryWriteStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ISD_SHA256.h">

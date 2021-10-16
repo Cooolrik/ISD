@@ -10,6 +10,8 @@
 
 #include "ISD.h"
 #include "ISD_MemoryReadSteam.h"
+#include "ISD_SHA256.h"
+#include "ISD_Blob.h"
 
 using namespace ISD;
 using std::pair;
@@ -47,6 +49,8 @@ struct LoadThreadParams
 
 static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 	{
+	const uint hash_size = 32;
+
 	// get the params
 	LoadThreadParams *params = (LoadThreadParams *)lpParameter;
 	UUID uuid = params->uuid;
@@ -58,7 +62,7 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 	std::wstring dir_name = value_to_hex_wstring( top_byte );
 	std::wstring file_name = value_to_hex_wstring( uuid ) + L".dat";
 	std::wstring file_path = path + L"\\" + file_name;
-	
+
 	// open the file
 	HANDLE file_handle = ::CreateFileW( file_path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr );
 	if( file_handle == INVALID_HANDLE_VALUE )
@@ -76,23 +80,32 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 		}
 	uint64 total_bytes_to_read = dfilesize.QuadPart;
 
+	// cant be less in size than the size of the hash at the end
+	if( total_bytes_to_read < hash_size )
+		{
+		return (DWORD)Status::ECorrupted;
+		}
+
 	// read in all of the file
-	uint8 *buffer = (uint8*) malloc(total_bytes_to_read);
-	if( !buffer )
+	std::vector<uint8> allocation;
+	allocation.resize( total_bytes_to_read );
+	if( allocation.size() != total_bytes_to_read )
 		{
 		// failed to allocate the memory
 		return (DWORD)Status::ECantAllocate;
 		}
+	uint8 *buffer = allocation.data();
 
 	uint64 bytes_read = 0;
 	while( bytes_read < total_bytes_to_read )
 		{
-		// check how much to read and cap at 32 bits
+		// check how much to read and cap each read at UINT_MAX
 		uint64 bytes_left = total_bytes_to_read - bytes_read;
-		uint32 bytes_to_read_this_time = 0xffffffff;
-		if( bytes_left < 0xffffffff )
+		uint32 bytes_to_read_this_time = UINT_MAX;
+		if( bytes_left < UINT_MAX )
 			bytes_to_read_this_time = (uint32)bytes_left;
 
+		// read in bytes into the memory allocation
 		DWORD bytes_that_were_read = 0;
 		if( !::ReadFile( file_handle, &buffer[bytes_read], bytes_to_read_this_time, &bytes_that_were_read, nullptr ) )
 			{
@@ -103,14 +116,34 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 		// update number of bytes that were read
 		bytes_read += bytes_that_were_read;
 		}
-	
+
 	::CloseHandle( file_handle );
 
-//	// read the header
-//	MemoryStream *pstream = new MemoryStream( buffer , total_bytes_to_read , false );
-//
-//	UUID uuid = pstream->Read<UUID>();
-//
+	// calculate the sha256 hash on the data, and make sure it compares correctly with the hash
+	const uint64 data_size = total_bytes_to_read - hash_size;
+	SHA256 sha( buffer, data_size );
+	uint8 digest[hash_size];
+	sha.GetDigest( digest );
+	if( memcmp( digest, &buffer[data_size], hash_size ) != 0 )
+		{
+		// sha hash does not compare correctly, file is corrupted
+		return (DWORD)Status::ECorrupted;
+		}
+
+	// use a memory stream to deserialize the data
+	MemoryReadStream is( buffer, data_size, false );
+
+	// read in the file header, make sure it is an ISD file
+	BlobHeader header;
+
+
+
+
+
+
+
+	//UUID uuid = pstream->Read<UUID>();
+
 	return (DWORD)Status::Ok;
 	}
 

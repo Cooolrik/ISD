@@ -80,12 +80,17 @@
   <ItemGroup>
     <ClInclude Include="ISD.h" />
     <ClInclude Include="ISD_Blob.h" />
-    <ClInclude Include="ISD_MemoryReadSteam.h" />
+    <ClInclude Include="ISD_MemoryReadStream.h" />
     <ClInclude Include="ISD_MemoryWriteSteam.h" />
+    <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_Types.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
+    <ClCompile Include="ISD_SHA256.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
     <ClCompile Include="ISD_Types.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

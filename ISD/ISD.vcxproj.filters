@@ -20,10 +20,13 @@
     <ClInclude Include="ISD.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_MemoryReadSteam.h">
+    <ClInclude Include="ISD_MemoryReadStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ISD_MemoryWriteSteam.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_SHA256.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,6 +35,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ISD_Types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_SHA256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

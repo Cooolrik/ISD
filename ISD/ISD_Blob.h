@@ -22,13 +22,13 @@ namespace ISD
 		uint64 DataSize; // size of the data, after the header
 
 		// read a header from file. returns true on success
-		bool Read( MemoryReadStream &istream );
+		bool ReadFromStream( MemoryReadStream &istream );
 
 		// write a header to file. returns true on success
-		bool Write( MemoryWriteStream &ostream );
+		bool WriteToStream( MemoryWriteStream &ostream );
 		};
 
-	bool BlobHeader::Read( MemoryReadStream &istream )
+	bool BlobHeader::ReadFromStream( MemoryReadStream &istream )
 		{
 		uint64 p = istream.GetPosition();
 		istream.Read( this->Magic, 3 );
@@ -36,19 +36,18 @@ namespace ISD
 		this->VersionMinor = istream.Read<uint8>();
 		istream.Read( this->_padding, 3 );
 		this->DataSize = istream.Read<uint64>();
-		return (p + 16) == istream.GetPosition(); 
+		return istream.GetPosition() == (p + 16); // true if we have read 16 bytes
 		}
 
-	bool BlobHeader::Write( MemoryWriteStream &ostream )
+	bool BlobHeader::WriteToStream( MemoryWriteStream &ostream )
 		{
-		uint64 p = istream.GetPosition();
-		istream.Read( this->Magic, 3 );
-		this->VersionMajor = istream.Read<uint8>();
-		this->VersionMinor = istream.Read<uint8>();
-		istream.Read( this->_padding, 3 );
-		this->DataSize = istream.Read<uint64>();
-		return (p + 16) == istream.GetPosition(); 
+		uint64 p = ostream.GetPosition();
+		ostream.Write( this->Magic, 3 );
+		ostream.Write( this->VersionMajor );
+		ostream.Write( this->VersionMinor );
+		ostream.Write( this->_padding, 3 );
+		ostream.Write( this->DataSize );
+		return ostream.GetPosition() == (p + 16); // true if we have written 16 bytes
 		}
-
 
 	};

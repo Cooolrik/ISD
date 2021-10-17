@@ -52,6 +52,7 @@ namespace ISD
 		ECantOpen = -6, // cant open file or handle
 		ECantRead = -7, // cant read from file or handle
 		ECorrupted = -8, // a filed is corrupted (failes sha256 test)
+		EInvalid = -9, // invalid file, not an ISD file
 		};
 
 	// widens utf-8 char string to wstring

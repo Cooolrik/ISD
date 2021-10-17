@@ -9,7 +9,7 @@
 #include <locale>      
 
 #include "ISD.h"
-#include "ISD_MemoryReadSteam.h"
+#include "ISD_MemoryReadStream.h"
 #include "ISD_SHA256.h"
 #include "ISD_Blob.h"
 
@@ -135,6 +135,17 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 
 	// read in the file header, make sure it is an ISD file
 	BlobHeader header;
+	header.ReadFromStream( is );
+	if( memcmp(header.Magic , "ISD" , 3) != 0 )
+		{
+		return (DWORD)Status::EInvalid;
+		}
+
+	// for now, the version does not matter, as we are only on 1.0 and future versions need to be backwards compatible 
+
+	// make sure the size fits the rest of the data
+	
+
 
 
 

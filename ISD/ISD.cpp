@@ -130,21 +130,11 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 		return (DWORD)Status::ECorrupted;
 		}
 
-	// use a memory stream to deserialize the data
+	// set up a memory stream and deserializer
 	MemoryReadStream is( buffer, data_size, false );
 
-	// read in the file header, make sure it is an ISD file
-	BlobHeader header;
-	header.ReadFromStream( is );
-	if( memcmp(header.Magic , "ISD" , 3) != 0 )
-		{
-		return (DWORD)Status::EInvalid;
-		}
 
-	// for now, the version does not matter, as we are only on 1.0 and future versions need to be backwards compatible 
 
-	// make sure the size fits the rest of the data
-	
 
 
 

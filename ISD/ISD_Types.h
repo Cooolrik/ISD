@@ -20,9 +20,6 @@ typedef GUID UUID;
 #endif//_WIN32
 #endif
 
-// define LITTLE_ENDIAN
-#define LITTLE_ENDIAN
-
 #include <utility>
 #include <map>
 #include <mutex>
@@ -176,5 +173,6 @@ namespace ISD
 			++dest;
 			}
 		}
+
 
 	};

@@ -5,23 +5,13 @@
 #pragma once
 
 #include "ISD_Types.h"
+#include "ISD_Entity.h"
 
 #include <map>
 #include <mutex>
 
 namespace ISD
 	{
-	class Entity
-		{
-		private:
-			UUID Uuid;
-			std::string Name;
-
-		public:
-			const UUID &GetUUID() const { return this->Uuid; }
-			const std::string &GetName() const { return this->Name; }
-		};
-
 	class EntityLoader
 		{
 		private:

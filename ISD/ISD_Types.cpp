@@ -104,6 +104,5 @@ namespace ISD
 		return ret;
 		}
 
-
-
+	const std::vector<size_t> indexed_array_empty_index; // used as replacement reference when returning empty index
 	};

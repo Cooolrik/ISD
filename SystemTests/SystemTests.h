@@ -5,8 +5,8 @@
 #pragma once
 
 #include "../ISD/ISD.h"
-#include "../ISD/ISD_MemoryReadSteam.h"
-#include "../ISD/ISD_MemoryWriteSteam.h"
+#include "../ISD/ISD_MemoryReadStream.h"
+#include "../ISD/ISD_MemoryWriteStream.h"
 
 #include <Rpc.h>
 

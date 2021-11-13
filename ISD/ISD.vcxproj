@@ -55,6 +55,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -69,6 +70,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -82,10 +84,13 @@
     <ClInclude Include="ISD_Blob.h" />
     <ClInclude Include="ISD_Entity.h" />
     <ClInclude Include="ISD_EntitySerializer.h" />
+    <ClInclude Include="ISD_EntityWriter.h" />
     <ClInclude Include="ISD_MemoryReadStream.h" />
     <ClInclude Include="ISD_MemoryWriteStream.h" />
     <ClInclude Include="ISD_SHA256.h" />
+    <ClInclude Include="ISD_TestNode.h" />
     <ClInclude Include="ISD_Types.h" />
+    <ClInclude Include="ISD_EntityReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
@@ -95,6 +100,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="ISD_Types.cpp" />
+    <ClCompile Include="VT_EntityWriter.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

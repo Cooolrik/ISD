@@ -11,6 +11,13 @@ namespace ISD
 	class MemoryReadStream;
 	class MemoryWriteStream;
 
+	class EntityValue
+		{
+		public:
+			ValueType GetValueType() const;
+		};
+
+
 	class EntitySerializer
 		{
 		public:

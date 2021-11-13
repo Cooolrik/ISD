@@ -2,11 +2,14 @@
 // Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
 
 #include "../ISD/ISD.h"
-#include "../ISD/ISD_MemoryReadSteam.h"
-#include "../ISD/ISD_MemoryWriteSteam.h"
+#include "../ISD/ISD_MemoryReadStream.h"
+#include "../ISD/ISD_MemoryWriteStream.h"
+#include "../ISD/ISD_TestNode.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <Rpc.h>
-
 extern void safe_thread_map_test();
 
 #define RUN_TEST( name )\
@@ -14,8 +17,42 @@ extern void safe_thread_map_test();
 	name();\
 	printf(" - Test: " #name " done\n");
 
+namespace ISD
+	{
+	typedef ver1::TestNode TestNode;
+
+
+
+	}
+
 int main()
 	{
+	glm::vec2 v;
+
+	//BoolWriter(  )
+
+	auto val = glm::value_ptr( v );
+
+	std::vector<double> dat1 = {1,2,3,4,5,6,7,8,9,10};
+	std::vector<double> dat2 = {1,2,3,4,5,6,7,8,9,10};
+
+	ISD::indexed_array<double> arr1( dat1 );
+	ISD::indexed_array<double> arr2( dat2 );
+
+	const auto val1 = arr1.Index();
+	const auto val2 = arr2.Index();
+
+	const void *p1 = &(val1.second);
+	const void *p2 = &(val2.second);
+
+	ISD::TestNode tn;
+
+	tn.GetName();
+
+	const auto &t = tn.GetTransformation();
+
+	const auto &tr = t.GetTranslation();
+
 	RUN_TEST( safe_thread_map_test );
 
 	//EntityLoader load;

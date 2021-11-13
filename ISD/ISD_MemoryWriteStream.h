@@ -65,7 +65,7 @@ namespace ISD
 			bool GetFlipByteOrder() const;
 			void SetFlipByteOrder( bool value );
 
-			// read one item from the memory stream. makes sure to convert endianness
+			// write one item to the memory stream. makes sure to convert endianness
 			void Write( const int8 &src );
 			void Write( const int16 &src );
 			void Write( const int32 &src );
@@ -77,7 +77,7 @@ namespace ISD
 			void Write( const UUID &src );
 			void Write( const float &src );
 			void Write( const double &src );
-			void Write( const std::string &src );
+			//void Write( const std::string &src );
 			
 			// write an array of items to the memory stream. makes sure to convert endianness
 			void Write( const int8 *src , uint64 count );
@@ -91,10 +91,10 @@ namespace ISD
 			void Write( const UUID *src , uint64 count );
 			void Write( const float *src , uint64 count );
 			void Write( const double *src , uint64 count );
-			void Write( const std::string *src , uint64 count );
+			//void Write( const std::string *src , uint64 count );
 			
 			//// read a std::vector of items from stream. reads in the count, and returns false if not the full vector could be read.
-			template<class T> void Write( const std::vector<T> *src );
+			//template<class T> void Write( const std::vector<T> *src );
 		};
 
 	inline void MemoryWriteStream::ReserveForSize( uint64 reserveSize )
@@ -200,7 +200,7 @@ namespace ISD
 		this->FlipByteOrder = value;
 		}
 
-	//// read one item of data
+	//// write one item of data
 	inline void MemoryWriteStream::Write( const int8 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const int16 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const int32 &src ) { this->Write( &src, 1 ); }
@@ -212,7 +212,7 @@ namespace ISD
 	inline void MemoryWriteStream::Write( const UUID &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const float &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const double &src ) { this->Write( &src, 1 ); }
-	inline void MemoryWriteStream::Write( const std::string &src ) { this->Write( &src, 1 ); }
+	//inline void MemoryWriteStream::Write( const std::string &src ) { this->Write( &src, 1 ); }
 
 	// 8 bit data
 	inline void MemoryWriteStream::Write( const int8 *src, uint64 count ) { return this->WriteValues<uint8>( (const uint8*)src, count ); }
@@ -251,28 +251,28 @@ namespace ISD
 			}
 		}
 
-	// std::strings
-	inline void MemoryWriteStream::Write( const std::string *src, uint64 count ) 
-		{ 
-		for( uint i = 0; i < count; ++i )
-			{
-			// write string length
-			uint64 strl = src[i].length();
-			this->Write( &strl, 1 );
+	//// std::strings
+	//inline void MemoryWriteStream::Write( const std::string *src, uint64 count ) 
+	//	{ 
+	//	for( uint i = 0; i < count; ++i )
+	//		{
+	//		// write string length
+	//		uint64 strl = src[i].length();
+	//		this->Write( &strl, 1 );
 
-			// write string data
-			this->Write( src[i].data(), strl );
-			}
-		}
+	//		// write string data
+	//		this->Write( src[i].data(), strl );
+	//		}
+	//	}
 
-	// std::vector
-	template<class T> void MemoryWriteStream::Write( const std::vector<T> *dest )
-		{
-		uint64 count = 0;
-		this->Write( &count, 1 );
+	//// std::vector
+	//template<class T> void MemoryWriteStream::Write( const std::vector<T> *dest )
+	//	{
+	//	uint64 count = 0;
+	//	this->Write( &count, 1 );
 
-		// read in values, return true if all values could be read
-		this->Write( dest->data(), count );
-		}
+	//	// read in values, return true if all values could be read
+	//	this->Write( dest->data(), count );
+	//	}
 	
 	};

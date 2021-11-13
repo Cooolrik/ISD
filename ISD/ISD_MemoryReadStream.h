@@ -61,7 +61,7 @@ namespace ISD
 			template <> UUID Read<UUID>();
 			template <> float Read<float>();
 			template <> double Read<double>();
-			template <> std::string Read<std::string>();
+			//template <> std::string Read<std::string>();
 
 			// read multiple items from the memory stream. makes sure to convert endianness
 			uint64 Read( int8 *dest , uint64 count );
@@ -75,10 +75,10 @@ namespace ISD
 			uint64 Read( UUID *dest , uint64 count );
 			uint64 Read( float *dest , uint64 count );
 			uint64 Read( double *dest , uint64 count );
-			uint64 Read( std::string *dest , uint64 count );
+			//uint64 Read( std::string *dest , uint64 count );
 
 			// read a std::vector of items from stream. reads in the count, and returns false if not the full vector could be read.
-			template<class T> bool Read( std::vector<T> *dest );
+			//template<class T> bool Read( std::vector<T> *dest );
 
 		};
 
@@ -162,7 +162,7 @@ namespace ISD
 	template <> inline UUID MemoryReadStream::Read<UUID>() { UUID dest = {}; this->Read( &dest, 1 ); return dest; }
 	template <> inline float MemoryReadStream::Read<float>() { float dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline double MemoryReadStream::Read<double>() { double dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline std::string MemoryReadStream::Read<std::string>() { std::string dest; this->Read( &dest, 1 ); return dest; }
+	//template <> inline std::string MemoryReadStream::Read<std::string>() { std::string dest; this->Read( &dest, 1 ); return dest; }
 
 	// 8 bit data
 	inline uint64 MemoryReadStream::Read( int8 *dest, uint64 count ) { return this->ReadValues<uint8>( (uint8*)dest, count ); }
@@ -202,41 +202,41 @@ namespace ISD
 		return count;
 		}
 
-	// std::strings
-	inline uint64 MemoryReadStream::Read( std::string *dest, uint64 count ) 
-		{ 
-		for( uint i = 0; i < count; ++i )
-			{
-			// read string length
-			uint64 strl = 0;
-			if( this->Read( &strl, 1 ) != 1 )
-				return i; // failed reading, at end of stream, so return number of successful reads
+	//// std::strings
+	//inline uint64 MemoryReadStream::Read( std::string *dest, uint64 count ) 
+	//	{ 
+	//	for( uint i = 0; i < count; ++i )
+	//		{
+	//		// read string length
+	//		uint64 strl = 0;
+	//		if( this->Read( &strl, 1 ) != 1 )
+	//			return i; // failed reading, at end of stream, so return number of successful reads
 
-			// make sure there are enough bytes left in the stream to assign from the data
-			uint64 data_left = this->DataSize - this->DataPosition;
-			if( data_left < strl )
-				return i; // failed reading, at end of stream, so return number of successful reads
+	//		// make sure there are enough bytes left in the stream to assign from the data
+	//		uint64 data_left = this->DataSize - this->DataPosition;
+	//		if( data_left < strl )
+	//			return i; // failed reading, at end of stream, so return number of successful reads
 
-			// assign to string directly from the data.
-			// NOTE ON CODE: this is OK since we have already checked the bounds, and this is a string of bytes, so no endianness issues arise
-			dest[i].assign( (const char*)(&this->Data[this->DataPosition]), strl );
-			this->DataPosition += strl;
-			}
+	//		// assign to string directly from the data.
+	//		// NOTE ON CODE: this is OK since we have already checked the bounds, and this is a string of bytes, so no endianness issues arise
+	//		dest[i].assign( (const char*)(&this->Data[this->DataPosition]), strl );
+	//		this->DataPosition += strl;
+	//		}
 
-		return count; // all OK
-		}
+	//	return count; // all OK
+	//	}
 
-	// std::vector
-	template<class T> bool MemoryReadStream::Read( std::vector<T> *dest )
-		{
-		uint64 count = 0;
-		if( this->Read( &count, 1 ) != 1 )
-			return false; // could not read array
+	//// std::vector
+	//template<class T> bool MemoryReadStream::Read( std::vector<T> *dest )
+	//	{
+	//	uint64 count = 0;
+	//	if( this->Read( &count, 1 ) != 1 )
+	//		return false; // could not read array
 
-		// resize array 
-		dest->resize( count );
+	//	// resize array 
+	//	dest->resize( count );
 
-		// read in values, return true if all values could be read
-		return (this->Read( dest->data(), count ) == count);
-		}
+	//	// read in values, return true if all values could be read
+	//	return (this->Read( dest->data(), count ) == count);
+	//	}
 	};

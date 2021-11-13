@@ -4,9 +4,15 @@
 
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "..\ISD\ISD_MemoryReadSteam.h"
-#include "..\ISD\ISD_MemoryWriteSteam.h"
+#include "..\ISD\ISD_MemoryReadStream.h"
+#include "..\ISD\ISD_MemoryWriteStream.h"
 #include "..\ISD\ISD_SHA256.h"
+#include "..\ISD\ISD_EntityWriter.h"
+
+#include <string>
+#include <vector>
+
+#include <glm/glm.hpp>
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -23,6 +29,11 @@ namespace UnitTests
 			uint64 uint64_rand() { return uint64(uint32_rand()) << 32 | uint64(uint32_rand()); }
 			float float_rand() { return float(uint64_rand()); }
 			double double_rand() { return double(uint64_rand()); }
+			UUID uuid_rand() 
+				{ 
+				const UUID id = {uint32_rand(), uint16_rand(), uint16_rand(), { uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() }};
+				return id;
+				}
 
 			TEST_METHOD( ISDTypes )
 				{
@@ -144,14 +155,14 @@ namespace UnitTests
 					const double f64 = double_rand();
 					const UUID id = {uint32_rand(), uint16_rand(), uint16_rand(), { uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() }};
 				
-					// random string
-					std::string str;
-					int strl = rand() % 100 + 10;
-					for( int i = 0; i < strl; ++i )
-						{
-						char s = (char)(rand() % 60 + 20);
-						str += s;
-						}
+					//// random string
+					//std::string str;
+					//int strl = rand() % 100 + 10;
+					//for( int i = 0; i < strl; ++i )
+					//	{
+					//	char s = (char)(rand() % 60 + 20);
+					//	str += s;
+					//	}
 
 					// set up a random order of the values to write and read
 					const uint num_values = 100000;
@@ -163,7 +174,7 @@ namespace UnitTests
 					ws->SetFlipByteOrder( (bool)byteorder );
 					for( int i = 0; i < num_values; ++i )
 						{
-						int item_type = rand() % 8;
+						int item_type = rand() % 7;
 						order[i] = item_type;
 
 						switch( item_type )
@@ -189,9 +200,9 @@ namespace UnitTests
 							case 6:
 								ws->Write( id ); expected_size += 16;
 								break;
-							case 7:
-								ws->Write( str ); expected_size += (str.length() + 8); // length of string plus 8 bytes for the uint64 size of the string
-								break; 
+//							case 7:
+//								ws->Write( str ); expected_size += (str.length() + 8); // length of string plus 8 bytes for the uint64 size of the string
+//								break; 
 							}
 						}
 
@@ -235,9 +246,9 @@ namespace UnitTests
 							case 6:
 								AsserteReadValueIs( rs, id );
 								break;
-							case 7:
-								AsserteReadValueIs( rs, str );
-								break; 
+//							case 7:
+//								AsserteReadValueIs( rs, str );
+//								break; 
 							}
 						}
 		
@@ -284,6 +295,120 @@ namespace UnitTests
 					uint8 expected_hash[32] = {0xf6,0x48,0x54,0x2d,0xf8,0xcc,0xf2,0x1f,0xd3,0x4e,0x95,0xf6,0x7d,0xf5,0xf2,0xb4,0xf2,0x72,0x72,0xaa,0x14,0xf5,0x03,0x09,0x0c,0xc4,0x76,0x6f,0xe2,0x78,0xc4,0xb5};
 
 					Assert::IsTrue( memcmp( calc_hash, expected_hash, 32 ) == 0 );
+					}
+				}
+
+			template<class T> void TestEntityWriter_TestWriteValue( const MemoryWriteStream &ws , EntityWriter &ew , const std::vector<std::string> &key_names , const T value )
+				{
+				const std::string key = key_names[rand() % key_names.size()];
+				uint64 curr_pos = ws.GetPosition();
+				uint64 expected_pos = curr_pos + 2 + sizeof( value ) + key.size();
+				ew.Write( key.c_str(), (uint8)key.size(), value );
+				Assert::IsTrue( ws.GetPosition() == expected_pos );
+				}
+
+			TEST_METHOD( TestEntityWriter )
+				{
+				if( true )
+					{
+					MemoryWriteStream ws;
+					EntityWriter ew(ws);
+
+					std::vector<std::string> key_names =
+						{
+						std::string("PLbYYDnVEpoPO2Yz"),
+						std::string("h3HHExIVS4eCngO1UZr4"),
+						std::string("At1w2H4jZe"),
+						std::string("Hi2I"),
+						std::string("uGp3TU67GSkitXB"),
+						std::string("c"),
+						std::string("PQkmX7Og"),
+						std::string("hellofoobar"),
+						std::string("ARJVMxS6yF6lasdjllg8jE292A7"),
+						std::string("z8ERgfAM8"),
+						};
+
+					TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names, true );
+					TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names, false );
+
+					TestEntityWriter_TestWriteValue<int8>( ws, ew, key_names, uint8_rand() );
+					TestEntityWriter_TestWriteValue<int16>( ws, ew, key_names, uint16_rand() );
+					TestEntityWriter_TestWriteValue<int32>( ws, ew, key_names, uint32_rand() );
+					TestEntityWriter_TestWriteValue<int64>( ws, ew, key_names, uint64_rand() );
+
+					TestEntityWriter_TestWriteValue<uint8>( ws, ew, key_names, uint8_rand() );
+					TestEntityWriter_TestWriteValue<uint16>( ws, ew, key_names, uint16_rand() );
+					TestEntityWriter_TestWriteValue<uint32>( ws, ew, key_names, uint32_rand() );
+					TestEntityWriter_TestWriteValue<uint64>( ws, ew, key_names, uint64_rand() );
+
+					TestEntityWriter_TestWriteValue<float>( ws, ew, key_names, float_rand() );
+					TestEntityWriter_TestWriteValue<double>( ws, ew, key_names, double_rand() );
+
+					TestEntityWriter_TestWriteValue<fvec2>( ws, ew, key_names, fvec2(float_rand(),float_rand()) );
+					TestEntityWriter_TestWriteValue<dvec2>( ws, ew, key_names, dvec2(double_rand(),double_rand()) );
+					TestEntityWriter_TestWriteValue<fvec3>( ws, ew, key_names, fvec3(float_rand(),float_rand(),float_rand()) );
+					TestEntityWriter_TestWriteValue<dvec3>( ws, ew, key_names, dvec3(double_rand(),double_rand(),double_rand()) );
+					TestEntityWriter_TestWriteValue<fvec4>( ws, ew, key_names, fvec4(float_rand(),float_rand(),float_rand(),float_rand()) );
+					TestEntityWriter_TestWriteValue<dvec4>( ws, ew, key_names, dvec4(double_rand(),double_rand(),double_rand(),double_rand()) );
+
+					TestEntityWriter_TestWriteValue<i8vec2> ( ws, ew, key_names, i8vec2( uint8_rand(), uint8_rand()) );
+					TestEntityWriter_TestWriteValue<i16vec2>( ws, ew, key_names, i16vec2(uint16_rand(),uint16_rand()) );
+					TestEntityWriter_TestWriteValue<i32vec2>( ws, ew, key_names, i32vec2(uint32_rand(),uint32_rand()) );
+					TestEntityWriter_TestWriteValue<i64vec2>( ws, ew, key_names, i64vec2(uint64_rand(),uint64_rand()) );
+					TestEntityWriter_TestWriteValue<i8vec3> ( ws, ew, key_names, i8vec3( uint8_rand(), uint8_rand(), uint8_rand()) );
+					TestEntityWriter_TestWriteValue<i16vec3>( ws, ew, key_names, i16vec3(uint16_rand(),uint16_rand(),uint16_rand()) );
+					TestEntityWriter_TestWriteValue<i32vec3>( ws, ew, key_names, i32vec3(uint32_rand(),uint32_rand(),uint32_rand()) );
+					TestEntityWriter_TestWriteValue<i64vec3>( ws, ew, key_names, i64vec3(uint64_rand(),uint64_rand(),uint64_rand()) );
+					TestEntityWriter_TestWriteValue<i8vec4> ( ws, ew, key_names, i8vec4( uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand()) );
+					TestEntityWriter_TestWriteValue<i16vec4>( ws, ew, key_names, i16vec4(uint16_rand(),uint16_rand(),uint16_rand(),uint16_rand()) );
+					TestEntityWriter_TestWriteValue<i32vec4>( ws, ew, key_names, i32vec4(uint32_rand(),uint32_rand(),uint32_rand(),uint32_rand()) );
+					TestEntityWriter_TestWriteValue<i64vec4>( ws, ew, key_names, i64vec4(uint64_rand(),uint64_rand(),uint64_rand(),uint64_rand()) );
+
+					TestEntityWriter_TestWriteValue<u8vec2> ( ws, ew, key_names, u8vec2( uint8_rand(), uint8_rand()) );
+					TestEntityWriter_TestWriteValue<u16vec2>( ws, ew, key_names, u16vec2(uint16_rand(),uint16_rand()) );
+					TestEntityWriter_TestWriteValue<u32vec2>( ws, ew, key_names, u32vec2(uint32_rand(),uint32_rand()) );
+					TestEntityWriter_TestWriteValue<u64vec2>( ws, ew, key_names, u64vec2(uint64_rand(),uint64_rand()) );
+					TestEntityWriter_TestWriteValue<u8vec3> ( ws, ew, key_names, u8vec3( uint8_rand(), uint8_rand(), uint8_rand()) );
+					TestEntityWriter_TestWriteValue<u16vec3>( ws, ew, key_names, u16vec3(uint16_rand(),uint16_rand(),uint16_rand()) );
+					TestEntityWriter_TestWriteValue<u32vec3>( ws, ew, key_names, u32vec3(uint32_rand(),uint32_rand(),uint32_rand()) );
+					TestEntityWriter_TestWriteValue<u64vec3>( ws, ew, key_names, u64vec3(uint64_rand(),uint64_rand(),uint64_rand()) );
+					TestEntityWriter_TestWriteValue<u8vec4> ( ws, ew, key_names, u8vec4( uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand()) );
+					TestEntityWriter_TestWriteValue<u16vec4>( ws, ew, key_names, u16vec4(uint16_rand(),uint16_rand(),uint16_rand(),uint16_rand()) );
+					TestEntityWriter_TestWriteValue<u32vec4>( ws, ew, key_names, u32vec4(uint32_rand(),uint32_rand(),uint32_rand(),uint32_rand()) );
+					TestEntityWriter_TestWriteValue<u64vec4>( ws, ew, key_names, u64vec4(uint64_rand(),uint64_rand(),uint64_rand(),uint64_rand()) );
+
+					TestEntityWriter_TestWriteValue<fmat2>( ws, ew, key_names, fmat2( 
+						float_rand(), float_rand(), 
+						float_rand(), float_rand() 
+					) );
+					TestEntityWriter_TestWriteValue<dmat2>( ws, ew, key_names, dmat2( 
+						double_rand(), double_rand(), 
+						double_rand(), double_rand() 
+					) );
+					TestEntityWriter_TestWriteValue<fmat3>( ws, ew, key_names, fmat3( 
+						float_rand(), float_rand(), float_rand(), 
+						float_rand(), float_rand(), float_rand(), 
+						float_rand(), float_rand(), float_rand() 
+					) );
+					TestEntityWriter_TestWriteValue<dmat3>( ws, ew, key_names, dmat3( 
+						double_rand(), double_rand(), double_rand(), 
+						double_rand(), double_rand(), double_rand(), 
+						double_rand(), double_rand(), double_rand() 
+					) );
+					TestEntityWriter_TestWriteValue<fmat4>( ws, ew, key_names, fmat4( 
+						float_rand(), float_rand(), float_rand(), float_rand(), 
+						float_rand(), float_rand(), float_rand(), float_rand(), 
+						float_rand(), float_rand(), float_rand(), float_rand(), 
+						float_rand(), float_rand(), float_rand(), float_rand() 
+					) );
+					TestEntityWriter_TestWriteValue<dmat4>( ws, ew, key_names, dmat4( 
+						double_rand(), double_rand(), double_rand(), double_rand(), 
+						double_rand(), double_rand(), double_rand(), double_rand(), 
+						double_rand(), double_rand(), double_rand(), double_rand(), 
+						double_rand(), double_rand(), double_rand(), double_rand() 
+					) );
+
+					TestEntityWriter_TestWriteValue<UUID>( ws, ew, key_names, uuid_rand() );
 					}
 				}
 

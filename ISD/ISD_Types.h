@@ -26,16 +26,16 @@ typedef GUID UUID;
 
 #include <glm/fwd.hpp>
 
+#define ISDErrorLog Log::Error( __FUNCSIG__ , __FILE__ , __LINE__ ) 
+#define ISDErrorLogEnd std::endl
+
 #ifdef _DEBUG
-#define ISDSanityCheckDebugMacro( statement ) 
-#define ISDSanityCheckCoreDebugMacro( statement ) // used for debugging really core issues
+#define ISDSanityCheckDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Sanity debug check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception(); }
+#define ISDSanityCheckCoreDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Core debug sanity check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception(); }
 #else
 #define ISDSanityCheckDebugMacro( statement ) 
 #define ISDSanityCheckCoreDebugMacro( statement ) 
 #endif
-
-#define ISDErrorLog Log::Error( __FUNCSIG__ , __FILE__ , __LINE__ ) 
-#define ISDErrorLogEnd std::endl
 
 namespace ISD
 	{
@@ -310,7 +310,7 @@ namespace ISD
 			T value = {};
 			bool has_value = false;
 		public:
-			void Clear() const { this->value = {};  this->has_value = false; }
+			void Clear() { this->value = {};  this->has_value = false; }
 			void Set( const T &_value ) { this->has_value = true; this->value = _value; }
 			bool HasValue() const { return this->has_value; }
 			const std::pair<bool, const T&> Value() const { return std::pair<bool, const T&>( this->has_value, this->value ); }

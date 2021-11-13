@@ -26,8 +26,17 @@ namespace UnitTests
 			bool write_successfully = ew.Write( key.c_str(), (uint8)key.size(), value );
 			Assert::IsTrue( ws.GetPosition() == expected_pos );
 			Assert::IsTrue( write_successfully );
-			
-			// set up a temporary entity reader and read back the value
+
+			// write an optional version of the value
+			optional_value<T> opt_value;
+			if( rand() % 2 == 0 )
+				opt_value.Set( value );
+			else
+				opt_value.Clear();
+			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), opt_value );
+			Assert::IsTrue( write_successfully );
+
+			// set up a temporary entity reader and read back the values
 			MemoryReadStream rs( ws.GetData(), ws.GetSize(), ws.GetFlipByteOrder() );
 			EntityReader er( rs );
 			rs.SetPosition( start_pos );
@@ -35,24 +44,18 @@ namespace UnitTests
 			bool read_successfully = er.Read( key.c_str() , (uint8)key.size(), read_back_value );
 			Assert::IsTrue( read_successfully );
 			Assert::IsTrue( memcmp( &value, &read_back_value, sizeof( value ) ) == 0 );
-			}
 
-		void TestEntityWriter_TestWriteNull( const MemoryWriteStream &ws, EntityWriter &ew, const std::vector<std::string> &key_names )
-			{
-			// write 
-			const std::string key = key_names[rand() % key_names.size()];
-			uint64 start_pos = ws.GetPosition();
-			uint64 expected_pos = start_pos + 2 + key.size();
-			bool write_successfully = ew.WriteNull( key.c_str(), (uint8)key.size() );
-			Assert::IsTrue( ws.GetPosition() == expected_pos );
-			Assert::IsTrue( write_successfully );
-
-			// set up a temporary entity reader and read back the value
-			MemoryReadStream rs( ws.GetData(), ws.GetSize(), ws.GetFlipByteOrder() );
-			EntityReader er( rs );
-			rs.SetPosition( start_pos );
-			bool read_successfully = er.ReadNull( key.c_str() , (uint8)key.size() );
+			// read back the optional value as well
+			optional_value<T> read_back_opt_value;
+			read_successfully = er.Read( key.c_str() , (uint8)key.size(), read_back_opt_value );
 			Assert::IsTrue( read_successfully );
+			Assert::IsTrue( opt_value.HasValue() == read_back_opt_value.HasValue() );
+			if( opt_value.HasValue() )
+				{
+				const T val1 = opt_value.Value().second;
+				const T val2 = read_back_opt_value.Value().second;
+				Assert::IsTrue( memcmp( &val1, &val2, sizeof( val1 ) ) == 0 );
+				}
 			}
 
 		TEST_METHOD( TestEntityWriter )
@@ -77,8 +80,6 @@ namespace UnitTests
 					std::string( "ARJVMxS6yF6lasdjllg8jE292A7" ),
 					std::string( "z8ERgfAM8" ),
 					};
-
-				TestEntityWriter_TestWriteNull( ws, ew, key_names );
 
 				TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names, true );
 				TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names, false );

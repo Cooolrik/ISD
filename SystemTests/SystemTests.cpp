@@ -27,12 +27,9 @@ namespace ISD
 	}
 
 
-
-
 int main()
 	{
 	glm::vec2 v;
-
 
 	//ISD::Log::Error() << "In read_small_block, the type in the input stream:" << 1 << " does not match expected type: " << 3 << std::endl;
 

@@ -1,5 +1,6 @@
 #include "ISD_EntityWriter.h"
 #include "ISD_MemoryWriteStream.h"
+#include "ISD_Log.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -11,11 +12,25 @@
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &value )\
 		{\
 		return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, &value );\
+		}\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &value )\
+		{\
+		if( value.HasValue() )\
+			return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, &value.Value().second );\
+		else\
+			return write_null_block( this->dstream, key, key_length );\
 		}
 #define ImplementSmallBlockVectorWriter( value_type , object_type , item_type , item_count )\
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &value )\
 		{\
 		return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, value_ptr(value) );\
+		}\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &value )\
+		{\
+		if( value.HasValue() )\
+			return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, value_ptr(value.Value().second) );\
+		else\
+			return write_null_block( this->dstream, key, key_length );\
 		}
 
 namespace ISD
@@ -41,6 +56,44 @@ namespace ISD
 		ISDSanityCheckCoreDebugMacro( dstream.GetPosition() == expected_end_pos ); // this should always be true
 		return (dstream.GetPosition() == expected_end_pos);			
 		};
+
+	bool write_null_block( MemoryWriteStream &dstream, const char *key, const uint8 key_length )
+		{
+		const uint8 value_type = (uint8)ValueType::VT_Null;
+		const size_t block_size = key_length;
+		ISDSanityCheckCoreDebugMacro( block_size < 256 ); // must fit in a byte
+		const uint8 u8_block_size = (uint8)(block_size);
+		const uint64 start_pos = dstream.GetPosition();
+		const uint64 expected_end_pos = start_pos + 2 + block_size;
+
+		// write data block, but write no data, null has no size
+		dstream.Write( value_type );
+		dstream.Write( u8_block_size );
+		dstream.Write( (int8*)key, key_length );
+
+		ISDSanityCheckCoreDebugMacro( dstream.GetPosition() == expected_end_pos ); // this should always be true
+		return (dstream.GetPosition() == expected_end_pos);				
+		}
+
+	// VT_Bool
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const bool &value )
+		{
+		uint8 u8value = value;
+		return write_small_block<ValueType::VT_Bool,uint8,1>( this->dstream, key, key_length, &u8value );
+		}
+
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<bool> &value )
+		{
+		if( value.HasValue() )
+			{
+			uint8 u8value = value.Value().second;
+			return write_small_block<ValueType::VT_Bool,uint8,1>( this->dstream, key, key_length, &u8value );
+			}
+		else
+			{
+			return write_null_block( this->dstream, key, key_length );
+			}
+		}
 
 	// VT_Int				 
 	ImplementSmallBlockSingleItemWriter( ValueType::VT_Int, int8 )
@@ -121,31 +174,5 @@ namespace ISD
 	// VT_UUID 
 	ImplementSmallBlockSingleItemWriter( ValueType::VT_UUID, UUID )
 
-	// special cases:
-
-	// VT_Null - write no data
-	bool EntityWriter::WriteNull( const char *key, const uint8 key_length )
-		{
-		const uint8 value_type = (uint8)ValueType::VT_Null;
-		const size_t block_size = key_length;
-		ISDSanityCheckCoreDebugMacro( block_size < 256 ); // must fit in a byte
-		const uint8 u8_block_size = (uint8)(block_size);
-		const uint64 start_pos = this->dstream.GetPosition();
-		const uint64 expected_end_pos = start_pos + 2 + block_size;
-
-		// write data block, but write no data, null has no size
-		dstream.Write( value_type );
-		dstream.Write( u8_block_size );
-		dstream.Write( (int8*)key, key_length );
-
-		ISDSanityCheckCoreDebugMacro( dstream.GetPosition() == expected_end_pos ); // this should always be true
-		return (this->dstream.GetPosition() == expected_end_pos);				
-		}
-
-	// VT_Bool - convert to int8
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const bool &value )
-		{
-		return write_small_block<ValueType::VT_Bool,int8,1>( this->dstream, key, key_length, (int8*)&value );
-		}
 
 	};

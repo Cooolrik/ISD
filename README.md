@@ -1,2 +1,2 @@
 # ISD
-Immutable Scene Description - still under development, not ready for use
+Immutable Scene Description - still under pre-alpha development, not ready for use

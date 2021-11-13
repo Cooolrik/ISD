@@ -34,6 +34,9 @@ typedef GUID UUID;
 #define ISDSanityCheckCoreDebugMacro( statement ) 
 #endif
 
+#define ISDErrorLog Log::Error( __FUNCSIG__ , __FILE__ , __LINE__ ) 
+#define ISDErrorLogEnd std::endl
+
 namespace ISD
 	{
 	typedef std::int8_t	int8;
@@ -106,6 +109,8 @@ namespace ISD
 	typedef glm::mat2 mat2;
 	typedef glm::mat3 mat3;
 	typedef glm::mat4 mat4;
+
+	const size_t EntityMaxKeyLength = 40; // maximum size of a name in the entities
 
 	enum class Status
 		{

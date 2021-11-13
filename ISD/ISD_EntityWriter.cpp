@@ -26,6 +26,7 @@ namespace ISD
 		{
 		const uint8 value_type = (uint8)VT;
 		const size_t block_size = (sizeof( I ) * IC) + key_length;
+		ISDSanityCheckDebugMacro( key_length <= EntityMaxKeyLength ); // max key length
 		ISDSanityCheckCoreDebugMacro( block_size < 256 ); // must fit in a byte
 		const uint8 u8_block_size = (uint8)(block_size);
 		const uint64 start_pos = dstream.GetPosition();
@@ -144,8 +145,7 @@ namespace ISD
 	// VT_Bool - convert to int8
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const bool &value )
 		{
-		const int8 i8val = value;
-		return write_small_block<ValueType::VT_Bool,int8,1>( this->dstream, key, key_length, &i8val );\
+		return write_small_block<ValueType::VT_Bool,int8,1>( this->dstream, key, key_length, (int8*)&value );
 		}
 
 	};

@@ -47,6 +47,9 @@
     <ClInclude Include="ISD_EntityWriter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ISD_Log.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp">
@@ -61,7 +64,10 @@
     <ClCompile Include="ISD_EntitySerializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VT_EntityWriter.cpp">
+    <ClCompile Include="ISD_EntityWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_EntityReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

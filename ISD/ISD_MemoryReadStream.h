@@ -32,7 +32,7 @@ namespace ISD
 			template <> uint64 ReadValues<uint8>( uint8 *dest, uint64 count );
 
 		public:
-			MemoryReadStream( const uint8 *_Data, uint64 _DataSize, bool _FlipByteOrder = false ) : Data( _Data ), DataSize( _DataSize ), FlipByteOrder(_FlipByteOrder) {};
+			MemoryReadStream( const void *_Data, uint64 _DataSize, bool _FlipByteOrder = false ) : Data( (uint8*)_Data ), DataSize( _DataSize ), FlipByteOrder(_FlipByteOrder) {};
 
 			// get the Size of the stream in bytes
 			uint64 GetSize() const;

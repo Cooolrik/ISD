@@ -5,6 +5,7 @@
 #include "../ISD/ISD_MemoryReadStream.h"
 #include "../ISD/ISD_MemoryWriteStream.h"
 #include "../ISD/ISD_TestNode.h"
+#include "../ISD/ISD_Log.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -25,9 +26,15 @@ namespace ISD
 
 	}
 
+
+
+
 int main()
 	{
 	glm::vec2 v;
+
+
+	//ISD::Log::Error() << "In read_small_block, the type in the input stream:" << 1 << " does not match expected type: " << 3 << std::endl;
 
 	//BoolWriter(  )
 

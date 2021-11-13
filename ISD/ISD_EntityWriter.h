@@ -15,7 +15,6 @@ namespace ISD
 		{
 		private:
 			MemoryWriteStream &dstream;
-					
 
 		public:
 			EntityWriter( MemoryWriteStream &_dstream ) : dstream( _dstream ) {}

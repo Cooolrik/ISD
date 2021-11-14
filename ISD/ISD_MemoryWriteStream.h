@@ -49,7 +49,7 @@ namespace ISD
 
 		public:
 			MemoryWriteStream( uint64 _InitialAllocationSize = InitialAllocationSize ) { this->ReserveForSize( _InitialAllocationSize ); };
-			~MemoryWriteStream() { if( this->Data ) { ::VirtualFree( this->Data, 0, MEM_RELEASE ); } };
+			~MemoryWriteStream() { this->FreeAllocation(); };
 
 			// get a read-only pointer to the data
 			const void *GetData() const { return this->Data; }
@@ -125,6 +125,15 @@ namespace ISD
 		// set the new pointer
 		this->Data = pNewData;
 		}
+
+	inline void MemoryWriteStream::FreeAllocation()
+		{
+		if( this->Data ) 
+			{ 
+			::VirtualFree( this->Data, 0, MEM_RELEASE ); 
+			}
+		}
+
 
 	inline void MemoryWriteStream::Resize( uint64 newSize )
 		{

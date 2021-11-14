@@ -35,15 +35,6 @@ namespace UnitTests
 				const double f64 = double_rand();
 				const UUID id = {uint32_rand(), uint16_rand(), uint16_rand(), { uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() }};
 
-				//// random string
-				//std::string str;
-				//int strl = rand() % 100 + 10;
-				//for( int i = 0; i < strl; ++i )
-				//	{
-				//	char s = (char)(rand() % 60 + 20);
-				//	str += s;
-				//	}
-
 				// set up a random order of the values to write and read
 				const uint num_values = 100000;
 				int order[num_values];
@@ -80,9 +71,6 @@ namespace UnitTests
 						case 6:
 							ws->Write( id ); expected_size += 16;
 							break;
-							//							case 7:
-							//								ws->Write( str ); expected_size += (str.length() + 8); // length of string plus 8 bytes for the uint64 size of the string
-							//								break; 
 						}
 					}
 
@@ -106,6 +94,7 @@ namespace UnitTests
 					switch( item_type )
 						{
 						case 0:
+							Assert::IsTrue( rs->Peek() == u8 ); // also test Peek functionality
 							AsserteReadValueIs( rs, u8 );
 							break;
 						case 1:
@@ -126,9 +115,6 @@ namespace UnitTests
 						case 6:
 							AsserteReadValueIs( rs, id );
 							break;
-							//							case 7:
-							//								AsserteReadValueIs( rs, str );
-							//								break; 
 						}
 					}
 

@@ -58,7 +58,7 @@ namespace UnitTests
 				}
 			}
 
-		TEST_METHOD( TestEntityWriter )
+		TEST_METHOD( TestEntityWriterAndReadback )
 			{
 			for( uint swap_byte_order_flag=0; swap_byte_order_flag<2; ++swap_byte_order_flag )
 				{

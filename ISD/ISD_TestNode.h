@@ -41,29 +41,29 @@ namespace ISD
 						this->transformation.Set( Transformation() );
 						}
 
-					const std::string &GetName() const
-						{
-						return name.Value().second;
-						}
+					//const std::string &GetName() const
+					//	{
+					//	return name.Value().second;
+					//	}
 
-					const Transformation &GetTransformation() const
-						{
-						return this->transformation.Value().second;
-						}
+					//const Transformation &GetTransformation() const
+					//	{
+					//	return this->transformation.Value().second;
+					//	}
 
-					virtual std::pair<bool, ValueType> Reflection_GetValueType( const char *Key ) const
-						{
-						if( strcmp( Key, "Name" ) == 0 )
-							return std::pair<bool, ValueType>( true, ValueType::VT_String );
-						return std::pair<bool, ValueType>( false, ValueType::VT_Null );
-						}
+					//virtual std::pair<bool, ValueType> Reflection_GetValueType( const char *Key ) const
+					//	{
+					//	if( strcmp( Key, "Name" ) == 0 )
+					//		return std::pair<bool, ValueType>( true, ValueType::VT_String );
+					//	return std::pair<bool, ValueType>( false, ValueType::VT_Null );
+					//	}
 
-					virtual std::vector<std::string> Reflection_ListKeys() const
-						{
-						std::vector<std::string> ret;
-						ret.push_back( "Name" );
-						return ret;
-						}
+					//virtual std::vector<std::string> Reflection_ListKeys() const
+					//	{
+					//	std::vector<std::string> ret;
+					//	ret.push_back( "Name" );
+					//	return ret;
+					//	}
 				};
 
 			class TestNodeBuilder : public TestNode

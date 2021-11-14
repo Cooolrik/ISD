@@ -9,28 +9,24 @@
 // item_type: the actual basic type that stores the data, int the case of glm::vec3, it is a float
 // item_count: the count of the the basic type, again in the case of glm::vec3, the count is 3
 #define ImplementSmallBlockSingleItemWriter( value_type , object_type )\
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &value )\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &src_variable )\
 		{\
-		return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, &value );\
+		return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, &src_variable );\
 		}\
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &value )\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &src_variable )\
 		{\
-		if( value.HasValue() )\
-			return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, &value.Value().second );\
-		else\
-			return write_null_block( this->dstream, key, key_length );\
+		const auto val = src_variable.Value();\
+		return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, val.first ? &val.second : nullptr );\
 		}
 #define ImplementSmallBlockVectorWriter( value_type , object_type , item_type , item_count )\
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &value )\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &src_variable )\
 		{\
-		return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, value_ptr(value) );\
+		return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, value_ptr(src_variable) );\
 		}\
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &value )\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &src_variable )\
 		{\
-		if( value.HasValue() )\
-			return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, value_ptr(value.Value().second) );\
-		else\
-			return write_null_block( this->dstream, key, key_length );\
+		const auto val = src_variable.Value();\
+		return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, val.first ? value_ptr(val.second) : nullptr );\
 		}
 
 namespace ISD
@@ -40,7 +36,8 @@ namespace ISD
 	template<ValueType VT, class I, size_t IC> bool write_small_block( MemoryWriteStream &dstream, const char *key, const uint8 key_length, const I *data )
 		{
 		const uint8 value_type = (uint8)VT;
-		const size_t block_size = (sizeof( I ) * IC) + key_length;
+		const size_t data_size_in_bytes = (data != nullptr) ? (sizeof( I ) * IC) : 0; // if data == nullptr, the block is empty
+		const size_t block_size = data_size_in_bytes + key_length;
 		ISDSanityCheckDebugMacro( key_length <= EntityMaxKeyLength ); // max key length
 		ISDSanityCheckCoreDebugMacro( block_size < 256 ); // must fit in a byte
 		const uint8 u8_block_size = (uint8)(block_size);
@@ -50,49 +47,27 @@ namespace ISD
 		// write data block 
 		dstream.Write( value_type );
 		dstream.Write( u8_block_size );
-		dstream.Write( data , IC );
+		if( data_size_in_bytes > 0 )
+			{
+			dstream.Write( data , IC );
+			}
 		dstream.Write( (int8*)key, key_length );
 
 		ISDSanityCheckCoreDebugMacro( dstream.GetPosition() == expected_end_pos ); // this should always be true
 		return (dstream.GetPosition() == expected_end_pos);			
 		};
 
-	bool write_null_block( MemoryWriteStream &dstream, const char *key, const uint8 key_length )
-		{
-		const uint8 value_type = (uint8)ValueType::VT_Null;
-		const size_t block_size = key_length;
-		ISDSanityCheckCoreDebugMacro( block_size < 256 ); // must fit in a byte
-		const uint8 u8_block_size = (uint8)(block_size);
-		const uint64 start_pos = dstream.GetPosition();
-		const uint64 expected_end_pos = start_pos + 2 + block_size;
-
-		// write data block, but write no data, null has no size
-		dstream.Write( value_type );
-		dstream.Write( u8_block_size );
-		dstream.Write( (int8*)key, key_length );
-
-		ISDSanityCheckCoreDebugMacro( dstream.GetPosition() == expected_end_pos ); // this should always be true
-		return (dstream.GetPosition() == expected_end_pos);				
-		}
-
 	// VT_Bool
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const bool &value )
 		{
-		uint8 u8value = value;
+		uint8 u8value = value; // convert it to uint8, since we need a u8 value, not bool
 		return write_small_block<ValueType::VT_Bool,uint8,1>( this->dstream, key, key_length, &u8value );
 		}
-
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<bool> &value )
 		{
-		if( value.HasValue() )
-			{
-			uint8 u8value = value.Value().second;
-			return write_small_block<ValueType::VT_Bool,uint8,1>( this->dstream, key, key_length, &u8value );
-			}
-		else
-			{
-			return write_null_block( this->dstream, key, key_length );
-			}
+		const auto val = value.Value(); // get the optional value
+		const uint8 u8val = val.second; // convert it to uint8 (even if it does not exits, as it is optional), since we need a u8 value, not bool
+		return write_small_block<ValueType::VT_Bool,uint8,1>( this->dstream, key, key_length, val.first ? &u8val : nullptr );
 		}
 
 	// VT_Int				 

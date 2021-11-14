@@ -15,11 +15,11 @@
 		}\
 	bool EntityReader::Read( const char *key, const uint8 key_size_in_bytes, optional_value<object_type> &dest_variable )\
 		{\
-		object_type temp_val = {};\
-		reader_status status = read_small_block<value_type,object_type,1,true>( this->sstream, key, key_size_in_bytes, &temp_val );\
+		object_type temp_dest = {};\
+		reader_status status = read_small_block<value_type,object_type,1,true>( this->sstream, key, key_size_in_bytes, &temp_dest );\
 		if( status == reader_status::fail ) { return false; }\
-		else if( status == reader_status::success_null ) { dest_variable.Clear(); return true; }\
-		else { dest_variable.Set(temp_val); return true;}\
+		else if( status == reader_status::success_empty ) { dest_variable.Clear(); return true; }\
+		else { dest_variable.Set(temp_dest); return true;}\
 		}
 #define ImplementSmallBlockVectorReader( value_type , object_type , item_type , item_count )\
 	bool EntityReader::Read( const char *key, const uint8 key_size_in_bytes, object_type &dest_variable )\
@@ -28,72 +28,77 @@
 		}\
 	bool EntityReader::Read( const char *key, const uint8 key_size_in_bytes, optional_value<object_type> &dest_variable )\
 		{\
-		object_type temp_val = {};\
-		reader_status status = read_small_block<value_type,item_type,item_count,true>( this->sstream, key, key_size_in_bytes, value_ptr(temp_val) );\
+		object_type temp_dest = {};\
+		reader_status status = read_small_block<value_type,item_type,item_count,true>( this->sstream, key, key_size_in_bytes, value_ptr(temp_dest) );\
 		if( status == reader_status::fail ) { return false; }\
-		else if( status == reader_status::success_null ) { dest_variable.Clear(); return true; }\
-		else { dest_variable.Set(temp_val); return true;}\
+		else if( status == reader_status::success_empty ) { dest_variable.Clear(); return true; }\
+		else { dest_variable.Set(temp_dest); return true; }\
 		}
 
 namespace ISD
 	{
 	enum reader_status
 		{
-		fail, // general fail, (or value was null, but null is not allowed)
-		success_null, // success, value was null
+		fail, // general fail, (or value was empty, but empty is not allowed for this value)
+		success_empty, // success, value was empty
 		success // success, has value
 		};
 
 	// template method that Reads a small block of a specific ValueType VT to the stream. Since most value types 
 	// can have different bit depths, the second parameter I is the actual type of the data stored. The data can have more than one values of type I, the count is stored in IC.
-	template<ValueType VT, class I, size_t IC, bool null_is_allowed> reader_status read_small_block( MemoryReadStream &sstream, const char *key, const uint8 key_size_in_bytes, I *dest_data )
+	template<ValueType VT, class I, size_t IC, bool empty_value_is_allowed> reader_status read_small_block( MemoryReadStream &sstream, const char *key, const uint8 key_size_in_bytes, I *dest_data )
 		{
 		// record start position, for validation
 		const uint64 start_pos = sstream.GetPosition();
 
 		// read uint8 value_type, check the value
 		const uint8 value_type = sstream.Read<uint8>();
-		bool has_null_value = false;
 		if( value_type != (uint8)VT )
 			{
-			// not the main expected value, check for null value
-			if( null_is_allowed && value_type == (uint8)ValueType::VT_Null )
-				{
-				// this is a null value, which is ok
-				has_null_value = true;
-				}
-			else
-				{
-				// either another value, or null is not ok
-				ISDErrorLog << "The type in the input stream:" << value_type << " does not match expected type: " << (uint8)VT << ISDErrorLogEnd;
-				return reader_status::fail;
-				}
+			// not the expected type
+			ISDErrorLog << "The type in the input stream:" << value_type << " does not match expected type: " << (uint8)VT << ISDErrorLogEnd;
+			return reader_status::fail;
 			}
 
-		// calc the expected sizes, if null value, the data size must be 0, else it is the expected size based on the item type (I) and count (IC)
-		const uint8 dest_data_size_in_bytes = (has_null_value) ? 0 : sizeof( I ) * IC;
-		const uint64 expected_block_size = dest_data_size_in_bytes + key_size_in_bytes;
-		const uint64 expected_end_pos = start_pos + 2 + expected_block_size;
+		// calc the expected possible sizes. if empty value, the data size must be 0, else it is the expected size based on the item type (I) and count (IC)
+		const uint64 dest_data_size_in_bytes = sizeof( I ) * IC;
+		const uint64 expected_block_size_if_empty = key_size_in_bytes;
+		const uint64 expected_block_size = dest_data_size_in_bytes + expected_block_size_if_empty;
 
 		ISDSanityCheckCoreDebugMacro( key_size_in_bytes <= EntityMaxKeyLength ); 
 		ISDSanityCheckCoreDebugMacro( expected_block_size < 256 ); // must fit in a byte
 
-		// read in size of the small block
+		// read in size of the small block, if the size does not match the expected block size, check if empty value is ok (is_optional_value == true), and if not raise error
+		// any size other than expected_block_size is regarded as empty, and we will check that size if empty is actually allowed
 		const uint64 block_size = sstream.Read<uint8>();
-		if( block_size != expected_block_size )
+		const bool is_empty_value = (block_size != expected_block_size) ? true : false;
+		if( is_empty_value  )
 			{
-			ISDErrorLog << "The size of the block in the input stream:" << block_size << " does not match expected size: " << expected_block_size << ISDErrorLogEnd;
-			return reader_status::fail;;
+			if( empty_value_is_allowed )
+				{
+				// if empty is allowed, make sure that we have that block size.
+				if( block_size != expected_block_size_if_empty )
+					{
+					ISDErrorLog << "The size of the block in the input stream:" << block_size << " does not match expected possible sizes: " << expected_block_size_if_empty << " (if empty value) or " << expected_block_size << " (if non-empty) " << ISDErrorLogEnd;
+					return reader_status::fail;
+					}
+				}
+			else
+				{
+				// empty is not allowed, so regardless of the size, it is wrong, error out
+				ISDErrorLog << "The size of the block in the input stream:" << block_size << " does not match expected possible size (empty is not allowed): " << expected_block_size << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
 			}
 
-		// read in the values, IC is the number of values
-		if( !has_null_value )
+		// read in the value(s), IC is the number of values
+		if( !is_empty_value )
 			{
 			const uint64 read_count = sstream.Read( dest_data , IC );
 			if( read_count != IC )
 				{
 				ISDErrorLog << "Could not read all expected values from the input stream. Expected count: " << IC << " read count: " << read_count << ISDErrorLogEnd;
-				return reader_status::fail;;
+				return reader_status::fail;
 				}
 			}
 
@@ -110,6 +115,7 @@ namespace ISD
 			}
 
 		// get the position beyond the end of the block, and validate position
+		const uint64 expected_end_pos = (is_empty_value) ? (start_pos + 2 + expected_block_size_if_empty) : (start_pos + 2 + expected_block_size);
 		const uint64 end_pos = sstream.GetPosition();
 		ISDSanityCheckCoreDebugMacro( end_pos == expected_end_pos ); 
 		if( end_pos != expected_end_pos )
@@ -118,12 +124,26 @@ namespace ISD
 			return reader_status::fail;
 			}
 
-		// return success, either value or null
-		if( has_null_value )
-			return reader_status::success_null;
+		// return success, either with value or empty
+		if( is_empty_value )
+			return reader_status::success_empty;
 		else
 			return reader_status::success;
 		};
+
+	// VT_Bool 
+	bool EntityReader::Read( const char *key, const uint8 key_length, bool &dest_variable )
+		{
+		return read_small_block<ValueType::VT_Bool,int8,1,false>( this->sstream, key, key_length, (int8*)&dest_variable ) != reader_status::fail;
+		}
+	bool EntityReader::Read( const char *key, const uint8 key_length, optional_value<bool> &dest_variable )
+		{
+		int8 temp_dest;
+		reader_status status = read_small_block<ValueType::VT_Bool,int8,1,true>( this->sstream, key, key_length, &temp_dest );
+		if( status == reader_status::fail ) { return false; }
+		else if( status == reader_status::success_empty ) { dest_variable.Clear(); return true; }
+		else { dest_variable.Set(temp_dest); return true;}
+		}
 
 	// VT_Int				 
 	ImplementSmallBlockSingleItemReader( ValueType::VT_Int, int8 )
@@ -203,21 +223,5 @@ namespace ISD
 
 	// VT_UUID 
 	ImplementSmallBlockSingleItemReader( ValueType::VT_UUID, UUID )
-
-	// special cases:
-
-	// VT_Bool - convert to int8
-	bool EntityReader::Read( const char *key, const uint8 key_length, bool &dest_variable )
-		{
-		return read_small_block<ValueType::VT_Bool,int8,1,false>( this->sstream, key, key_length, (int8*)&dest_variable ) != reader_status::fail;
-		}
-	bool EntityReader::Read( const char *key, const uint8 key_length, optional_value<bool> &dest_variable )
-		{
-		int8 temp_val;
-		reader_status status = read_small_block<ValueType::VT_Bool,int8,1,true>( this->sstream, key, key_length, &temp_val );
-		if( status == reader_status::fail ) { return false; }
-		else if( status == reader_status::success_null ) { dest_variable.Clear(); return true; }
-		else { dest_variable.Set(temp_val); return true;}
-		}
 
 	};

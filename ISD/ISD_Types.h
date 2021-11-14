@@ -110,8 +110,10 @@ namespace ISD
 	typedef glm::mat3 mat3;
 	typedef glm::mat4 mat4;
 
-	const size_t EntityMaxKeyLength = 40; // maximum size of a name in the entities
+	// maximum size of a name of a value of subchunk in the entities
+	const size_t EntityMaxKeyLength = 40; 
 
+	// status message for functions that return more than a bool status
 	enum class Status
 		{
 		Ok = 0, // no error
@@ -126,6 +128,31 @@ namespace ISD
 		EInvalid = -9, // invalid file, not an ISD file
 		};
 
+	// A Note on how types are either stored in small encoding chunks, or large encoding chunks in the binary files:
+	// 
+	// Small encoding chunks, for any valuetype < 0x40:
+	// * Small values of fixed maximum length, where the payload + length of the key is < 256 bytes
+	// * Used mainly for single items of base types: bools, ints, floats, vec2s, vec3s, vec4s, UUIDs
+	// * Layout:
+	//		uint8 Type; // types 0x00 - 0x3f
+	//		uint8 SizeInBytes; // can be used to skip value if not recognized
+	//		uint8 Value[]; // <- defined size, based on Type (or with extra info inside, if variable size)
+	//		uint8 KeyData[]; // the key of the value (EntityMaxKeyLength is the max length of any key)
+	// 
+	// Large encoding chunks, for any valuetype >= 0x40 
+	// * Uses a uint64 to define size, so basically any useful size
+	// * Used for:
+	//		- Nested chunks
+	//		- Arrays of values
+	//		- Strings (UTF-8 encoded)
+	//		- Data that would not fit in 256 bytes
+	// * Layout:
+	//		uint8 Type; // types 0x40 - 0xff
+	//		uint64 SizeInBytes; // to skip over full block 
+	//		uint8 KeySizeInBytes; // the size of the key of the value (EntityMaxKeyLength is the max length of any key)
+	//		uint8 KeyData[]; // the key of the value 
+	//		uint8 Value[]; // payload
+
 	// reflection and serialization value types
 	enum class ValueType
 		{
@@ -133,7 +160,6 @@ namespace ISD
 		// --- Base value types up to 0x3f use the smaller encoding chunk, and are capped at less than 256 bytes in size
 
 		// --- Base value types, valid range: 0x00 - 0x3f 
-		VT_Null = 0x00, // empty value, can only have 0 size. Explicitly empty, as in that the key exists, but does not have a value.
 		VT_Bool = 0x01, // boolean value, can only be 1 byte in size
 		VT_Int = 0x02, // signed integer value, can be 1, 2, 4, and 8 or in size (8, 16, 32 or 64 bits)
 		VT_UInt = 0x03, // unsigned integer value, can be 1, 2, 4, or 8 bytes in size (8, 16, 32 or 64 bits)

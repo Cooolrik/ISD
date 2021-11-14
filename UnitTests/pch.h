@@ -30,4 +30,17 @@ inline UUID uuid_rand()
 	return id;
 	}
 
+//// random string
+inline std::string str_rand( size_t min_len = 0 , size_t max_len = 1000 )
+	{
+	std::string str;
+	size_t strl = (rand() % (max_len-min_len)) + min_len;
+	for( size_t i = 0; i < strl; ++i )
+		{
+		char s = (char)((rand() % 0x60) + 0x20); // generate ASCII values in the range 0x20 - 0x7f
+		str += s;
+		}
+	}
+
+
 #endif //PCH_H

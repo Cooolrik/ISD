@@ -41,12 +41,15 @@ namespace ISD
 			uint64 GetPosition() const;
 			bool SetPosition( uint64 new_pos );
 
-			// if at EOF return true, which means that Position == Size
+			// if at EOF return true, which means that Position >= Size
 			bool IsEOF() const;
 
 			// FlipByteOrder is set if the stream flips byte order of multibyte values 
 			bool GetFlipByteOrder() const;
 			void SetFlipByteOrder( bool value );
+
+			// Peek at the next byte in the stream, without modifing the Position or any data. If the Position is beyond the end of the stream, the value will be 0
+			uint8 Peek() const;
 
 			// read one item from the memory stream. makes sure to convert endianness
 			template <class T> T Read();
@@ -81,6 +84,14 @@ namespace ISD
 			//template<class T> bool Read( std::vector<T> *dest );
 
 		};
+
+	inline uint8 MemoryReadStream::Peek() const
+		{
+		if( this->DataPosition >= this->DataSize )
+			return 0;
+		else
+			return this->Data[this->DataPosition];
+		}
 
 	inline uint64 MemoryReadStream::ReadRawData( void *dest, uint64 count )
 		{

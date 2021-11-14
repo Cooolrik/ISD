@@ -49,13 +49,13 @@ int main()
 	const void *p1 = &(val1.second);
 	const void *p2 = &(val2.second);
 
-	ISD::TestNode tn;
+	//ISD::TestNode tn;
 
-	tn.GetName();
+	//tn.GetName();
 
-	const auto &t = tn.GetTransformation();
+	//const auto &t = tn.GetTransformation();
 
-	const auto &tr = t.GetTranslation();
+	//const auto &tr = t.GetTranslation();
 
 	RUN_TEST( safe_thread_map_test );
 

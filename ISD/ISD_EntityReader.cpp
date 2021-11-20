@@ -18,8 +18,8 @@
 		object_type temp_dest = {};\
 		reader_status status = read_small_block<value_type,object_type,1,true>( this->sstream, key, key_size_in_bytes, &temp_dest );\
 		if( status == reader_status::fail ) { return false; }\
-		else if( status == reader_status::success_empty ) { dest_variable.Clear(); return true; }\
-		else { dest_variable.Set(temp_dest); return true;}\
+		else if( status == reader_status::success_empty ) { dest_variable.clear(); return true; }\
+		else { dest_variable.set(temp_dest); return true;}\
 		}
 #define ImplementSmallBlockVectorReader( value_type , object_type , item_type , item_count )\
 	bool EntityReader::Read( const char *key, const uint8 key_size_in_bytes, object_type &dest_variable )\
@@ -31,8 +31,8 @@
 		object_type temp_dest = {};\
 		reader_status status = read_small_block<value_type,item_type,item_count,true>( this->sstream, key, key_size_in_bytes, value_ptr(temp_dest) );\
 		if( status == reader_status::fail ) { return false; }\
-		else if( status == reader_status::success_empty ) { dest_variable.Clear(); return true; }\
-		else { dest_variable.Set(temp_dest); return true; }\
+		else if( status == reader_status::success_empty ) { dest_variable.clear(); return true; }\
+		else { dest_variable.set(temp_dest); return true; }\
 		}
 
 namespace ISD
@@ -141,8 +141,8 @@ namespace ISD
 		int8 temp_dest;
 		reader_status status = read_small_block<ValueType::VT_Bool,int8,1,true>( this->sstream, key, key_length, &temp_dest );
 		if( status == reader_status::fail ) { return false; }
-		else if( status == reader_status::success_empty ) { dest_variable.Clear(); return true; }
-		else { dest_variable.Set(temp_dest); return true;}
+		else if( status == reader_status::success_empty ) { dest_variable.clear(); return true; }
+		else { dest_variable.set(temp_dest); return true;}
 		}
 
 	// VT_Int				 

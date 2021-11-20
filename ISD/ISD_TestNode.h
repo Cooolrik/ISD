@@ -37,8 +37,8 @@ namespace ISD
 					TestNode()
 						{
 						//this->Name.Set( "Name" );
-						this->id.Set( -45 );
-						this->transformation.Set( Transformation() );
+						this->id.set( -45 );
+						this->transformation.set( Transformation() );
 						}
 
 					//const std::string &GetName() const

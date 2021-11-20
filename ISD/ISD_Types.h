@@ -148,10 +148,10 @@ namespace ISD
 	//		- Data that would not fit in 256 bytes
 	// * Layout:
 	//		uint8 Type; // types 0x40 - 0xff
-	//		uint64 SizeInBytes; // to skip over full block 
+	//		uint64 SizeInBytes; // to skip over rest of this block, size after this value  
 	//		uint8 KeySizeInBytes; // the size of the key of the value (EntityMaxKeyLength is the max length of any key)
 	//		uint8 KeyData[]; // the key of the value 
-	//		uint8 Value[]; // payload
+	//		uint8 Value[]; // <- defined size, equal to the rest of SizeInBytes after the key data ( sizeof(KeySizeInBytes)=1 + KeySizeInBytes bytes) 
 
 	// reflection and serialization value types
 	enum class ValueType
@@ -334,29 +334,30 @@ namespace ISD
 		{
 		private:
 			T value = {};
-			bool has_value = false;
+			bool hasvalue = false;
 		public:
-			void Clear() { this->value = {};  this->has_value = false; }
-			void Set( const T &_value ) { this->has_value = true; this->value = _value; }
-			bool HasValue() const { return this->has_value; }
-			const std::pair<bool, const T&> Value() const { return std::pair<bool, const T&>( this->has_value, this->value ); }
+			void clear() { this->value = {};  this->hasvalue = false; }
+			void set( const T &_value ) { this->hasvalue = true; this->value = _value; }
+			bool has_value() const { return this->hasvalue; }
+			const std::pair<bool, const T&> value() const { return std::pair<bool, const T&>( this->has_value, this->value ); }
 		};
 
 	extern const std::vector<size_t> indexed_array_empty_index; // used as replacement reference when returning an empty index
 	template<class T> class indexed_array
 		{
 		private:
-			std::vector<T> data = {};
+			std::vector<T> values = {};
 			std::vector<size_t> *index = nullptr;
 			
 		public:
-			indexed_array( const std::vector<T> &_data ) : data( _data ) {}
-			indexed_array( const std::vector<T> &_data, const std::vector<size_t> _index ) : data( _data ) { this->index = new std::vector<size_t>(_index); }
-			~indexed_array() 
-				{
-				if( this->index ) { delete[] this->index; }
-				}
-			const std::vector<T> &Data() const { return this->data; }
+			indexed_array( const std::vector<T> &_values ) : values( _values ) {}
+			indexed_array( const std::vector<T> &_values, const std::vector<size_t> &_index ) : values( _values ) { this->index = new std::vector<size_t>(_index); }
+			~indexed_array() { if( this->index ) { delete[] this->index; } }
+
+			// read/write accessors for values and index
+			std::vector<T> &values() { return this->data; }
+
+			const std::vector<T> &values() const { return this->data; }
 			bool HasIndex() const { return (this->index != nullptr); }
 			const std::pair<bool, const std::vector<size_t> &> Index() const 
 				{ 

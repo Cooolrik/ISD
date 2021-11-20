@@ -15,9 +15,19 @@
 		}\
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &src_variable )\
 		{\
-		const auto val = src_variable.Value();\
+		const auto val = src_variable.value();\
 		return write_small_block<value_type,object_type,1>( this->dstream, key, key_length, val.first ? &val.second : nullptr );\
+		}\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const indexed_array<object_type> &src_variable )\
+		{\
+		return write_large_block_indexed_array<value_type,object_type,object_type,1>( this->dstream, key, key_length, &src_variable );\
+		}\
+	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<indexed_array<object_type>> &src_variable )\
+		{\
+		const auto val = src_variable.value();\
+		return write_large_block_indexed_array<value_type,object_type,object_type,1>( this->dstream, key, key_length, val.first ? &val.second : nullptr );\
 		}
+
 #define ImplementSmallBlockVectorWriter( value_type , object_type , item_type , item_count )\
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const object_type &src_variable )\
 		{\
@@ -25,7 +35,7 @@
 		}\
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<object_type> &src_variable )\
 		{\
-		const auto val = src_variable.Value();\
+		const auto val = src_variable.value();\
 		return write_small_block<value_type,item_type,item_count>( this->dstream, key, key_length, val.first ? value_ptr(val.second) : nullptr );\
 		}
 
@@ -53,9 +63,129 @@ namespace ISD
 			}
 		dstream.Write( (int8*)key, key_length );
 
-		ISDSanityCheckCoreDebugMacro( dstream.GetPosition() == expected_end_pos ); // this should always be true
+		const uint64 end_pos = dstream.GetPosition();
+		ISDSanityCheckCoreDebugMacro( end_pos == expected_end_pos ); 
 		return (dstream.GetPosition() == expected_end_pos);			
 		};
+
+	// returns the stream position of the start of the block, to be used when writing the size when ending the block
+	std::pair<bool, uint64> begin_large_block( MemoryWriteStream &dstream, ValueType VT, const char *key, const uint8 key_size_in_bytes )
+		{
+		const uint8 value_type = (uint8)VT;
+		const uint64 start_pos = dstream.GetPosition();
+		ISDSanityCheckDebugMacro( key_size_in_bytes <= EntityMaxKeyLength ); // max key length
+		const uint64 expected_end_pos = start_pos + key_size_in_bytes + 10; // sizeof(value_type)=1 + sizeof(block_size)=8 + sizeof(key_size_in_bytes)=1 + key_size_in_bytes;
+
+		// write block header 
+		// write empty stand in value for now (MAXINT64 on purpose), which is definitely 
+		// wrong, as to trigger any test if the value is not overwritten with the correct value
+		dstream.Write( value_type );
+		dstream.Write( (uint64)MAXINT64 );
+		dstream.Write( key_size_in_bytes );
+		dstream.Write( (int8*)key, key_size_in_bytes );
+
+		const uint64 end_pos = dstream.GetPosition();
+		ISDSanityCheckCoreDebugMacro( end_pos == expected_end_pos ); 
+		return std::pair<bool, uint64>( (end_pos == expected_end_pos), start_pos );
+		}
+
+	// ends the block, write the size of the block
+	bool end_large_block( MemoryWriteStream &dstream, uint64 start_pos )
+		{
+		const uint64 end_pos = dstream.GetPosition();
+		const uint64 block_size = end_pos - start_pos - 9; // total block size - ( sizeof( valuetype )=1 + sizeof( block_size_variable )=8 )
+		dstream.SetPosition( start_pos + 1 ); // skip over the valuetype
+		dstream.Write( block_size );
+		dstream.SetPosition( end_pos ); // move back the where we were
+		return (end_pos > start_pos); // only thing we really can check
+		}
+
+	// write indexed array to stream
+	template<ValueType VT, class T, class I, size_t I_per_T > bool write_large_block_indexed_array( MemoryWriteStream &dstream, const char *key, const uint8 key_size_in_bytes, const indexed_array<T> *data )
+		{
+		// assuming size_t is same size as uint64
+		// if this fails, the code needs to be updated to support other sizes of size_t
+		static_assert(sizeof( uint64 ) == sizeof( size_t ) , "Unsupported size_t, current code requires it to be 8 bytes in size, equal to uint64");
+
+		// this code only supports values that are exactly the multiple I_per_T of the items it contins
+		// eg basic types are ok, since I_per_T is 1. vec3 etc are also ok, as vec3 is I_per_T = 3
+		static_assert(sizeof(I)*I_per_T == sizeof(T) , "Size of T must be exactly size of I times I_per_T");
+
+		// begin a large block, and store the start position returned from it
+		auto begin_status = begin_large_block( dstream, VT, key, key_size_in_bytes );
+		if( !begin_status.first )
+			{
+			ISDErrorLog << "begin_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		const uint64 start_pos = dstream.GetPosition();
+
+		// if data is empty, mark flags with empty and return
+		uint64 expected_end_pos = 0;
+		if( data == nullptr )
+			{
+			// empty data, mark flags field empty
+			dstream.Write( (uint16)0 );
+
+			// calc the end position 
+			expected_end_pos = start_pos + sizeof(uint16);
+			}
+		else
+			{
+			// indexed array flags: size of each item (if need to decode array outside regular decoding) and bit set if index is used 
+			const uint16 per_item_size = (uint16)sizeof( I ); // size of each item I in T (max 255 bytes per item)
+			ISDSanityCheckCoreDebugMacro( per_item_size <= 0xff ); 
+			const uint16 has_index = (data->HasIndex()) ? 0x100 : 0x0;
+			const uint16 index_array_flags = has_index | per_item_size;
+			dstream.Write( index_array_flags );
+
+			// write the item count and items
+			const std::vector<T> &data_items = data->values();
+			const uint64 num_items = data_items.size() * I_per_T;
+			const I *items = (const I *)data_items.data();
+			dstream.Write( num_items );
+			dstream.Write( items , num_items );
+
+			// if we have an index, write it 
+			uint64 num_index_items = 0;
+			if( has_index )
+				{
+				std::vector<size_t> index = data->Index().second;
+
+				// cast to uint64* and write to stream 
+				// (the code assumes size_t and uint64 are the same size, and can be cast, look at static_assert above)
+				num_index_items = (uint64)index.size();
+				const uint64 *index_data = (const uint64 *)index.data();
+				dstream.Write( index_data, num_index_items );
+				}
+
+			// make sure all data was written
+			expected_end_pos =	start_pos
+								+ sizeof(uint16) // the flags
+								+ sizeof(uint64) // the item count
+								+ (num_items * sizeof( I )) // the items
+								+ ((num_index_items * sizeof( uint64 )) ); // the list of indices, if any
+			}
+
+		// end the block by going back to the start and writing the start position offset
+		if( !end_large_block( dstream, begin_status.second ) )
+			{
+			ISDErrorLog << "end_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// make sure we are at the expected end pos
+		const uint64 end_pos = dstream.GetPosition();
+		if( end_pos != expected_end_pos )
+			{
+			ISDErrorLog << "End position of data " << end_pos << " do not equal the expected end position which is " << expected_end_pos << ISDErrorLogEnd;
+			return false;
+			}
+
+		return true;
+		}
+
 
 	// VT_Bool
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const bool &value )
@@ -65,7 +195,7 @@ namespace ISD
 		}
 	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<bool> &value )
 		{
-		const auto val = value.Value(); // get the optional value
+		const auto val = value.value(); // get the optional value
 		const uint8 u8val = val.second; // convert it to uint8 (even if it does not exits, as it is optional), since we need a u8 value, not bool
 		return write_small_block<ValueType::VT_Bool,uint8,1>( this->dstream, key, key_length, val.first ? &u8val : nullptr );
 		}

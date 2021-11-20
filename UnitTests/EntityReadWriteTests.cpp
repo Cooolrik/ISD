@@ -17,8 +17,10 @@ namespace UnitTests
 	TEST_CLASS( EntityReadWriteTests )
 		{
 
-		template<class T> void TestEntityWriter_TestWriteValue( const MemoryWriteStream &ws, EntityWriter &ew, const std::vector<std::string> &key_names, const T value )
+		template<class T> void TestEntityWriter_TestWriteValue( const MemoryWriteStream &ws, EntityWriter &ew, const std::vector<std::string> &key_names)
 			{
+			const T value = random_value<T>();
+
 			// write 
 			const std::string key = key_names[rand() % key_names.size()];
 			uint64 start_pos = ws.GetPosition();
@@ -30,9 +32,9 @@ namespace UnitTests
 			// write an optional version of the value
 			optional_value<T> opt_value;
 			if( rand() % 2 == 0 )
-				opt_value.Set( value );
+				opt_value.set( value );
 			else
-				opt_value.Clear();
+				opt_value.clear();
 			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), opt_value );
 			Assert::IsTrue( write_successfully );
 
@@ -49,15 +51,31 @@ namespace UnitTests
 			optional_value<T> read_back_opt_value;
 			read_successfully = er.Read( key.c_str() , (uint8)key.size(), read_back_opt_value );
 			Assert::IsTrue( read_successfully );
-			Assert::IsTrue( opt_value.HasValue() == read_back_opt_value.HasValue() );
-			if( opt_value.HasValue() )
+			Assert::IsTrue( opt_value.has_value() == read_back_opt_value.has_value() );
+			if( opt_value.has_value() )
 				{
-				const T val1 = opt_value.Value().second;
-				const T val2 = read_back_opt_value.Value().second;
+				const T val1 = opt_value.value().second;
+				const T val2 = read_back_opt_value.value().second;
 				Assert::IsTrue( memcmp( &val1, &val2, sizeof( val1 ) ) == 0 );
 				}
 			}
 
+		template<class T> void TestEntityWriter_TestWriteVector( const MemoryWriteStream &ws, EntityWriter &ew, const std::vector<std::string> &key_names )
+			{
+			indexed_array<T> arr = random_array<T>();
+
+			// write 
+			const std::string key = key_names[rand() % key_names.size()];
+			uint64 start_pos = ws.GetPosition();
+			//uint64 expected_pos = start_pos + 2 + sizeof( value ) + key.size();
+			bool write_successfully = ew.Write( key.c_str(), (uint8)key.size(), arr );
+			//Assert::IsTrue( ws.GetPosition() == expected_pos );
+			Assert::IsTrue( write_successfully );
+
+
+
+
+			}
 		TEST_METHOD( TestEntityWriterAndReadback )
 			{
 			for( uint swap_byte_order_flag=0; swap_byte_order_flag<2; ++swap_byte_order_flag )
@@ -81,87 +99,64 @@ namespace UnitTests
 					std::string( "z8ERgfAM8" ),
 					};
 
-				TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names, true );
-				TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names, false );
+				TestEntityWriter_TestWriteValue<bool>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<int8>( ws, ew, key_names, uint8_rand() );
-				TestEntityWriter_TestWriteValue<int16>( ws, ew, key_names, uint16_rand() );
-				TestEntityWriter_TestWriteValue<int32>( ws, ew, key_names, uint32_rand() );
-				TestEntityWriter_TestWriteValue<int64>( ws, ew, key_names, uint64_rand() );
+				TestEntityWriter_TestWriteValue<int8>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<int16>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<int32>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<int64>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<uint8>( ws, ew, key_names, uint8_rand() );
-				TestEntityWriter_TestWriteValue<uint16>( ws, ew, key_names, uint16_rand() );
-				TestEntityWriter_TestWriteValue<uint32>( ws, ew, key_names, uint32_rand() );
-				TestEntityWriter_TestWriteValue<uint64>( ws, ew, key_names, uint64_rand() );
+				TestEntityWriter_TestWriteValue<uint8>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<uint16>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<uint32>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<uint64>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<float>( ws, ew, key_names, float_rand() );
-				TestEntityWriter_TestWriteValue<double>( ws, ew, key_names, double_rand() );
+				TestEntityWriter_TestWriteValue<float>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<double>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<fvec2>( ws, ew, key_names, fvec2( float_rand(), float_rand() ) );
-				TestEntityWriter_TestWriteValue<dvec2>( ws, ew, key_names, dvec2( double_rand(), double_rand() ) );
-				TestEntityWriter_TestWriteValue<fvec3>( ws, ew, key_names, fvec3( float_rand(), float_rand(), float_rand() ) );
-				TestEntityWriter_TestWriteValue<dvec3>( ws, ew, key_names, dvec3( double_rand(), double_rand(), double_rand() ) );
-				TestEntityWriter_TestWriteValue<fvec4>( ws, ew, key_names, fvec4( float_rand(), float_rand(), float_rand(), float_rand() ) );
-				TestEntityWriter_TestWriteValue<dvec4>( ws, ew, key_names, dvec4( double_rand(), double_rand(), double_rand(), double_rand() ) );
+				TestEntityWriter_TestWriteValue<fvec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<dvec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<fvec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<dvec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<fvec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<dvec4>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<i8vec2>( ws, ew, key_names, i8vec2( uint8_rand(), uint8_rand() ) );
-				TestEntityWriter_TestWriteValue<i16vec2>( ws, ew, key_names, i16vec2( uint16_rand(), uint16_rand() ) );
-				TestEntityWriter_TestWriteValue<i32vec2>( ws, ew, key_names, i32vec2( uint32_rand(), uint32_rand() ) );
-				TestEntityWriter_TestWriteValue<i64vec2>( ws, ew, key_names, i64vec2( uint64_rand(), uint64_rand() ) );
-				TestEntityWriter_TestWriteValue<i8vec3>( ws, ew, key_names, i8vec3( uint8_rand(), uint8_rand(), uint8_rand() ) );
-				TestEntityWriter_TestWriteValue<i16vec3>( ws, ew, key_names, i16vec3( uint16_rand(), uint16_rand(), uint16_rand() ) );
-				TestEntityWriter_TestWriteValue<i32vec3>( ws, ew, key_names, i32vec3( uint32_rand(), uint32_rand(), uint32_rand() ) );
-				TestEntityWriter_TestWriteValue<i64vec3>( ws, ew, key_names, i64vec3( uint64_rand(), uint64_rand(), uint64_rand() ) );
-				TestEntityWriter_TestWriteValue<i8vec4>( ws, ew, key_names, i8vec4( uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() ) );
-				TestEntityWriter_TestWriteValue<i16vec4>( ws, ew, key_names, i16vec4( uint16_rand(), uint16_rand(), uint16_rand(), uint16_rand() ) );
-				TestEntityWriter_TestWriteValue<i32vec4>( ws, ew, key_names, i32vec4( uint32_rand(), uint32_rand(), uint32_rand(), uint32_rand() ) );
-				TestEntityWriter_TestWriteValue<i64vec4>( ws, ew, key_names, i64vec4( uint64_rand(), uint64_rand(), uint64_rand(), uint64_rand() ) );
+				TestEntityWriter_TestWriteValue<i8vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i16vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i32vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i64vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i8vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i16vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i32vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i64vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i8vec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i16vec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i32vec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<i64vec4>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<u8vec2>( ws, ew, key_names, u8vec2( uint8_rand(), uint8_rand() ) );
-				TestEntityWriter_TestWriteValue<u16vec2>( ws, ew, key_names, u16vec2( uint16_rand(), uint16_rand() ) );
-				TestEntityWriter_TestWriteValue<u32vec2>( ws, ew, key_names, u32vec2( uint32_rand(), uint32_rand() ) );
-				TestEntityWriter_TestWriteValue<u64vec2>( ws, ew, key_names, u64vec2( uint64_rand(), uint64_rand() ) );
-				TestEntityWriter_TestWriteValue<u8vec3>( ws, ew, key_names, u8vec3( uint8_rand(), uint8_rand(), uint8_rand() ) );
-				TestEntityWriter_TestWriteValue<u16vec3>( ws, ew, key_names, u16vec3( uint16_rand(), uint16_rand(), uint16_rand() ) );
-				TestEntityWriter_TestWriteValue<u32vec3>( ws, ew, key_names, u32vec3( uint32_rand(), uint32_rand(), uint32_rand() ) );
-				TestEntityWriter_TestWriteValue<u64vec3>( ws, ew, key_names, u64vec3( uint64_rand(), uint64_rand(), uint64_rand() ) );
-				TestEntityWriter_TestWriteValue<u8vec4>( ws, ew, key_names, u8vec4( uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() ) );
-				TestEntityWriter_TestWriteValue<u16vec4>( ws, ew, key_names, u16vec4( uint16_rand(), uint16_rand(), uint16_rand(), uint16_rand() ) );
-				TestEntityWriter_TestWriteValue<u32vec4>( ws, ew, key_names, u32vec4( uint32_rand(), uint32_rand(), uint32_rand(), uint32_rand() ) );
-				TestEntityWriter_TestWriteValue<u64vec4>( ws, ew, key_names, u64vec4( uint64_rand(), uint64_rand(), uint64_rand(), uint64_rand() ) );
+				TestEntityWriter_TestWriteValue<u8vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u16vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u32vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u64vec2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u8vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u16vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u32vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u64vec3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u8vec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u16vec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u32vec4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<u64vec4>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<fmat2>( ws, ew, key_names, fmat2(
-					float_rand(), float_rand(),
-					float_rand(), float_rand()
-				) );
-				TestEntityWriter_TestWriteValue<dmat2>( ws, ew, key_names, dmat2(
-					double_rand(), double_rand(),
-					double_rand(), double_rand()
-				) );
-				TestEntityWriter_TestWriteValue<fmat3>( ws, ew, key_names, fmat3(
-					float_rand(), float_rand(), float_rand(),
-					float_rand(), float_rand(), float_rand(),
-					float_rand(), float_rand(), float_rand()
-				) );
-				TestEntityWriter_TestWriteValue<dmat3>( ws, ew, key_names, dmat3(
-					double_rand(), double_rand(), double_rand(),
-					double_rand(), double_rand(), double_rand(),
-					double_rand(), double_rand(), double_rand()
-				) );
-				TestEntityWriter_TestWriteValue<fmat4>( ws, ew, key_names, fmat4(
-					float_rand(), float_rand(), float_rand(), float_rand(),
-					float_rand(), float_rand(), float_rand(), float_rand(),
-					float_rand(), float_rand(), float_rand(), float_rand(),
-					float_rand(), float_rand(), float_rand(), float_rand()
-				) );
-				TestEntityWriter_TestWriteValue<dmat4>( ws, ew, key_names, dmat4(
-					double_rand(), double_rand(), double_rand(), double_rand(),
-					double_rand(), double_rand(), double_rand(), double_rand(),
-					double_rand(), double_rand(), double_rand(), double_rand(),
-					double_rand(), double_rand(), double_rand(), double_rand()
-				) );
+				TestEntityWriter_TestWriteValue<fmat2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<dmat2>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<fmat3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<dmat3>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<fmat4>( ws, ew, key_names );
+				TestEntityWriter_TestWriteValue<dmat4>( ws, ew, key_names );
 
-				TestEntityWriter_TestWriteValue<UUID>( ws, ew, key_names, uuid_rand() );
+				TestEntityWriter_TestWriteValue<UUID>( ws, ew, key_names );
+
+				//TestEntityWriter_TestWriteVector<int8>( ws, ew, key_names );
 				}
 			}
 		};

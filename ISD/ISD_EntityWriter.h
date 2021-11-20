@@ -10,7 +10,6 @@ namespace ISD
 	{
 	class MemoryWriteStream;
 
-
 	class EntityWriter
 		{
 		private:
@@ -148,5 +147,137 @@ namespace ISD
 			// VT_UUID				   
 			bool Write( const char *key, const uint8 key_length, const UUID &value );
 			bool Write( const char *key, const uint8 key_length, const optional_value<UUID> &value );
+
+			// VT_Array_Bool			
+			bool Write( const char *key, const uint8 key_length, const indexed_array<bool> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<bool>> &value );
+
+			// VT_Array_Int				 
+			bool Write( const char *key, const uint8 key_length, const indexed_array<int8> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<int16> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<int32> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<int64> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<int8>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<int16>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<int32>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<int64>> &value );
+
+			// VT_Array_UInt				 
+			bool Write( const char *key, const uint8 key_length, const indexed_array<uint8> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<uint16> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<uint32> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<uint64> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<uint8>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<uint16>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<uint32>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<uint64>> &value );
+
+			// VT_Array_Float				
+			bool Write( const char *key, const uint8 key_length, const indexed_array<float> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<double> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<float>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<double>> &value );
+
+			// VT_Array_Vec2				 
+			bool Write( const char *key, const uint8 key_length, const indexed_array<fvec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<dvec2> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<fvec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<dvec2>> &value );
+
+			// VT_Array_Vec3				  
+			bool Write( const char *key, const uint8 key_length, const indexed_array<fvec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<dvec3> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<fvec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<dvec3>> &value );
+
+			// VT_Array_Vec4				  
+			bool Write( const char *key, const uint8 key_length, const indexed_array<fvec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<dvec4> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<fvec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<dvec4>> &value );
+
+			// VT_Array_IVec2				 
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i8vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i16vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i32vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i64vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i8vec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i16vec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i32vec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i64vec2>> &value );
+
+			// VT_Array_IVec3				 
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i8vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i16vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i32vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i64vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i8vec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i16vec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i32vec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i64vec3>> &value );
+
+			// VT_Array_IVec4					   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i8vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i16vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i32vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<i64vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i8vec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i16vec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i32vec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<i64vec4>> &value );
+
+			// VT_Array_UVec2				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u8vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u16vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u32vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u64vec2> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u8vec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u16vec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u32vec2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u64vec2>> &value );
+
+			// VT_Array_UVec3				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u8vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u16vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u32vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u64vec3> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u8vec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u16vec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u32vec3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u64vec3>> &value );
+
+			// VT_Array_UVec4				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u8vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u16vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u32vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<u64vec4> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u8vec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u16vec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u32vec4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<u64vec4>> &value );
+
+			// VT_Array_Mat2				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<fmat2> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<dmat2> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<fmat2>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<dmat2>> &value );
+
+			// VT_Array_Mat3				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<fmat3> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<dmat3> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<fmat3>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<dmat3>> &value );
+
+			// VT_Array_Mat4				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<fmat4> &value );
+			bool Write( const char *key, const uint8 key_length, const indexed_array<dmat4> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<fmat4>> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<dmat4>> &value );
+
+			// VT_Array_UUID				   
+			bool Write( const char *key, const uint8 key_length, const indexed_array<UUID> &value );
+			bool Write( const char *key, const uint8 key_length, const optional_value<indexed_array<UUID>> &value );
+
+
 		};
 	};

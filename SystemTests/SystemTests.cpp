@@ -29,25 +29,25 @@ namespace ISD
 
 int main()
 	{
-	glm::vec2 v;
+	//glm::vec2 v;
 
 	//ISD::Log::Error() << "In read_small_block, the type in the input stream:" << 1 << " does not match expected type: " << 3 << std::endl;
 
 	//BoolWriter(  )
-
-	auto val = glm::value_ptr( v );
-
-	std::vector<double> dat1 = {1,2,3,4,5,6,7,8,9,10};
-	std::vector<double> dat2 = {1,2,3,4,5,6,7,8,9,10};
-
-	ISD::indexed_array<double> arr1( dat1 );
-	ISD::indexed_array<double> arr2( dat2 );
-
-	const auto val1 = arr1.Index();
-	const auto val2 = arr2.Index();
-
-	const void *p1 = &(val1.second);
-	const void *p2 = &(val2.second);
+	//
+	//auto val = glm::value_ptr( v );
+	//
+	//std::vector<double> dat1 = {1,2,3,4,5,6,7,8,9,10};
+	//std::vector<double> dat2 = {1,2,3,4,5,6,7,8,9,10};
+	//
+	//ISD::indexed_array<double> arr1( dat1 );
+	//ISD::indexed_array<double> arr2( dat2 );
+	//
+	//const auto val1 = arr1.Index();
+	//const auto val2 = arr2.Index();
+	//
+	//const void *p1 = &(val1.second);
+	//const void *p2 = &(val2.second);
 
 	//ISD::TestNode tn;
 

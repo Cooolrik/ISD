@@ -1,3 +1,6 @@
+// ISD Copyright (c) 2021 Ulrik Lindahl
+// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
+
 #include "ISD_EntityReader.h"
 #include "ISD_MemoryReadStream.h"
 #include "ISD_Log.h"

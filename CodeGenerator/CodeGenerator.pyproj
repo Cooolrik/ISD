@@ -25,9 +25,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CodeGenerator.py" />
-    <Compile Include="ISD_EntityWriter.py">
+    <Compile Include="Generators\ISD_EntityWriter.py">
       <SubType>Code</SubType>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Generators\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

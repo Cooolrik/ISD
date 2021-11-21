@@ -1,5 +1,7 @@
-import ISD_EntityWriter
+# ISD Copyright (c) 2021 Ulrik Lindahl
+# Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
 
-# write base files
-ISD_EntityWriter.ISD_EntityWriter_h()
 
+import CodeGeneratorHelpers as hlp
+
+hlp.run_module('ISD_EntityWriter')

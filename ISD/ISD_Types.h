@@ -333,42 +333,32 @@ namespace ISD
 	template<class T> class optional_value
 		{
 		private:
-			T value = {};
-			bool hasvalue = false;
+			T value_m = {};
+			bool has_value_m = false;
 		public:
-			void clear() { this->value = {};  this->hasvalue = false; }
-			void set( const T &_value ) { this->hasvalue = true; this->value = _value; }
-			bool has_value() const { return this->hasvalue; }
-			const std::pair<bool, const T&> value() const { return std::pair<bool, const T&>( this->has_value, this->value ); }
+			void clear() { this->value_m = {};  this->has_value_m = false; }
+			void set( const T &_value ) { this->has_value_m = true; this->value_m = _value; }
+			bool has_value() const { return this->has_value_m; }
+			const std::pair<bool, const T&> value() const { return std::pair<bool, const T&>( this->has_value_m, this->value_m ); }
 		};
 
 	extern const std::vector<size_t> indexed_array_empty_index; // used as replacement reference when returning an empty index
 	template<class T> class indexed_array
 		{
 		private:
-			std::vector<T> values = {};
-			std::vector<size_t> *index = nullptr;
+			std::vector<T> values_m = {};
+			std::vector<size_t> index_m = {};
 			
 		public:
-			indexed_array( const std::vector<T> &_values ) : values( _values ) {}
-			indexed_array( const std::vector<T> &_values, const std::vector<size_t> &_index ) : values( _values ) { this->index = new std::vector<size_t>(_index); }
-			~indexed_array() { if( this->index ) { delete[] this->index; } }
+			indexed_array( const std::vector<T> &_values, const std::vector<size_t> &_index ) : values_m( _values ) , index_m(_index) {}
 
-			// read/write accessors for values and index
-			std::vector<T> &values() { return this->data; }
-
-			const std::vector<T> &values() const { return this->data; }
-			bool HasIndex() const { return (this->index != nullptr); }
-			const std::pair<bool, const std::vector<size_t> &> Index() const 
+			const std::vector<T> &values() const 
 				{ 
-				if( this->index )
-					{
-					return std::pair<bool, const std::vector<size_t> &>( true, *(this->index) );
-					}
-				else
-					{
-					return std::pair<bool, const std::vector<size_t> &>( false, indexed_array_empty_index );
-					}
+				return this->values_m; 
+				}
+			const std::vector<size_t> &index() const 
+				{ 
+				return this->index_m;
 				}
 		};
 

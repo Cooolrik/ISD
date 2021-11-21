@@ -104,6 +104,9 @@
     <ClCompile Include="ISD_Types.cpp" />
     <ClCompile Include="ISD_EntityWriter.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="ISD_EntityWriterTemplates.inl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -6,6 +6,7 @@
 #include "../ISD/ISD_MemoryWriteStream.h"
 #include "../ISD/ISD_TestNode.h"
 #include "../ISD/ISD_Log.h"
+#include "../ISD/ISD_EntityWriter.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -21,14 +22,31 @@ extern void safe_thread_map_test();
 namespace ISD
 	{
 	typedef ver1::TestNode TestNode;
-
-
-
 	}
 
 
 int main()
 	{
+
+	auto *coords = new std::vector<glm::vec3>( 100000 );
+	auto *coords_index = new std::vector<size_t>( 300000 );
+	auto *myarray = new ISD::indexed_array<glm::vec3>(*coords,*coords_index);
+	delete coords;
+	delete coords_index;
+	
+	ISD::MemoryWriteStream ws;
+	ISD::EntityWriter ew( ws );
+	
+	ew.Write( "mykey", 5, myarray );
+	delete myarray;
+	
+	bool val = false;
+	ew.Write( "mykey2", 6, val );
+	
+	printf( "stream size: %lld", ws.GetPosition() );
+	
+
+
 	//glm::vec2 v;
 
 	//ISD::Log::Error() << "In read_small_block, the type in the input stream:" << 1 << " does not match expected type: " << 3 << std::endl;
@@ -57,7 +75,7 @@ int main()
 
 	//const auto &tr = t.GetTranslation();
 
-	RUN_TEST( safe_thread_map_test );
+	//RUN_TEST( safe_thread_map_test );
 
 	//EntityLoader load;
 

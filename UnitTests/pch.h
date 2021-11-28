@@ -16,6 +16,16 @@
 
 using namespace ISD;
 
+inline void random_seed( int64 seed = -1 )
+	{
+	if( seed == -1 )
+		{
+		seed = int64(time( nullptr ));
+		srand(uint( seed & 0xffffffff ));
+		}
+	}
+
+
 // add headers that you want to pre-compile here
 inline uint8 uint8_rand() { return (uint8)(rand() & 0xff); } 
 inline uint16 uint16_rand() { return (rand() << 4) ^ rand(); } 
@@ -49,31 +59,60 @@ inline size_t capped_rand( size_t minv, size_t maxv )
 
 template<class T> T random_value();
 
-template <class T> indexed_array<T> random_array( size_t minc = 100, size_t maxc = 1000 )
+template<class T> optional_value<T> optional_random_value()
 	{
-	// generate a random array, either indexed or not
-	std::vector<T> vals;
-	size_t len = capped_rand( minc, maxc );
-	for( size_t i = 0; i < len; ++i )
-		{
-		vals.push_back(random_value<T>());
-		}
-
+	optional_value<T> val;
 	if( random_value<bool>() )
 		{
-		std::vector<size_t> indices;
-		size_t index_len = capped_rand( minc, maxc );
-		for( size_t i = 0; i < len; ++i )
-			{
-			indices.push_back(capped_rand( 0, len )); // make sure all indices are actually valid
-			}
-		return indexed_array<T>(vals,indices);
+		val.set( random_value<T>() );
 		}
-	else
-		{
-		return indexed_array<T>(vals);
-		}
+	return val;
 	}
 
+template <class T> std::vector<T> random_vector( size_t minc = 10, size_t maxc = 1000 )
+	{
+	size_t len = capped_rand( minc, maxc );
+	std::vector<T> vals(len);
+	for( size_t i = 0; i < len; ++i )
+		{
+		vals[i] = random_value<T>();
+		}
+	return vals;
+	}
+
+template<class T> optional_value<std::vector<T>> optional_random_vector()
+	{
+	optional_value<std::vector<T>> val;
+	if( random_value<bool>() )
+		{
+		val.set( random_vector<T>() );
+		}
+	return val;
+	}
+
+template <class T> indexed_array<T> random_indexed_array( size_t minc = 10, size_t maxc = 1000 )
+	{
+	// generate a random indexed array
+	std::vector<T> vals = random_vector<T>( minc, maxc );
+	size_t len = vals.size();
+
+	size_t index_len = capped_rand( minc, maxc );
+	std::vector<size_t> indices(index_len);
+	for( size_t i = 0; i < index_len; ++i )
+		{
+		indices[i] = capped_rand( 0, len ); // make sure all indices are actually valid
+		}
+	return indexed_array<T>(vals,indices);
+	}
+
+template<class T> optional_value<indexed_array<T>> optional_random_indexed_array()
+	{
+	optional_value<indexed_array<T>> val;
+	if( random_value<bool>() )
+		{
+		val.set( random_indexed_array<T>() );
+		}
+	return val;
+	}
 
 #endif //PCH_H

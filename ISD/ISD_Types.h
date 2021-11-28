@@ -332,30 +332,47 @@ namespace ISD
 
 	template<class T> class optional_value
 		{
-		private:
+		protected:
 			T value_m = {};
 			bool has_value_m = false;
+
 		public:
+			optional_value() = default;
+			optional_value( const T &_value ) : value_m( _value ), has_value_m( true ) {}
+			optional_value( const optional_value &other ) : value_m( other.value_m ) , has_value_m( other.has_value_m ) {}
+
 			void clear() { this->value_m = {};  this->has_value_m = false; }
 			void set( const T &_value ) { this->has_value_m = true; this->value_m = _value; }
 			bool has_value() const { return this->has_value_m; }
 			const std::pair<bool, const T&> value() const { return std::pair<bool, const T&>( this->has_value_m, this->value_m ); }
 		};
 
-	extern const std::vector<size_t> indexed_array_empty_index; // used as replacement reference when returning an empty index
 	template<class T> class indexed_array
 		{
-		private:
-			std::vector<T> values_m = {};
-			std::vector<size_t> index_m = {};
+		protected:
+			std::vector<T> values_m;
+			std::vector<size_t> index_m;
 			
 		public:
+			indexed_array() = default;
 			indexed_array( const std::vector<T> &_values, const std::vector<size_t> &_index ) : values_m( _values ) , index_m(_index) {}
+			indexed_array( const indexed_array &_other ) : values_m( _other.values_m ) , index_m(_other.index_m) {}
+
+			std::vector<T> &values()
+				{ 
+				return this->values_m; 
+				}
+
+			std::vector<size_t> &index() 
+				{ 
+				return this->index_m;
+				}
 
 			const std::vector<T> &values() const 
 				{ 
 				return this->values_m; 
 				}
+
 			const std::vector<size_t> &index() const 
 				{ 
 				return this->index_m;

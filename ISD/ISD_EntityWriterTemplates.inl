@@ -42,7 +42,7 @@ namespace ISD
 
 
 	// returns the stream position of the start of the block, to be used when writing the size when ending the block
-	std::pair<bool, uint64> begin_large_block( MemoryWriteStream &dstream, ValueType VT, const char *key, const uint8 key_size_in_bytes )
+	bool begin_large_block( MemoryWriteStream &dstream, ValueType VT, const char *key, const uint8 key_size_in_bytes )
 		{
 		const uint8 value_type = (uint8)VT;
 		const uint64 start_pos = dstream.GetPosition();
@@ -59,7 +59,7 @@ namespace ISD
 
 		const uint64 end_pos = dstream.GetPosition();
 		ISDSanityCheckCoreDebugMacro( end_pos == expected_end_pos );
-		return std::pair<bool, uint64>( (end_pos == expected_end_pos), start_pos );
+		return (end_pos == expected_end_pos);
 		}
 
 	// ends the block, write the size of the block
@@ -73,56 +73,44 @@ namespace ISD
 		return (end_pos > start_pos); // only thing we really can check
 		}
 
-	// write indexed array to stream
-	template<ValueType VT, class T, class I, size_t I_per_T > bool write_large_block_array( 
+	// template to write array data to large block
+	template<class I> bool write_large_block_array_data( 
 		MemoryWriteStream &dstream, 
-		const char *key, 
-		const uint8 key_size_in_bytes, 
-		const bool is_empty,
+		bool has_values, 
 		const I *data_items, 
 		const size_t data_items_count,
 		const size_t *data_index,
 		const size_t data_index_count )
 		{
-		// assuming size_t is same size as uint64
-		// if this fails, the code needs to be updated to support other sizes of size_t
+		// assuming size_t is same size as uint64, so no need for conversions
+		// (when this assert fails, the code needs to be updated to support other sizes of size_t)
 		static_assert(sizeof( uint64 ) == sizeof( size_t ), "Unsupported size_t, current code requires it to be 8 bytes in size, equal to uint64");
 
-		// this code only supports values that are exactly the multiple I_per_T of the items it contins
-		// eg basic types are ok, since I_per_T is 1. vec3 etc are also ok, as vec3 is I_per_T = 3
-		static_assert(sizeof( I ) * I_per_T == sizeof( T ), "Size of T must be exactly size of I times I_per_T");
-
-		// begin a large block, and store the start position returned from it
-		auto begin_status = begin_large_block( dstream, VT, key, key_size_in_bytes );
-		if( !begin_status.first )
-			{
-			ISDErrorLog << "begin_large_block() failed unexpectedly" << ISDErrorLogEnd;
-			return false;
-			}
-
+		// record start of array data so we can check that it was written
 		const uint64 start_pos = dstream.GetPosition();
 
 		// if empty data (not same as a zero-length array, which is not empty, only zero length)
+		// note that zero-length data will have nullptr pointers, so we will not use that to deduce if there are values
 		uint64 expected_end_pos = 0;
-		if( is_empty )
+		if( !has_values )
 			{
-			// empty data, mark flags field empty
+			// empty data, mark flags field as empty
 			dstream.Write( (uint16)0 );
 
-			// calc the end position 
+			// calc the end position, which is only the flags field 
 			expected_end_pos = start_pos + sizeof( uint16 );
 			}
 		else
 			{
 			// indexed array flags: size of each item (if need to decode array outside regular decoding) and bit set if index is used 
-			const uint16 per_item_size = (uint16)sizeof( I ); // size of each item I in T (max 255 bytes per item)
+			const uint16 per_item_size = (uint16)sizeof( I ); // size of each item I (max 255 bytes per item)
 			ISDSanityCheckCoreDebugMacro( per_item_size <= 0xff );
 			const uint16 has_index = (data_index) ? 0x100 : 0x0;
 			const uint16 index_array_flags = has_index | per_item_size;
 			dstream.Write( index_array_flags );
 
 			// write the item count and items
-			dstream.Write( data_items_count );
+			dstream.Write( uint64(data_items_count) );
 			dstream.Write( data_items, data_items_count );
 
 			// if we have an index, write it 
@@ -141,13 +129,6 @@ namespace ISD
 				+ ((data_index_count * sizeof( uint64 ))); // the list of indices, if any
 			}
 
-		// end the block by going back to the start and writing the start position offset
-		if( !end_large_block( dstream, begin_status.second ) )
-			{
-			ISDErrorLog << "end_large_block() failed unexpectedly" << ISDErrorLogEnd;
-			return false;
-			}
-
 		// make sure we are at the expected end pos
 		const uint64 end_pos = dstream.GetPosition();
 		if( end_pos != expected_end_pos )
@@ -159,67 +140,146 @@ namespace ISD
 		return true;
 		}
 
-	// specific write_large_block_array implementation for VT_Bool
+	// write indexed array to stream
+	template<ValueType VT, class T, class I, size_t I_per_T > bool write_array( 
+		MemoryWriteStream &dstream, 
+		const char *key, 
+		const uint8 key_size_in_bytes, 
+		bool has_values, 
+		const I *data_items, 
+		const size_t data_items_count,
+		const size_t *data_index,
+		const size_t data_index_count )
+		{
+		// this code only supports values that are exactly the multiple I_per_T of the items it contins
+		// eg basic types are ok, since I_per_T is 1. vec3 etc are also ok, as vec3 is I_per_T = 3
+		static_assert(sizeof( I ) * I_per_T == sizeof( T ), "Size of T must be exactly size of I times I_per_T");
+
+		// record start position, we need this in the end block
+		const uint64 start_pos = dstream.GetPosition();
+
+		// begin a large block
+		if( !begin_large_block( dstream, VT, key, key_size_in_bytes ) )
+			{
+			ISDErrorLog << "begin_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// write the array data
+		if( !write_large_block_array_data<I>( dstream, has_values, data_items, data_items_count, data_index, data_index_count ) )
+			{
+			ISDErrorLog << "write_large_block_array_data() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// end the block by going back to the start and writing the start position offset
+		if( !end_large_block( dstream, start_pos ) )
+			{
+			ISDErrorLog << "end_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// all blocks succeeded
+		return true;
+		}
+
+	// specific write_array implementation for VT_Array_Bool, since we cant retrieve the data directly in bool vectors
 	bool write_bool_array(
 		MemoryWriteStream &dstream,
 		const char *key,
 		const uint8 key_size_in_bytes,
-		const bool is_empty,
-		const std::vector<bool> *bool_data,
-		const std::vector<size_t> *index_data )
+		const std::vector<bool> *bool_vector,
+		const std::vector<size_t> *index_vector )
 		{
-		// copy the bool vector to an int8 vector
-		std::vector<int8> i8vec;
-		if( bool_data )
+		uint8 *data_items = nullptr;
+		size_t data_items_count = 0;
+		std::vector<uint8> u8vec;
+
+		const bool has_values = bool_vector != nullptr;
+		if( has_values )
 			{
-			for( size_t i = 0; i < bool_data->size(); ++i )
+			// pack the bool vector to a temporary uint8 vector
+			size_t number_of_packed_uint8s = (bool_vector->size()+7) / 8; // round up, should the last uint8 be not fully filled
+			u8vec.resize( number_of_packed_uint8s );
+			for( size_t bool_index = 0; bool_index < bool_vector->size(); ++bool_index )
 				{
-				i8vec[i] = (int8)(*bool_data)[i];
+				if( (*bool_vector)[bool_index] )
+					{
+					const size_t packed_index = bool_index / 8;
+					const size_t packed_subindex = bool_index % 8;
+					u8vec[packed_index] |= 1 << packed_subindex;
+					}
 				}
+
+			// point at the temporary vector
+			data_items = u8vec.data();
+			data_items_count = u8vec.size();
 			}
 
-		// call the template implementation with int8 instead of bool
-		return write_large_block_array<ValueType::VT_Bool, int8, int8, 1>( 
-			dstream, 
-			key, 
-			key_size_in_bytes, 
-			is_empty,
-			(bool_data) ? i8vec.data() : nullptr,
-			(bool_data) ? i8vec.size() : 0,
-			(index_data) ? index_data->data() : nullptr,
-			(index_data) ? index_data->size() : 0
-			);
+		const size_t *data_index = (index_vector) ? index_vector->data() : nullptr;
+		const size_t data_index_count = (index_vector) ? index_vector->size() : 0;
+		
+		// record start position of the stream, we need this in the end block
+		const uint64 start_pos = dstream.GetPosition();
+
+		// begin a large block
+		if( !begin_large_block( dstream, ValueType::VT_Array_Bool, key, key_size_in_bytes ) )
+			{
+			ISDErrorLog << "begin_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// write the uint8 array data items
+		if( !write_large_block_array_data<uint8>( dstream, has_values, data_items, data_items_count, data_index, data_index_count ) )
+			{
+			ISDErrorLog << "write_large_block_array_data() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// write the actual size of the bool array to the end of the data, so we can reconstruct the bool array when reading
+		if( bool_vector )
+			{
+			dstream.Write( uint64(bool_vector->size()) );
+			}
+
+		// end the block by going back to the start and writing the start position offset
+		if( !end_large_block( dstream, start_pos ) )
+			{
+			ISDErrorLog << "end_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return false;
+			}
+
+		return true;
 		}
 
 	// VT_Bool: bool
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const bool &src_variable )
+	template <> bool EntityWriter::Write<bool>( const char *key, const uint8 key_length, const bool &src_variable )
 		{
-		int8 i8val = (int8)src_variable;
-		return write_small_block<ValueType::VT_Bool, int8, 1>( dstream, key, key_length, &i8val );
+		int8 u8val = (uint8)src_variable;
+		return write_small_block<ValueType::VT_Bool, int8, 1>( dstream, key, key_length, &u8val );
 		}
 
 	// VT_Bool: optional_value<bool>
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<bool> &src_variable )
+	template <> bool EntityWriter::Write<optional_value<bool>>( const char *key, const uint8 key_length, const optional_value<bool> &opt_src_variable )
 		{
-		int8 i8val = (int8)src_variable.value().second;
-		return write_small_block<ValueType::VT_Bool, int8, 1>( dstream, key, key_length, (src_variable.has_value()) ? &i8val : nullptr );
+		int8 u8val = (uint8)opt_src_variable.value().second;
+		return write_small_block<ValueType::VT_Bool, int8, 1>( dstream, key, key_length, (opt_src_variable.has_value()) ? &u8val : nullptr );
 		}
 
 	// VT_Bool: std::vector<bool>
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const std::vector<bool> &src_variable )
+	template <> bool EntityWriter::Write<std::vector<bool>>( const char *key, const uint8 key_length, const std::vector<bool> &src_variable )
 		{
 		return write_bool_array(
 			this->dstream, 
 			key, 
 			key_length, 
-			true, // not an optional value
 			&src_variable, 
 			nullptr
 			);
 		}
 
 	// VT_Bool: optional_value<std::vector<bool>>
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<std::vector<bool>> &opt_src_variable )
+	template <> bool EntityWriter::Write<optional_value<std::vector<bool>>>( const char *key, const uint8 key_length, const optional_value<std::vector<bool>> &opt_src_variable )
 		{
 		const bool has_value = opt_src_variable.has_value();
 		const std::vector<bool> &src_variable = opt_src_variable.value().second;
@@ -228,27 +288,25 @@ namespace ISD
 			this->dstream, 
 			key, 
 			key_length, 
-			true, // not an optional value
-			(has_value) ? &src_variable : nullptr, // nullptr if size is zero
+			(has_value) ? &src_variable : nullptr, 
 			nullptr
 			);
 		}
 
 	// VT_Bool: indexed_array<bool>
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const indexed_array<bool> &src_variable )
+	template <> bool EntityWriter::Write<indexed_array<bool>>( const char *key, const uint8 key_length, const indexed_array<bool> &src_variable )
 		{
 		return write_bool_array(
 			this->dstream, 
 			key, 
 			key_length, 
-			true, // not an optional value
 			&src_variable.values(), 
 			&src_variable.index()
 			);
 		}
 
 	// VT_Bool: optional_value<indexed_array<bool>>
-	bool EntityWriter::Write( const char *key, const uint8 key_length, const optional_value<indexed_array<bool>> &opt_src_variable )
+	template <> bool EntityWriter::Write<optional_value<indexed_array<bool>>>( const char *key, const uint8 key_length, const optional_value<indexed_array<bool>> &opt_src_variable )
 		{
 		const bool has_value = opt_src_variable.has_value();
 		const indexed_array<bool> &src_variable = opt_src_variable.value().second;
@@ -257,7 +315,6 @@ namespace ISD
 			this->dstream, 
 			key, 
 			key_length, 
-			true, // not an optional value
 			(has_value) ? &src_variable.values() : nullptr, 
 			(has_value) ? &src_variable.index() : nullptr
 			);

@@ -1,6 +1,8 @@
 # ISD Generated files
 ISD/ISD_EntityWriter.h
 ISD/ISD_EntityWriter.cpp
+ISD/ISD_EntityReader.h
+ISD/ISD_EntityReader.cpp
 
 # User-specific files
 *.rsuser

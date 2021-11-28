@@ -67,7 +67,7 @@
     <ClCompile Include="ISD_EntityWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ISD_EntityReader.cpp">
+    <ClCompile Include="ISD_EntityReaderTemplates.inl">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

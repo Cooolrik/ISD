@@ -3,7 +3,7 @@
 
 import CodeGeneratorHelpers as hlp
 
-def ISD_EntityWriter_h():
+def ISD_EntityReader_h():
 	lines = []
 	lines.append('// ISD Copyright (c) 2021 Ulrik Lindahl')
 	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
@@ -15,18 +15,18 @@ def ISD_EntityWriter_h():
 	lines.append('')
 	lines.append('namespace ISD')
 	lines.append('    {')
-	lines.append('    class MemoryWriteStream;')
+	lines.append('    class MemoryReadStream;')
 	lines.append('')
-	lines.append('    class EntityWriter')
+	lines.append('    class EntityReader')
 	lines.append('        {')
 	lines.append('        private:')
-	lines.append('            MemoryWriteStream &dstream;')
+	lines.append('            MemoryReadStream &sstream;')
 	lines.append('')
 	lines.append('        public:')
-	lines.append('            EntityWriter( MemoryWriteStream &_dstream ) : dstream( _dstream ) {}')
+	lines.append('            EntityReader( MemoryReadStream &_sstream ) : sstream( _sstream ) {}')
 	lines.append('')
-	lines.append('            // The Write function template, specifically implemented below for all supported value types.')
-	lines.append('            template <class T> bool Write( const char *key, const uint8 key_length, const T &value );')
+	lines.append('            // The Read function template, specifically implemented below for all supported value types.')
+	lines.append('            template <class T> bool Read( const char *key, const uint8 key_length, T &value );')
 	lines.append('')
 
 	# print the base types
@@ -35,8 +35,8 @@ def ISD_EntityWriter_h():
 		lines.append('            // ' + type_name )
 		for type_impl in basetype.variants:
 			type_impl_name = type_impl.implementing_type
-			lines.append('            template <> bool Write<' + type_impl_name + '>( const char *key, const uint8 key_length, const ' + type_impl_name + ' &value );')
-			lines.append('            template <> bool Write<optional_value<' + type_impl_name + '>>( const char *key, const uint8 key_length, const optional_value<' + type_impl_name + '> &value );')
+			lines.append('            template <> bool Read<' + type_impl_name + '>( const char *key, const uint8 key_length, ' + type_impl_name + ' &value );')
+			lines.append('            template <> bool Read<optional_value<' + type_impl_name + '>>( const char *key, const uint8 key_length, optional_value<' + type_impl_name + '> &value );')
 		lines.append('')
 
 	# print the array types
@@ -45,33 +45,33 @@ def ISD_EntityWriter_h():
 		lines.append('            // ' + type_name )
 		for type_impl in basetype.variants:
 			type_impl_name = type_impl.implementing_type
-			lines.append('            template <> bool Write<std::vector<' + type_impl_name + '>>( const char *key, const uint8 key_length, const std::vector<' + type_impl_name + '> &value );')
-			lines.append('            template <> bool Write<optional_value<std::vector<' + type_impl_name + '>>>( const char *key, const uint8 key_length, const optional_value<std::vector<' + type_impl_name + '>> &value );')
-			lines.append('            template <> bool Write<indexed_array<' + type_impl_name + '>>( const char *key, const uint8 key_length, const indexed_array<' + type_impl_name + '> &value );')
-			lines.append('            template <> bool Write<optional_value<indexed_array<' + type_impl_name + '>>>( const char *key, const uint8 key_length, const optional_value<indexed_array<' + type_impl_name + '>> &value );')
+			lines.append('            template <> bool Read<std::vector<' + type_impl_name + '>>( const char *key, const uint8 key_length, std::vector<' + type_impl_name + '> &value );')
+			lines.append('            template <> bool Read<optional_value<std::vector<' + type_impl_name + '>>>( const char *key, const uint8 key_length, optional_value<std::vector<' + type_impl_name + '>> &value );')
+			lines.append('            template <> bool Read<indexed_array<' + type_impl_name + '>>( const char *key, const uint8 key_length, indexed_array<' + type_impl_name + '> &value );')
+			lines.append('            template <> bool Read<optional_value<indexed_array<' + type_impl_name + '>>>( const char *key, const uint8 key_length, optional_value<indexed_array<' + type_impl_name + '>> &value );')
 		lines.append('')
 
 	lines.append('		};')
 	lines.append('')
-	lines.append('	// Write function. Specialized for all supported value types.')
-	lines.append('	template <class T> bool EntityWriter::Write( const char *key, const uint8 key_length, const T &value )')
+	lines.append('	// Read method. Specialized for all supported value types.')
+	lines.append('	template <class T> bool EntityReader::Read( const char *key, const uint8 key_length, T &value )')
 	lines.append('		{')
-	lines.append('		static_assert(false, "Error: EntityWriter::Write template: The value type T cannot be serialized.");')
+	lines.append('		static_assert(false, "Error: EntityReader::Read template: The value type T cannot be serialized.");')
 	lines.append('		}')
 	lines.append('	};')
-	hlp.write_lines_to_file("../ISD/ISD_EntityWriter.h",lines)
+	hlp.write_lines_to_file("../ISD/ISD_EntityReader.h",lines)
 
-def ISD_EntityWriter_cpp():
+def ISD_EntityReader_cpp():
 	lines = []
 	lines.append('// ISD Copyright (c) 2021 Ulrik Lindahl')
 	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
 	lines.append('')
 	lines.append('#pragma once')
 	lines.append('')
-	lines.append('#include "ISD_EntityWriter.h"')
+	lines.append('#include "ISD_EntityReader.h"')
 	lines.append('#include "ISD_MemoryWriteStream.h"')
 	lines.append('')
-	lines.append('#include "ISD_EntityWriterTemplates.inl"')
+	lines.append('#include "ISD_EntityReaderTemplates.inl"')
 	lines.append('')
 	lines.append('namespace ISD')
 	lines.append('	{')
@@ -95,7 +95,7 @@ def ISD_EntityWriter_cpp():
 			else:
 				ptr_to_items = 'value_ptr'
 			lines.append('	// ' + type_name + ': ' + implementing_type )
-			lines.append('	template <> bool EntityWriter::Write<' + implementing_type + '>( const char *key, const uint8 key_length, const ' + implementing_type + ' &src_variable )')
+			lines.append('	template <> bool EntityReader::Write<' + implementing_type + '>( const char *key, const uint8 key_length, const ' + implementing_type + ' &src_variable )')
 			lines.append('		{')
 			lines.append('		return write_small_block<ValueType::' + type_name + ',' + item_type + ',' + num_items_per_object + '>(')
 			lines.append('			this->dstream, ')
@@ -106,7 +106,7 @@ def ISD_EntityWriter_cpp():
 			lines.append('		}')
 			lines.append('')
 			lines.append('	// ' + type_name + ': optional_value<' + implementing_type + '>' )
-			lines.append('	template <> bool EntityWriter::Write<optional_value<' + implementing_type + '>>( const char *key, const uint8 key_length, const optional_value<' + implementing_type + '> &opt_src_variable )')
+			lines.append('	template <> bool EntityReader::Write<optional_value<' + implementing_type + '>>( const char *key, const uint8 key_length, const optional_value<' + implementing_type + '> &opt_src_variable )')
 			lines.append('		{')
 			lines.append('		const bool has_value = opt_src_variable.has_value();')
 			lines.append('		const ' + implementing_type + ' &src_variable = opt_src_variable.value().second;')
@@ -119,7 +119,7 @@ def ISD_EntityWriter_cpp():
 			lines.append('		}')
 			lines.append('')
 			lines.append('	// ' + type_name + ': std::vector<' + implementing_type + '>' )
-			lines.append('	template <> bool EntityWriter::Write<std::vector<' + implementing_type + '>>( const char *key, const uint8 key_length, const std::vector<' + implementing_type + '> &src_variable )')
+			lines.append('	template <> bool EntityReader::Write<std::vector<' + implementing_type + '>>( const char *key, const uint8 key_length, const std::vector<' + implementing_type + '> &src_variable )')
 			lines.append('		{')
 			lines.append('		return write_array<ValueType::' + type_name + ',' + implementing_type + ',' + item_type + ',' + num_items_per_object + '>(')
 			lines.append('			this->dstream, ')
@@ -134,7 +134,7 @@ def ISD_EntityWriter_cpp():
 			lines.append('		}')
 			lines.append('')
 			lines.append('	// ' + type_name + ': optional_value<std::vector<' + implementing_type + '>>' )
-			lines.append('	template <> bool EntityWriter::Write<optional_value<std::vector<' + implementing_type + '>>>( const char *key, const uint8 key_length, const optional_value<std::vector<' + implementing_type + '>> &opt_src_variable )')
+			lines.append('	template <> bool EntityReader::Write<optional_value<std::vector<' + implementing_type + '>>>( const char *key, const uint8 key_length, const optional_value<std::vector<' + implementing_type + '>> &opt_src_variable )')
 			lines.append('		{')
 			lines.append('		const bool has_value = opt_src_variable.has_value();')
 			lines.append('		const std::vector<' + implementing_type + '> &src_variable = opt_src_variable.value().second;')
@@ -151,7 +151,7 @@ def ISD_EntityWriter_cpp():
 			lines.append('		}')
 			lines.append('')
 			lines.append('	// ' + type_name + ': indexed_array<' + implementing_type + '>' )
-			lines.append('	template <> bool EntityWriter::Write<indexed_array<' + implementing_type + '>>( const char *key, const uint8 key_length, const indexed_array<' + implementing_type + '> &src_variable )')
+			lines.append('	template <> bool EntityReader::Write<indexed_array<' + implementing_type + '>>( const char *key, const uint8 key_length, const indexed_array<' + implementing_type + '> &src_variable )')
 			lines.append('		{')
 			lines.append('		return write_array<ValueType::' + type_name + ',' + implementing_type + ',' + item_type + ',' + num_items_per_object + '>(')
 			lines.append('			this->dstream, ')
@@ -166,7 +166,7 @@ def ISD_EntityWriter_cpp():
 			lines.append('		}')
 			lines.append('')
 			lines.append('	// ' + type_name + ': optional_value<indexed_array<' + implementing_type + '>>' )
-			lines.append('	template <> bool EntityWriter::Write< optional_value<indexed_array<' + implementing_type + '>>>( const char *key, const uint8 key_length, const optional_value<indexed_array<' + implementing_type + '>> &opt_src_variable )')
+			lines.append('	template <> bool EntityReader::Write< optional_value<indexed_array<' + implementing_type + '>>>( const char *key, const uint8 key_length, const optional_value<indexed_array<' + implementing_type + '>> &opt_src_variable )')
 			lines.append('		{')
 			lines.append('		const bool has_value = opt_src_variable.has_value();')
 			lines.append('		const indexed_array<' + implementing_type + '> &src_variable = opt_src_variable.value().second;')
@@ -184,8 +184,8 @@ def ISD_EntityWriter_cpp():
 			lines.append('')
 				
 	lines.append('	};')
-	hlp.write_lines_to_file("../ISD/ISD_EntityWriter.cpp",lines)
+	hlp.write_lines_to_file("../ISD/ISD_EntityReader.cpp",lines)
 
 def run():
-	ISD_EntityWriter_h()
-	ISD_EntityWriter_cpp()
+	ISD_EntityReader_h()
+	#ISD_EntityReader_cpp()

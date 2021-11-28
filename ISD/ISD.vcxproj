@@ -95,7 +95,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
-    <ClCompile Include="ISD_EntityReader.cpp" />
+    <ClCompile Include="ISD_EntityReaderTemplates.inl" />
     <ClCompile Include="ISD_EntitySerializer.cpp" />
     <ClCompile Include="ISD_SHA256.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

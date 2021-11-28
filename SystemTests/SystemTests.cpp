@@ -37,7 +37,7 @@ int main()
 	ISD::MemoryWriteStream ws;
 	ISD::EntityWriter ew( ws );
 	
-	ew.Write( "mykey", 5, myarray );
+	ew.Write( "mykey", 5, *myarray );
 	delete myarray;
 	
 	bool val = false;

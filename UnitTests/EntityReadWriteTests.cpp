@@ -30,28 +30,28 @@ namespace UnitTests
 			// write value
 			uint64 start_pos = ws.GetPosition();
 			uint64 expected_pos = start_pos + 2 + sizeof( value ) + key.size();
-			bool write_successfully = ew.Write( key.c_str(), (uint8)key.size(), value );
+			bool write_successfully = ew.Write<T>( key.c_str(), (uint8)key.size(), value );
 			Assert::IsTrue( ws.GetPosition() == expected_pos );
 			Assert::IsTrue( write_successfully );
 
 			// write an optional value
-			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), opt_value );
+			write_successfully = ew.Write<optional_value<T>>( key.c_str(), (uint8)key.size(), opt_value );
 			Assert::IsTrue( write_successfully );
 
 			// write a random vector of values
-			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), value_vec );
+			write_successfully = ew.Write<std::vector<T>>( key.c_str(), (uint8)key.size(), value_vec );
 			Assert::IsTrue( write_successfully );
 
 			// write an optional random vector of values
-			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), opt_value_vec );
+			write_successfully = ew.Write<optional_value<std::vector<T>>>( key.c_str(), (uint8)key.size(), opt_value_vec );
 			Assert::IsTrue( write_successfully );
 
 			// write a random indexed array of values
-			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), value_inxarr );
+			write_successfully = ew.Write<indexed_array<T>>( key.c_str(), (uint8)key.size(), value_inxarr );
 			Assert::IsTrue( write_successfully );
 
 			// write an optional random indexed array of values
-			write_successfully = ew.Write( key.c_str(), (uint8)key.size(), opt_value_inxarr );
+			write_successfully = ew.Write<optional_value<indexed_array<T>>>( key.c_str(), (uint8)key.size(), opt_value_inxarr );
 			Assert::IsTrue( write_successfully );
 
 			// set up a temporary entity reader and read back the values

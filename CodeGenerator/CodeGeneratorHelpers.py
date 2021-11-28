@@ -54,8 +54,9 @@ base_types = [base_type_Bool,
               base_type_UUID]
 
 def run_module( name ):
-    print('Running: ' + name + '\n')
+    print('Running: ' + name )
     importlib.import_module('Generators.' + name ).run()
+    print('')
 
 def write_lines_to_file( path , lines ):
     # make into one long string
@@ -72,7 +73,7 @@ def write_lines_to_file( path , lines ):
 
         #if no difference was found, return
         if new_text == existing_text:
-            print( 'File: ' + path + ' not modified, skipping...')
+            print( '\tFile: ' + path + ' is identical, skipping...')
             return
 
         # if a difference was found, remove the old file
@@ -80,6 +81,7 @@ def write_lines_to_file( path , lines ):
         os.remove( path ) 
 
     # we should write to the new file
+    print( '\tWriting: ' + path + '...')
     with open(path,'w') as f:
         f.write(new_text)
         f.close()

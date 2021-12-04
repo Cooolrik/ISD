@@ -17,14 +17,14 @@ namespace UnitTests
 		
 			TEST_METHOD( ISDTypes )
 				{
-				Assert::IsTrue(sizeof(uint8) == 1);
-				Assert::IsTrue(sizeof(uint16) == 2);
-				Assert::IsTrue(sizeof(uint32) == 4);
-				Assert::IsTrue(sizeof(uint64) == 8);
-				Assert::IsTrue(sizeof(int8) == 1);
-				Assert::IsTrue(sizeof(int16) == 2);
-				Assert::IsTrue(sizeof(int32) == 4);
-				Assert::IsTrue(sizeof(int64) == 8);
+				Assert::IsTrue(sizeof(u8) == 1);
+				Assert::IsTrue(sizeof(u16) == 2);
+				Assert::IsTrue(sizeof(u32) == 4);
+				Assert::IsTrue(sizeof(u64) == 8);
+				Assert::IsTrue(sizeof(i8) == 1);
+				Assert::IsTrue(sizeof(i16) == 2);
+				Assert::IsTrue(sizeof(i32) == 4);
+				Assert::IsTrue(sizeof(i64) == 8);
 				Assert::IsTrue(sizeof(uint) == 4);
 				Assert::IsTrue(sizeof(UUID) == 16);
 
@@ -45,51 +45,51 @@ namespace UnitTests
 
 			TEST_METHOD(ByteswapFunctions)
 				{
-				const uint16 u16 = 0x6712;
-				const uint32 u32 = 0x93671028;
-				const uint64 u64 = 0x2047239209461749;
+				const u16 u16val = 0x6712;
+				const u32 u32val = 0x93671028;
+				const u64 u64val = 0x2047239209461749;
 
-				const uint8 u16_be[] = {0x67, 0x12};
-				const uint8 u32_be[] = {0x93, 0x67, 0x10, 0x28};
-				const uint8 u64_be[] = {0x20, 0x47, 0x23, 0x92, 0x09, 0x46, 0x17, 0x49};
+				const u8 u16_be[] = {0x67, 0x12};
+				const u8 u32_be[] = {0x93, 0x67, 0x10, 0x28};
+				const u8 u64_be[] = {0x20, 0x47, 0x23, 0x92, 0x09, 0x46, 0x17, 0x49};
 
-				uint16 t16 = value_from_bigendian<uint16>( u16_be );
-				Assert::IsTrue(t16 == u16);
-				uint32 t32 = value_from_bigendian<uint32>( u32_be );
-				Assert::IsTrue(t32 == u32);
-				uint64 t64 = value_from_bigendian<uint64>( u64_be );
-				Assert::IsTrue(t64 == u64);
+				u16 t16 = value_from_bigendian<u16>( u16_be );
+				Assert::IsTrue(t16 == u16val);
+				u32 t32 = value_from_bigendian<u32>( u32_be );
+				Assert::IsTrue(t32 == u32val);
+				u64 t64 = value_from_bigendian<u64>( u64_be );
+				Assert::IsTrue(t64 == u64val);
 			
-				uint8 res[8];
-				bigendian_from_value<uint16>( res , u16 );
+				u8 res[8];
+				bigendian_from_value<u16>( res , u16val );
 				Assert::IsTrue(memcmp(res,u16_be,sizeof(u16_be)) == 0);
-				bigendian_from_value<uint32>( res , u32 );
+				bigendian_from_value<u32>( res , u32val );
 				Assert::IsTrue(memcmp(res,u32_be,sizeof(u32_be)) == 0);
-				bigendian_from_value<uint64>( res , u64 );
+				bigendian_from_value<u64>( res , u64val );
 				Assert::IsTrue(memcmp(res,u64_be,sizeof(u64_be)) == 0);
 
-				t16 = u16;
+				t16 = u16val;
 				swap_byte_order( &t16 );
-				Assert::IsTrue( ((t16 >> 0) & 0xff) == ((u16 >>  8) & 0xff) );
-				Assert::IsTrue( ((t16 >> 8) & 0xff) == ((u16 >>  0) & 0xff) );
+				Assert::IsTrue( ((t16 >> 0) & 0xff) == ((u16val >>  8) & 0xff) );
+				Assert::IsTrue( ((t16 >> 8) & 0xff) == ((u16val >>  0) & 0xff) );
 				
-				t32 = u32;
+				t32 = u32val;
 				swap_byte_order( &t32 );
-				Assert::IsTrue( ((t32 >>  0) & 0xff) == ((u32 >> 24) & 0xff) );
-				Assert::IsTrue( ((t32 >>  8) & 0xff) == ((u32 >> 16) & 0xff) );
-				Assert::IsTrue( ((t32 >> 16) & 0xff) == ((u32 >>  8) & 0xff) );
-				Assert::IsTrue( ((t32 >> 24) & 0xff) == ((u32 >>  0) & 0xff) );
+				Assert::IsTrue( ((t32 >>  0) & 0xff) == ((u32val >> 24) & 0xff) );
+				Assert::IsTrue( ((t32 >>  8) & 0xff) == ((u32val >> 16) & 0xff) );
+				Assert::IsTrue( ((t32 >> 16) & 0xff) == ((u32val >>  8) & 0xff) );
+				Assert::IsTrue( ((t32 >> 24) & 0xff) == ((u32val >>  0) & 0xff) );
 
-				t64 = u64;
+				t64 = u64val;
 				swap_byte_order( &t64 );
-				Assert::IsTrue( ((t64 >>  0) & 0xff) == ((u64 >> 56) & 0xff) );
-				Assert::IsTrue( ((t64 >>  8) & 0xff) == ((u64 >> 48) & 0xff) );
-				Assert::IsTrue( ((t64 >> 16) & 0xff) == ((u64 >> 40) & 0xff) );
-				Assert::IsTrue( ((t64 >> 24) & 0xff) == ((u64 >> 32) & 0xff) );
-				Assert::IsTrue( ((t64 >> 32) & 0xff) == ((u64 >> 24) & 0xff) );
-				Assert::IsTrue( ((t64 >> 40) & 0xff) == ((u64 >> 16) & 0xff) );
-				Assert::IsTrue( ((t64 >> 48) & 0xff) == ((u64 >>  8) & 0xff) );
-				Assert::IsTrue( ((t64 >> 56) & 0xff) == ((u64 >>  0) & 0xff) );
+				Assert::IsTrue( ((t64 >>  0) & 0xff) == ((u64val >> 56) & 0xff) );
+				Assert::IsTrue( ((t64 >>  8) & 0xff) == ((u64val >> 48) & 0xff) );
+				Assert::IsTrue( ((t64 >> 16) & 0xff) == ((u64val >> 40) & 0xff) );
+				Assert::IsTrue( ((t64 >> 24) & 0xff) == ((u64val >> 32) & 0xff) );
+				Assert::IsTrue( ((t64 >> 32) & 0xff) == ((u64val >> 24) & 0xff) );
+				Assert::IsTrue( ((t64 >> 40) & 0xff) == ((u64val >> 16) & 0xff) );
+				Assert::IsTrue( ((t64 >> 48) & 0xff) == ((u64val >>  8) & 0xff) );
+				Assert::IsTrue( ((t64 >> 56) & 0xff) == ((u64val >>  0) & 0xff) );
 				}
 
 			TEST_METHOD( HexStringFunctions )
@@ -98,21 +98,21 @@ namespace UnitTests
 				std::wstring expected_hexid = L"12345678-a1a2-b1b2-c1c2-c3c4c5c6c7c8";
 				Assert::IsTrue( value_to_hex_wstring( id ) == expected_hexid );
 
-				uint8 u8 = 0x13;
+				u8 u8val = 0x13;
 				std::wstring expected_hexu8 = L"13";
-				Assert::IsTrue( value_to_hex_wstring( u8 ) == expected_hexu8 );
+				Assert::IsTrue( value_to_hex_wstring( u8val ) == expected_hexu8 );
 
-				uint16 u16 = 0x1234;
+				u16 u16val = 0x1234;
 				std::wstring expected_hexu16 = L"1234";
-				Assert::IsTrue( value_to_hex_wstring( u16 ) == expected_hexu16 );
+				Assert::IsTrue( value_to_hex_wstring( u16val ) == expected_hexu16 );
 
-				uint32 u32 = 0x0218a782;
+				u32 u32val = 0x0218a782;
 				std::wstring expected_hexu32 = L"0218a782";
-				Assert::IsTrue( value_to_hex_wstring( u32 ) == expected_hexu32 );
+				Assert::IsTrue( value_to_hex_wstring( u32val ) == expected_hexu32 );
 
-				uint64 u64 = 0x35023218a7828505;
+				u64 u64val = 0x35023218a7828505;
 				std::wstring expected_hexu64 = L"35023218a7828505";
-				Assert::IsTrue( value_to_hex_wstring( u64 ) == expected_hexu64 );
+				Assert::IsTrue( value_to_hex_wstring( u64val ) == expected_hexu64 );
 				}
 
 
@@ -122,7 +122,7 @@ namespace UnitTests
 					{
 					SHA256 sha;
 
-					uint8 testdata[] = {
+					u8 testdata[] = {
 						0x34,0x2b,0x1f,0x3e,0x61,
 						0x4b,0x03,0x4b,0x02,0x36,
 						0x05,0x5c,0x17,0x29,0x3d,
@@ -147,10 +147,10 @@ namespace UnitTests
 
 					sha.Update( testdata, sizeof( testdata ) );
 
-					uint8 calc_hash[32];
+					u8 calc_hash[32];
 					sha.GetDigest( calc_hash );
 
-					uint8 expected_hash[32] = {0xf6,0x48,0x54,0x2d,0xf8,0xcc,0xf2,0x1f,0xd3,0x4e,0x95,0xf6,0x7d,0xf5,0xf2,0xb4,0xf2,0x72,0x72,0xaa,0x14,0xf5,0x03,0x09,0x0c,0xc4,0x76,0x6f,0xe2,0x78,0xc4,0xb5};
+					u8 expected_hash[32] = {0xf6,0x48,0x54,0x2d,0xf8,0xcc,0xf2,0x1f,0xd3,0x4e,0x95,0xf6,0x7d,0xf5,0xf2,0xb4,0xf2,0x72,0x72,0xaa,0x14,0xf5,0x03,0x09,0x0c,0xc4,0x76,0x6f,0xe2,0x78,0xc4,0xb5};
 
 					Assert::IsTrue( memcmp( calc_hash, expected_hash, 32 ) == 0 );
 					}

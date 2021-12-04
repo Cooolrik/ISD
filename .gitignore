@@ -349,3 +349,5 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/ISD/ISD_DataTypes.h
+/ISD/ISD_DataItemPointers.h

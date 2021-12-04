@@ -41,13 +41,16 @@
     <ClInclude Include="ISD_TestNode.h">
       <Filter>Source Files\Generated</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_EntityReader.h">
+    <ClInclude Include="ISD_Log.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_DataTypes.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_DataItemPointers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ISD_EntityWriter.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_Log.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -67,12 +70,12 @@
     <ClCompile Include="ISD_EntityWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ISD_EntityReaderTemplates.inl">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="ISD_EntityWriterTemplates.inl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="ISD_EntityReaderTemplates.inl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

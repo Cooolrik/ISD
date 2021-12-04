@@ -25,6 +25,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CodeGenerator.py" />
+    <Compile Include="Generators\ISD_DataTypes.py" />
     <Compile Include="Generators\ISD_EntityReader.py" />
     <Compile Include="Generators\ISD_EntityWriter.py">
       <SubType>Code</SubType>

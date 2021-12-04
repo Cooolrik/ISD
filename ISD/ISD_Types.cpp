@@ -38,7 +38,7 @@ namespace ISD
 		static const wchar_t hexchars[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
 		std::wstring ret;
-		const uint8 *p = (const uint8 *)bytes;
+		const u8 *p = (const u8 *)bytes;
 		for( size_t i = 0; i < count; ++i )
 			{
 			ret += hexchars[((*p) >> 4) & 0xf]; // high nibble
@@ -49,26 +49,26 @@ namespace ISD
 		}
 
 
-	template <> std::wstring value_to_hex_wstring<uint8>( uint8 value )
+	template <> std::wstring value_to_hex_wstring<u8>( u8 value )
 		{
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<uint16>( uint16 value )
+	template <> std::wstring value_to_hex_wstring<u16>( u16 value )
 		{
-		bigendian_from_value( (uint8*)&value, value ); // in-place make sure big endian
+		bigendian_from_value( (u8*)&value, value ); // in-place make sure big endian
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<uint32>( uint32 value )
+	template <> std::wstring value_to_hex_wstring<u32>( u32 value )
 		{
-		bigendian_from_value( (uint8*)&value, value ); // in-place make sure big endian
+		bigendian_from_value( (u8*)&value, value ); // in-place make sure big endian
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<uint64>( uint64 value )
+	template <> std::wstring value_to_hex_wstring<u64>( u64 value )
 		{
-		bigendian_from_value( (uint8*)&value, value ); // in-place make sure big endian
+		bigendian_from_value( (u8*)&value, value ); // in-place make sure big endian
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
@@ -76,11 +76,11 @@ namespace ISD
 		{
 		std::wstring ret;
 
-		ret += value_to_hex_wstring<uint32>( value.Data1 );
+		ret += value_to_hex_wstring<u32>( value.Data1 );
 		ret += L"-";
-		ret += value_to_hex_wstring<uint16>( value.Data2 );
+		ret += value_to_hex_wstring<u16>( value.Data2 );
 		ret += L"-";
-		ret += value_to_hex_wstring<uint16>( value.Data3 );
+		ret += value_to_hex_wstring<u16>( value.Data3 );
 		ret += L"-";
 		ret += bytes_to_hex_wstring( value.Data4 , 2 );
 		ret += L"-";

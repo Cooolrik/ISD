@@ -58,7 +58,7 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 	free( params );
 
 	// create the file name from the uuid
-	uint8 top_byte = (uuid.Data1 >> 24) & 0xff;
+	u8 top_byte = (uuid.Data1 >> 24) & 0xff;
 	std::wstring dir_name = value_to_hex_wstring( top_byte );
 	std::wstring file_name = value_to_hex_wstring( uuid ) + L".dat";
 	std::wstring file_path = path + L"\\" + file_name;
@@ -78,7 +78,7 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 		// failed to get the size
 		return (DWORD)Status::ECantOpen;
 		}
-	uint64 total_bytes_to_read = dfilesize.QuadPart;
+	u64 total_bytes_to_read = dfilesize.QuadPart;
 
 	// cant be less in size than the size of the hash at the end
 	if( total_bytes_to_read < hash_size )
@@ -87,23 +87,23 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 		}
 
 	// read in all of the file
-	std::vector<uint8> allocation;
+	std::vector<u8> allocation;
 	allocation.resize( total_bytes_to_read );
 	if( allocation.size() != total_bytes_to_read )
 		{
 		// failed to allocate the memory
 		return (DWORD)Status::ECantAllocate;
 		}
-	uint8 *buffer = allocation.data();
+	u8 *buffer = allocation.data();
 
-	uint64 bytes_read = 0;
+	u64 bytes_read = 0;
 	while( bytes_read < total_bytes_to_read )
 		{
 		// check how much to read and cap each read at UINT_MAX
-		uint64 bytes_left = total_bytes_to_read - bytes_read;
-		uint32 bytes_to_read_this_time = UINT_MAX;
+		u64 bytes_left = total_bytes_to_read - bytes_read;
+		u32 bytes_to_read_this_time = UINT_MAX;
 		if( bytes_left < UINT_MAX )
-			bytes_to_read_this_time = (uint32)bytes_left;
+			bytes_to_read_this_time = (u32)bytes_left;
 
 		// read in bytes into the memory allocation
 		DWORD bytes_that_were_read = 0;
@@ -120,9 +120,9 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 	::CloseHandle( file_handle );
 
 	// calculate the sha256 hash on the data, and make sure it compares correctly with the hash
-	const uint64 data_size = total_bytes_to_read - hash_size;
+	const u64 data_size = total_bytes_to_read - hash_size;
 	SHA256 sha( buffer, data_size );
-	uint8 digest[hash_size];
+	u8 digest[hash_size];
 	sha.GetDigest( digest );
 	if( memcmp( digest, &buffer[data_size], hash_size ) != 0 )
 		{

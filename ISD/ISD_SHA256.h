@@ -15,13 +15,13 @@ namespace ISD
 			void *MDData = nullptr;
 
 		public:
-			SHA256( const uint8 *Data = nullptr , size_t DataLength = 0 );
+			SHA256( const u8 *Data = nullptr , size_t DataLength = 0 );
 			~SHA256();
 
 			// update the SHA with the data at Data, length DataLength
-			void Update( const uint8 *Data, size_t DataLength );
+			void Update( const u8 *Data, size_t DataLength );
 
 			// get the calculated digest 
-			void GetDigest( uint8 DestDigest[32] );
+			void GetDigest( u8 DestDigest[32] );
 		};
 	};

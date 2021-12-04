@@ -82,6 +82,8 @@
   <ItemGroup>
     <ClInclude Include="ISD.h" />
     <ClInclude Include="ISD_Blob.h" />
+    <ClInclude Include="ISD_DataItemPointers.h" />
+    <ClInclude Include="ISD_DataTypes.h" />
     <ClInclude Include="ISD_Entity.h" />
     <ClInclude Include="ISD_EntitySerializer.h" />
     <ClInclude Include="ISD_EntityWriter.h" />
@@ -91,20 +93,19 @@
     <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_TestNode.h" />
     <ClInclude Include="ISD_Types.h" />
-    <ClInclude Include="ISD_EntityReader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
-    <ClCompile Include="ISD_EntityReaderTemplates.inl" />
     <ClCompile Include="ISD_EntitySerializer.cpp" />
+    <ClCompile Include="ISD_EntityWriter.cpp" />
     <ClCompile Include="ISD_SHA256.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="ISD_Types.cpp" />
-    <ClCompile Include="ISD_EntityWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ISD_EntityReaderTemplates.inl" />
     <None Include="ISD_EntityWriterTemplates.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

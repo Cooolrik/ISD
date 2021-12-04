@@ -27,20 +27,20 @@ namespace UnitTests
 			for( int byteorder = 0; byteorder < 2; ++byteorder )
 				{
 				// random values
-				const uint8 u8 = uint8_rand();
-				const uint16 u16 = uint16_rand();
-				const uint32 u32 = uint32_rand();
-				const uint64 u64 = uint64_rand();
-				const float f32 = float_rand();
-				const double f64 = double_rand();
-				const UUID id = {uint32_rand(), uint16_rand(), uint16_rand(), { uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() }};
+				const u8 u8val = u8_rand();
+				const u16 u16val = u16_rand();
+				const u32 u32val = u32_rand();
+				const u64 u64val = u64_rand();
+				const float f32val = float_rand();
+				const double f64val = double_rand();
+				const UUID id = {u32_rand(), u16_rand(), u16_rand(), { u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand() }};
 
 				// set up a random order of the values to write and read
 				const uint num_values = 100000;
 				int order[num_values];
 
 				// write random stuff to write stream
-				uint64 expected_size = 0;
+				u64 expected_size = 0;
 				MemoryWriteStream *ws = new MemoryWriteStream();
 				ws->SetFlipByteOrder( (bool)byteorder );
 				for( int i = 0; i < num_values; ++i )
@@ -51,22 +51,22 @@ namespace UnitTests
 					switch( item_type )
 						{
 						case 0:
-							ws->Write( u8 ); expected_size += 1;
+							ws->Write( u8val ); expected_size += 1;
 							break;
 						case 1:
-							ws->Write( u16 ); expected_size += 2;
+							ws->Write( u16val ); expected_size += 2;
 							break;
 						case 2:
-							ws->Write( u32 ); expected_size += 4;
+							ws->Write( u32val ); expected_size += 4;
 							break;
 						case 3:
-							ws->Write( u64 ); expected_size += 8;
+							ws->Write( u64val ); expected_size += 8;
 							break;
 						case 4:
-							ws->Write( f32 ); expected_size += 4;
+							ws->Write( f32val ); expected_size += 4;
 							break;
 						case 5:
-							ws->Write( f64 ); expected_size += 8;
+							ws->Write( f64val ); expected_size += 8;
 							break;
 						case 6:
 							ws->Write( id ); expected_size += 16;
@@ -78,7 +78,7 @@ namespace UnitTests
 				Assert::IsTrue( expected_size == ws->GetSize() );
 
 				// get the data, and set up a read stream
-				std::vector<uint8> memdata;
+				std::vector<u8> memdata;
 				memdata.resize( expected_size );
 				memcpy( memdata.data(), ws->GetData(), expected_size );
 				delete ws;
@@ -94,23 +94,23 @@ namespace UnitTests
 					switch( item_type )
 						{
 						case 0:
-							Assert::IsTrue( rs->Peek() == u8 ); // also test Peek functionality
-							AsserteReadValueIs( rs, u8 );
+							Assert::IsTrue( rs->Peek() == u8val ); // also test Peek functionality
+							AsserteReadValueIs( rs, u8val );
 							break;
 						case 1:
-							AsserteReadValueIs( rs, u16 );
+							AsserteReadValueIs( rs, u16val );
 							break;
 						case 2:
-							AsserteReadValueIs( rs, u32 );
+							AsserteReadValueIs( rs, u32val );
 							break;
 						case 3:
-							AsserteReadValueIs( rs, u64 );
+							AsserteReadValueIs( rs, u64val );
 							break;
 						case 4:
-							AsserteReadValueIs( rs, f32 );
+							AsserteReadValueIs( rs, f32val );
 							break;
 						case 5:
-							AsserteReadValueIs( rs, f64 );
+							AsserteReadValueIs( rs, f64val );
 							break;
 						case 6:
 							AsserteReadValueIs( rs, id );

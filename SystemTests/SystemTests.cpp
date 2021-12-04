@@ -79,9 +79,9 @@ int main()
 
 	//EntityLoader load;
 
-	//uint8 val[8] = {};
+	//u8 val[8] = {};
 	//float val32 = 10.f;
-	//bigendian_from_value<uint32>( val, (uint32)val32 );
+	//bigendian_from_value<u32>( val, (u32)val32 );
 
 	//load.Initialize( "../../ISDDir" );
 
@@ -94,19 +94,19 @@ int main()
 
 	//std::wstring name = value_to_hex_wstring( id );
 
-	//std::wstring top_byte = value_to_hex_wstring( (uint8)((id.Data1 >> 24) & 0xff) );
+	//std::wstring top_byte = value_to_hex_wstring( (u8)((id.Data1 >> 24) & 0xff) );
 
 	//// read the header
-	//uint8 arr[256];
+	//u8 arr[256];
 	//for( size_t i = 0; i < 256; ++i )
 	//	{
-	//	arr[i] = (uint8)i;
+	//	arr[i] = (u8)i;
 	//	}
 
 	//MemoryReadStream *pstream = new MemoryReadStream( arr , sizeof(arr) , false );
 
 	//std::vector<float> vec;
-	//*((uint64 *)arr) = 12;
+	//*((u64 *)arr) = 12;
 	//bool succ = pstream->Read( &vec );
 
 

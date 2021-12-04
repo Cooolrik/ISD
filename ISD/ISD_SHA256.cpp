@@ -7,7 +7,7 @@
 
 using namespace ISD;
 
-SHA256::SHA256( const uint8 *Data , size_t DataLength )
+SHA256::SHA256( const u8 *Data , size_t DataLength )
 	{
 	this->MDData = malloc( librock_SHA256_Init(0) );
 	librock_SHA256_Init( (librock_SHA256_CTX*)this->MDData );
@@ -22,9 +22,9 @@ SHA256::~SHA256()
 	free( this->MDData );
 	}
 
-void SHA256::Update( const uint8 *Data, size_t DataLength )
+void SHA256::Update( const u8 *Data, size_t DataLength )
 	{
-	const uint8 *End = &Data[DataLength];
+	const u8 *End = &Data[DataLength];
 
 	// run until end, in blocks of INT_MAX
 	while( Data < End )
@@ -44,7 +44,7 @@ void SHA256::Update( const uint8 *Data, size_t DataLength )
 	}
 
 // get the calculated digest 
-void SHA256::GetDigest( uint8 DestDigest[32] )
+void SHA256::GetDigest( u8 DestDigest[32] )
 	{
 	librock_SHA256_StoreFinal( DestDigest, (librock_SHA256_CTX *)this->MDData );
 	}

@@ -23,16 +23,16 @@ enum BlobFlags
 // header for each file blob
 struct BlobHeader
 	{
-	uint8 Magic[3]; // magic values of the ISD blob ( 0x49, 0x53, 0x44 )
-	uint8 Version; // version of the blob header. Initial version is 0.
-	uint8 Flags; // flags for the blob header
-	uint8 _padding[3]; // padding reserved for possible future use
-	uint64 DataSize; // size of the data, after the header
+	u8 Magic[3]; // magic values of the ISD blob ( 0x49, 0x53, 0x44 )
+	u8 Version; // version of the blob header. Initial version is 0.
+	u8 Flags; // flags for the blob header
+	u8 _padding[3]; // padding reserved for possible future use
+	u64 DataSize; // size of the data, after the header
 	};
 
 //bool BlobHeader::WriteToStream( MemoryWriteStream &ostream )
 //	{
-//	uint64 p = ostream.GetPosition();
+//	u64 p = ostream.GetPosition();
 //	ostream.Write( this->Magic, 3 );
 //	ostream.Write( this->Version );
 //	ostream.Write( this->Flags );
@@ -44,13 +44,13 @@ struct BlobHeader
 std::pair<Entity *, Status> ISD::EntitySerializer::FromMemoryStream( MemoryReadStream &input_stream )
 	{
 	Entity *entity = {};
-	uint64 expected_pos = {};
+	u64 expected_pos = {};
 
 	// read in the first 8 bytes of the header
 	BlobHeader header;
 	input_stream.Read( header.Magic, 3 );
-	header.Version = input_stream.Read<uint8>();
-	header.Flags = input_stream.Read<uint8>();
+	header.Version = input_stream.Read<u8>();
+	header.Flags = input_stream.Read<u8>();
 	input_stream.Read( header._padding, 3 );
 
 	// make sure it is an ISD file, and check flags
@@ -73,7 +73,7 @@ std::pair<Entity *, Status> ISD::EntitySerializer::FromMemoryStream( MemoryReadS
 		}
 
 	// make sure the stream has all the data
-	header.DataSize = input_stream.Read<uint64>();
+	header.DataSize = input_stream.Read<u64>();
 	if( (input_stream.GetPosition() + header.DataSize) > input_stream.GetSize() )
 		{
 		return std::pair<Entity *, Status>( nullptr, Status::EInvalid );

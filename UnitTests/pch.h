@@ -16,27 +16,27 @@
 
 using namespace ISD;
 
-inline void random_seed( int64 seed = -1 )
+inline void random_seed( i64 seed = -1 )
 	{
 	if( seed == -1 )
 		{
-		seed = int64(time( nullptr ));
+		seed = i64(time( nullptr ));
 		srand(uint( seed & 0xffffffff ));
 		}
 	}
 
 
 // add headers that you want to pre-compile here
-inline uint8 uint8_rand() { return (uint8)(rand() & 0xff); } 
-inline uint16 uint16_rand() { return (rand() << 4) ^ rand(); } 
-inline uint32 uint32_rand() { return uint32(uint16_rand()) << 16 | uint32(uint16_rand()); } 
-inline uint64 uint64_rand() { return uint64(uint32_rand()) << 32 | uint64(uint32_rand()); } 
-inline float float_rand() { return float(uint64_rand()); } 
-inline double double_rand() { return double(uint64_rand()); } 
+inline u8 u8_rand() { return (u8)(rand() & 0xff); } 
+inline u16 u16_rand() { return (rand() << 4) ^ rand(); } 
+inline u32 u32_rand() { return u32(u16_rand()) << 16 | u32(u16_rand()); } 
+inline u64 u64_rand() { return u64(u32_rand()) << 32 | u64(u32_rand()); } 
+inline float float_rand() { return float(u64_rand()); } 
+inline double double_rand() { return double(u64_rand()); } 
 
 inline UUID uuid_rand() 
 	{ 
-	const UUID id = {uint32_rand(), uint16_rand(), uint16_rand(), { uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand(), uint8_rand() }};
+	const UUID id = {u32_rand(), u16_rand(), u16_rand(), { u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand() }};
 	return id;
 	}
 
@@ -54,7 +54,7 @@ inline std::string str_rand( size_t min_len = 0 , size_t max_len = 1000 )
 
 inline size_t capped_rand( size_t minv, size_t maxv )
 	{
-	return (uint64_rand() % (maxv - minv)) + minv;
+	return (u64_rand() % (maxv - minv)) + minv;
 	}
 
 template<class T> T random_value();

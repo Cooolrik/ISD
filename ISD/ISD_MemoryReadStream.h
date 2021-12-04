@@ -19,27 +19,27 @@ namespace ISD
 	class MemoryReadStream
 		{
 		private:
-			const uint8 *Data = nullptr;
-			uint64 DataSize = 0;
-			uint64 DataPosition = 0;
+			const u8 *Data = nullptr;
+			u64 DataSize = 0;
+			u64 DataPosition = 0;
 			bool FlipByteOrder = false; // true if we should flip BE to LE or LE to BE
 
 			// read raw bytes from the memory stream
-			uint64 ReadRawData( void *dest, uint64 count );
+			u64 ReadRawData( void *dest, u64 count );
 
 			// read 1,2,4 or 8 byte values and make sure they are in the correct byte order
-			template <class T> uint64 ReadValues( T *dest, uint64 count );
-			template <> uint64 ReadValues<uint8>( uint8 *dest, uint64 count );
+			template <class T> u64 ReadValues( T *dest, u64 count );
+			template <> u64 ReadValues<u8>( u8 *dest, u64 count );
 
 		public:
-			MemoryReadStream( const void *_Data, uint64 _DataSize, bool _FlipByteOrder = false ) : Data( (uint8*)_Data ), DataSize( _DataSize ), FlipByteOrder(_FlipByteOrder) {};
+			MemoryReadStream( const void *_Data, u64 _DataSize, bool _FlipByteOrder = false ) : Data( (u8*)_Data ), DataSize( _DataSize ), FlipByteOrder(_FlipByteOrder) {};
 
 			// get the Size of the stream in bytes
-			uint64 GetSize() const;
+			u64 GetSize() const;
 
 			// Position is the current data position. the beginning of the stream is position 0. the position will not move past the end of the stream.
-			uint64 GetPosition() const;
-			bool SetPosition( uint64 new_pos );
+			u64 GetPosition() const;
+			bool SetPosition( u64 new_pos );
 
 			// if at EOF return true, which means that Position >= Size
 			bool IsEOF() const;
@@ -49,43 +49,43 @@ namespace ISD
 			void SetFlipByteOrder( bool value );
 
 			// Peek at the next byte in the stream, without modifing the Position or any data. If the Position is beyond the end of the stream, the value will be 0
-			uint8 Peek() const;
+			u8 Peek() const;
 
 			// read one item from the memory stream. makes sure to convert endianness
 			template <class T> T Read();
-			template <> int8 Read<int8>();
-			template <> int16 Read<int16>();
-			template <> int32 Read<int32>();
-			template <> int64 Read<int64>();
-			template <> uint8 Read<uint8>();
-			template <> uint16 Read<uint16>();
-			template <> uint32 Read<uint32>();
-			template <> uint64 Read<uint64>();
+			template <> i8 Read<i8>();
+			template <> i16 Read<i16>();
+			template <> i32 Read<i32>();
+			template <> i64 Read<i64>();
+			template <> u8 Read<u8>();
+			template <> u16 Read<u16>();
+			template <> u32 Read<u32>();
+			template <> u64 Read<u64>();
 			template <> UUID Read<UUID>();
 			template <> float Read<float>();
 			template <> double Read<double>();
 			//template <> std::string Read<std::string>();
 
 			// read multiple items from the memory stream. makes sure to convert endianness
-			uint64 Read( int8 *dest , uint64 count );
-			uint64 Read( int16 *dest , uint64 count );
-			uint64 Read( int32 *dest , uint64 count );
-			uint64 Read( int64 *dest , uint64 count );
-			uint64 Read( uint8 *dest , uint64 count );
-			uint64 Read( uint16 *dest , uint64 count );
-			uint64 Read( uint32 *dest , uint64 count );
-			uint64 Read( uint64 *dest , uint64 count );
-			uint64 Read( UUID *dest , uint64 count );
-			uint64 Read( float *dest , uint64 count );
-			uint64 Read( double *dest , uint64 count );
-			//uint64 Read( std::string *dest , uint64 count );
+			u64 Read( i8 *dest , u64 count );
+			u64 Read( i16 *dest , u64 count );
+			u64 Read( i32 *dest , u64 count );
+			u64 Read( i64 *dest , u64 count );
+			u64 Read( u8 *dest , u64 count );
+			u64 Read( u16 *dest , u64 count );
+			u64 Read( u32 *dest , u64 count );
+			u64 Read( u64 *dest , u64 count );
+			u64 Read( UUID *dest , u64 count );
+			u64 Read( float *dest , u64 count );
+			u64 Read( double *dest , u64 count );
+			//u64 Read( std::string *dest , u64 count );
 
 			// read a std::vector of items from stream. reads in the count, and returns false if not the full vector could be read.
 			//template<class T> bool Read( std::vector<T> *dest );
 
 		};
 
-	inline uint8 MemoryReadStream::Peek() const
+	inline u8 MemoryReadStream::Peek() const
 		{
 		if( this->DataPosition >= this->DataSize )
 			return 0;
@@ -93,10 +93,10 @@ namespace ISD
 			return this->Data[this->DataPosition];
 		}
 
-	inline uint64 MemoryReadStream::ReadRawData( void *dest, uint64 count )
+	inline u64 MemoryReadStream::ReadRawData( void *dest, u64 count )
 		{
 		// cap the end position
-		uint64 end_pos = this->DataPosition + count;
+		u64 end_pos = this->DataPosition + count;
 		if( end_pos > this->DataSize )
 			{
 			end_pos = this->DataSize;
@@ -109,9 +109,9 @@ namespace ISD
 		return count;
 		}
 
-	template <class T> inline uint64 MemoryReadStream::ReadValues( T *dest, uint64 count )
+	template <class T> inline u64 MemoryReadStream::ReadValues( T *dest, u64 count )
 		{
-		uint64 readc = this->ReadRawData( dest, count * sizeof(T) ) / sizeof(T);
+		u64 readc = this->ReadRawData( dest, count * sizeof(T) ) / sizeof(T);
 		if( !this->FlipByteOrder )
 			return readc;
 
@@ -120,22 +120,22 @@ namespace ISD
 		return readc;
 		}
 
-	template <> inline uint64 MemoryReadStream::ReadValues<uint8>( uint8 *dest, uint64 count ) 
+	template <> inline u64 MemoryReadStream::ReadValues<u8>( u8 *dest, u64 count ) 
 		{ 
 		return ReadRawData( dest, count ); 
 		}
 
-	inline uint64 MemoryReadStream::GetSize() const
+	inline u64 MemoryReadStream::GetSize() const
 		{
 		return this->DataSize;
 		}
 
-	inline uint64 MemoryReadStream::GetPosition() const 
+	inline u64 MemoryReadStream::GetPosition() const 
 		{ 
 		return this->DataPosition; 
 		}
 
-	inline bool MemoryReadStream::SetPosition( uint64 new_pos ) 
+	inline bool MemoryReadStream::SetPosition( u64 new_pos ) 
 		{ 
 		if( new_pos > DataSize )
 			{
@@ -162,51 +162,51 @@ namespace ISD
 
 	// read one item of data
 	template <class T> T MemoryReadStream::Read() { static_assert(false, "MemoryReadStream::Read<T>(), invalid template type T, use the implemented types"); }
-	template <> inline int8 MemoryReadStream::Read<int8>() { int8 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline int16 MemoryReadStream::Read<int16>() { int16 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline int32 MemoryReadStream::Read<int32>() { int32 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline int64 MemoryReadStream::Read<int64>() { int64 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline uint8 MemoryReadStream::Read<uint8>() { uint8 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline uint16 MemoryReadStream::Read<uint16>() { uint16 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline uint32 MemoryReadStream::Read<uint32>() { uint32 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline uint64 MemoryReadStream::Read<uint64>() { uint64 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline i8 MemoryReadStream::Read<i8>() { i8 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline i16 MemoryReadStream::Read<i16>() { i16 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline i32 MemoryReadStream::Read<i32>() { i32 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline i64 MemoryReadStream::Read<i64>() { i64 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline u8 MemoryReadStream::Read<u8>() { u8 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline u16 MemoryReadStream::Read<u16>() { u16 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline u32 MemoryReadStream::Read<u32>() { u32 dest = 0; this->Read( &dest, 1 ); return dest; }
+	template <> inline u64 MemoryReadStream::Read<u64>() { u64 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline UUID MemoryReadStream::Read<UUID>() { UUID dest = {}; this->Read( &dest, 1 ); return dest; }
 	template <> inline float MemoryReadStream::Read<float>() { float dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline double MemoryReadStream::Read<double>() { double dest = 0; this->Read( &dest, 1 ); return dest; }
 	//template <> inline std::string MemoryReadStream::Read<std::string>() { std::string dest; this->Read( &dest, 1 ); return dest; }
 
 	// 8 bit data
-	inline uint64 MemoryReadStream::Read( int8 *dest, uint64 count ) { return this->ReadValues<uint8>( (uint8*)dest, count ); }
-	inline uint64 MemoryReadStream::Read( uint8 *dest, uint64 count ) { return this->ReadValues<uint8>( dest, count ); }
+	inline u64 MemoryReadStream::Read( i8 *dest, u64 count ) { return this->ReadValues<u8>( (u8*)dest, count ); }
+	inline u64 MemoryReadStream::Read( u8 *dest, u64 count ) { return this->ReadValues<u8>( dest, count ); }
 
 	// 16 bit data
-	inline uint64 MemoryReadStream::Read( int16 *dest, uint64 count ) { return this->ReadValues<uint16>( (uint16*)dest, count ); }
-	inline uint64 MemoryReadStream::Read( uint16 *dest, uint64 count ) { return this->ReadValues<uint16>( dest, count ); }
+	inline u64 MemoryReadStream::Read( i16 *dest, u64 count ) { return this->ReadValues<u16>( (u16*)dest, count ); }
+	inline u64 MemoryReadStream::Read( u16 *dest, u64 count ) { return this->ReadValues<u16>( dest, count ); }
 
 	// 32 bit data
-	inline uint64 MemoryReadStream::Read( int32 *dest, uint64 count ) { return this->ReadValues<uint32>( (uint32*)dest, count ); }
-	inline uint64 MemoryReadStream::Read( uint32 *dest, uint64 count ) { return this->ReadValues<uint32>( dest, count ); }
-	inline uint64 MemoryReadStream::Read( float *dest, uint64 count ) { return this->ReadValues<uint32>( (uint32*)dest, count ); }
+	inline u64 MemoryReadStream::Read( i32 *dest, u64 count ) { return this->ReadValues<u32>( (u32*)dest, count ); }
+	inline u64 MemoryReadStream::Read( u32 *dest, u64 count ) { return this->ReadValues<u32>( dest, count ); }
+	inline u64 MemoryReadStream::Read( float *dest, u64 count ) { return this->ReadValues<u32>( (u32*)dest, count ); }
 
 	// 64 bit data
-	inline uint64 MemoryReadStream::Read( int64 *dest, uint64 count ) { return this->ReadValues<uint64>( (uint64*)dest, count ); }
-	inline uint64 MemoryReadStream::Read( uint64 *dest, uint64 count ) { return this->ReadValues<uint64>( dest, count ); }
-	inline uint64 MemoryReadStream::Read( double *dest, uint64 count ) { return this->ReadValues<uint64>( (uint64*)dest, count ); }
+	inline u64 MemoryReadStream::Read( i64 *dest, u64 count ) { return this->ReadValues<u64>( (u64*)dest, count ); }
+	inline u64 MemoryReadStream::Read( u64 *dest, u64 count ) { return this->ReadValues<u64>( dest, count ); }
+	inline u64 MemoryReadStream::Read( double *dest, u64 count ) { return this->ReadValues<u64>( (u64*)dest, count ); }
 
 	// UUIDs
-	inline uint64 MemoryReadStream::Read( UUID *dest, uint64 count ) 
+	inline u64 MemoryReadStream::Read( UUID *dest, u64 count ) 
 		{ 
-		for( uint64 i = 0; i < count; ++i )
+		for( u64 i = 0; i < count; ++i )
 			{
 			// we always store uuids big endian (the order which the hex values are printed when printing a UUID), regardless of machine, so read in the 16 bytes and assign
-			uint8 rawbytes[16];
+			u8 rawbytes[16];
 			if( this->Read( rawbytes, 16 ) != 16 )
 				return i; // could not read further, return number of succesful reads
 
 			// assign to the values
-			dest[i].Data1 = value_from_bigendian<uint32>( &rawbytes[0] );
-			dest[i].Data2 = value_from_bigendian<uint16>( &rawbytes[4] );
-			dest[i].Data3 = value_from_bigendian<uint16>( &rawbytes[6] );
+			dest[i].Data1 = value_from_bigendian<u32>( &rawbytes[0] );
+			dest[i].Data2 = value_from_bigendian<u16>( &rawbytes[4] );
+			dest[i].Data3 = value_from_bigendian<u16>( &rawbytes[6] );
 			memcpy( dest[i].Data4, &rawbytes[8], 8 );
 			}
 
@@ -214,17 +214,17 @@ namespace ISD
 		}
 
 	//// std::strings
-	//inline uint64 MemoryReadStream::Read( std::string *dest, uint64 count ) 
+	//inline u64 MemoryReadStream::Read( std::string *dest, u64 count ) 
 	//	{ 
 	//	for( uint i = 0; i < count; ++i )
 	//		{
 	//		// read string length
-	//		uint64 strl = 0;
+	//		u64 strl = 0;
 	//		if( this->Read( &strl, 1 ) != 1 )
 	//			return i; // failed reading, at end of stream, so return number of successful reads
 
 	//		// make sure there are enough bytes left in the stream to assign from the data
-	//		uint64 data_left = this->DataSize - this->DataPosition;
+	//		u64 data_left = this->DataSize - this->DataPosition;
 	//		if( data_left < strl )
 	//			return i; // failed reading, at end of stream, so return number of successful reads
 
@@ -240,7 +240,7 @@ namespace ISD
 	//// std::vector
 	//template<class T> bool MemoryReadStream::Read( std::vector<T> *dest )
 	//	{
-	//	uint64 count = 0;
+	//	u64 count = 0;
 	//	if( this->Read( &count, 1 ) != 1 )
 	//		return false; // could not read array
 

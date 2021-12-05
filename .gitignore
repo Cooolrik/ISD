@@ -3,6 +3,9 @@ ISD/ISD_EntityWriter.h
 ISD/ISD_EntityWriter.cpp
 ISD/ISD_EntityReader.h
 ISD/ISD_EntityReader.cpp
+ISD/ISD_DataTypes.h
+ISD/ISD_DataTypes.cpp
+ISD/ISD_DataValuePointers.h
 
 # User-specific files
 *.rsuser
@@ -349,5 +352,4 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-/ISD/ISD_DataTypes.h
-/ISD/ISD_DataItemPointers.h
+

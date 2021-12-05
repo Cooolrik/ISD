@@ -4,8 +4,7 @@
 #include "ISD_EntityReader.h"
 #include "ISD_MemoryReadStream.h"
 #include "ISD_Log.h"
-
-#include <glm/gtc/type_ptr.hpp>
+#include "ISD_DataValuePointers.h"
 
 // value_type: the ValueType enum to read the block as
 // object_type: the C++ object that stores the data (can be a basic type), such as u32, or glm::vec3
@@ -23,8 +22,13 @@ namespace ISD
 
 	// template method that Reads a small block of a specific ValueType VT to the stream. Since most value types 
 	// can have different bit depths, the second parameter I is the actual type of the data stored. The data can have more than one values of type I, the count is stored in IC.
-	template<ValueType VT, class I, size_t IC, bool empty_value_is_allowed> reader_status read_small_block( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, I *dest_data )
+	template<ValueType VT, class T> reader_status read_small_block( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, bool empty_value_is_allowed, T *dest_data )
 		{
+		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_UUID), "Invalid type for write_small_block");
+
+		const u64 value_size = sizeof( type_information<T>::value_type );
+		const u64 value_count = type_information<T>::value_count;
+
 		// record start position, for validation
 		const u64 start_pos = sstream.GetPosition();
 
@@ -38,7 +42,7 @@ namespace ISD
 			}
 
 		// calc the expected possible sizes. if empty value, the data size must be 0, else it is the expected size based on the item type (I) and count (IC)
-		const u64 dest_data_size_in_bytes = sizeof( I ) * IC;
+		const u64 dest_data_size_in_bytes = value_size * value_count;
 		const u64 expected_block_size_if_empty = key_size_in_bytes;
 		const u64 expected_block_size = dest_data_size_in_bytes + expected_block_size_if_empty;
 
@@ -53,7 +57,7 @@ namespace ISD
 			{
 			if( empty_value_is_allowed )
 				{
-				// if empty is allowed, make sure that we have that block size.
+				// if empty is allowed, make sure that we have the block size of an empty block
 				if( block_size != expected_block_size_if_empty )
 					{
 					ISDErrorLog << "The size of the block in the input stream:" << block_size << " does not match expected possible sizes: " << expected_block_size_if_empty << " (if empty value) or " << expected_block_size << " (if non-empty) " << ISDErrorLogEnd;
@@ -62,33 +66,34 @@ namespace ISD
 				}
 			else
 				{
-				// empty is not allowed, so regardless of the size, it is wrong, error out
-				ISDErrorLog << "The size of the block in the input stream:" << block_size << " does not match expected possible size (empty is not allowed): " << expected_block_size << ISDErrorLogEnd;
+				// empty is not allowed, so regardless of the size, it is invalid, error out
+				ISDErrorLog << "The size of the block in the input stream:" << block_size << " does not match expected size (empty is not allowed): " << expected_block_size << ISDErrorLogEnd;
 				return reader_status::fail;
 				}
 			}
 
-		// read in the value(s), IC is the number of values
+		// read in the value(s)
 		if( !is_empty_value )
 			{
-			const u64 read_count = sstream.Read( dest_data , IC );
-			if( read_count != IC )
+			const u64 read_count = sstream.Read( value_ptr(*dest_data) , value_count );
+			if( read_count != value_count )
 				{
-				ISDErrorLog << "Could not read all expected values from the input stream. Expected count: " << IC << " read count: " << read_count << ISDErrorLogEnd;
+				ISDErrorLog << "Could not read all expected values from the input stream. Expected count: " << value_count << " read count: " << read_count << ISDErrorLogEnd;
 				return reader_status::fail;
 				}
 			}
 
 		// read in the key data
 		char read_key[EntityMaxKeyLength];
-		const u64 read_key_length = sstream.Read( (i8*)read_key, (u64)key_size_in_bytes );
+		const u64 read_key_length = sstream.Read( (u8*)read_key, (u64)key_size_in_bytes );
 		if( read_key_length != (u64)key_size_in_bytes 
 			|| memcmp(key,read_key,(u64)key_size_in_bytes)!=0 )
 			{
+			ISDSanityCheckCoreDebugMacro( read_key_length < (u64)key_size_in_bytes );
 			std::string expected_key_name( key, key_size_in_bytes );
-			std::string read_key_name( read_key, key_size_in_bytes );
+			std::string read_key_name( read_key, read_key_length );
 			ISDErrorLog << "Unexpected key name in the stream. Expected name: " << expected_key_name << " read name: " << read_key_name << ISDErrorLogEnd;
-			return reader_status::fail;;
+			return reader_status::fail;
 			}
 
 		// get the position beyond the end of the block, and validate position
@@ -107,24 +112,44 @@ namespace ISD
 		return reader_status::success;
 		};
 
-	// returns the stream position of the start of the block, to be used when writing the size when ending the block
-	std::pair<bool,u64> begin_read_large_block( MemoryReadStream &sstream, ValueType VT, const char *key, const u8 key_size_in_bytes )
+	// special implementation of read_small_block for bool values, which reads a u8 and converts to bool
+	template<> reader_status read_small_block<ValueType::VT_Bool, bool>( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, bool empty_value_is_allowed, bool *dest_data )
+		{
+		u8 u8val;
+		reader_status status = read_small_block<ValueType::VT_Bool, u8>( sstream, key, key_size_in_bytes, empty_value_is_allowed, &u8val );
+		if( status != reader_status::fail )
+			{
+			(*dest_data) = (bool)u8val;
+			}
+		return status;
+		};
+	
+	// read the header of a large block
+	// returns the stream position of the expected end of the block, to validate the read position
+	// a stream position of 0 is not possible, and indicates error
+	u64 begin_read_large_block( MemoryReadStream &sstream, ValueType VT, const char *key, const u8 key_size_in_bytes )
 		{
 		const u64 start_pos = sstream.GetPosition();
 		ISDSanityCheckDebugMacro( key_size_in_bytes <= EntityMaxKeyLength ); // max key length
-
+	
 		// read and make sure we have the correct value type
 		const u8 value_type = sstream.Read<u8>();
 		if( value_type != (u8)VT )
 			{
 			// not the expected type
 			ISDErrorLog << "The type in the input stream:" << value_type << " does not match expected type: " << (u8)VT << ISDErrorLogEnd;
-			return std::pair<bool,u64>(false,0);
+			return 0;
 			}
-
+	
 		// check the size, and calculate expected end position
 		const u64 block_size = sstream.Read<u64>();
 		const u64 expected_end_pos = sstream.GetPosition() + block_size;
+		if( expected_end_pos > sstream.GetSize() )
+			{
+			// not the expected type
+			ISDErrorLog << "The block size:" << block_size << " points beyond the end of the stream size: " << (u8)VT << ISDErrorLogEnd;
+			return 0;
+			}
 
 		// read in the key length
 		const u8 read_key_size_in_bytes = sstream.Read<u8>();
@@ -133,9 +158,9 @@ namespace ISD
 			// not the expected type
 			std::string expected_key_name( key, key_size_in_bytes );
 			ISDErrorLog << "The size of the input key:" << read_key_size_in_bytes << " does not match expected size: " << key_size_in_bytes << " for key: \"" << expected_key_name << "\"" << ISDErrorLogEnd;
-			return std::pair<bool,u64>(false,0);
+			return 0;
 			}
-
+	
 		// read in the key data
 		char read_key[EntityMaxKeyLength];
 		sstream.Read( (i8*)read_key, (u64)key_size_in_bytes );
@@ -144,12 +169,12 @@ namespace ISD
 			std::string expected_key_name( key, key_size_in_bytes );
 			std::string read_key_name( read_key, key_size_in_bytes );
 			ISDErrorLog << "Unexpected key name in the stream. Expected name: " << expected_key_name << " read name: " << read_key_name << ISDErrorLogEnd;
-			return std::pair<bool,u64>(false,0);
+			return 0;
 			}
-
-		return std::pair<bool,u64>(true,expected_end_pos);
+	
+		return expected_end_pos;
 		}
-
+	
 	// ends the block, write the size of the block
 	bool end_read_large_block( MemoryReadStream &sstream, u64 expected_end_pos )
 		{
@@ -157,128 +182,245 @@ namespace ISD
 		return (end_pos == expected_end_pos); // make sure we have read in the full block
 		}
 
-	// class for reading arrays	
-	template<class I, bool empty_value_is_allowed> class read_array
+	template<ValueType VT, class T> reader_status read_array( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, bool empty_value_is_allowed, std::vector<T> *dest_items, std::vector<size_t> *dest_index )
 		{
-		private:
-			MemoryReadStream &sstream;
-
-			u64 start_pos = 0;
-			u64 expected_end_pos = 0;
-			u16 index_array_flags = 0;
-
-		public:
-			read_array( MemoryReadStream &_sstream ) : sstream( _sstream ) {}
-
-			reader_status read_header();
-
-			bool read_data(
-				I *data_items,
-				size_t data_items_count,
-				size_t *data_index,
-				size_t data_index_count
-			);
-		};
-			
-	template<class I, bool empty_value_is_allowed> reader_status read_large_block_array<I,empty_value_is_allowed>::read_header()
-		{
-		// assuming size_t is same size as u64, so no need for conversions
-		// (when this assert fails, the code needs to be updated to support other sizes of size_t)
+		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_UUID), "Invalid type for write_array");
 		static_assert(sizeof( u64 ) == sizeof( size_t ), "Unsupported size_t, current code requires it to be 8 bytes in size, equal to u64");
-		static_assert(sizeof( I ) <= 0xff, "Invalid size of I");
 
-		// record start of array data so we can check that it was written
-		this->start_pos = sstream.GetPosition();
+		ISDSanityCheckCoreDebugMacro( dest_items );
+
+		// read block header
+		const u64 expected_end_position = begin_read_large_block( sstream, VT, key, key_size_in_bytes );
+		if( expected_end_position == 0 )
+			{
+			ISDErrorLog << "begin_write_large_block() failed unexpectedly" << ISDErrorLogEnd;
+			return reader_status::fail;
+			}
 
 		// read in flags
-		this->index_array_flags = sstream.Read<u16>();
-		if( this->index_array_flags == 0 )
+		const u16 array_flags = sstream.Read<u16>();
+		if( array_flags == 0 )
 			{
+			// marked as empty, check that this is allowed
 			if( empty_value_is_allowed )
 				{
-				// empty value is allowed, return success if we have the right position
-				this->expected_end_pos = this->start_pos + sizeof( u16 );
-				if( sstream.GetPosition() == expected_end_pos )
-					return reader_status::success_empty;
-				else
+				// empty value is allowed, early out if the block end checks out
+				if( !end_read_large_block( sstream, expected_end_position ) )
+					{
+					ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
 					return reader_status::fail;
+					}
+
+				// all good
+				return reader_status::success_empty;
 				}
 			else
 				{
 				// empty is not allowed
-				ISDErrorLog << "The read stream value is empty, which is not allowed for this value" << ISDErrorLogEnd;
+				ISDErrorLog << "The read stream value is empty, which is not allowed for value \"" << key << "\"" << ISDErrorLogEnd;
 				return reader_status::fail;
 				}
 			}
 
 		// non-empty, decode the data
-		const u8 per_item_size = (u8)(index_array_flags & 0xff);
-		const bool has_index = (index_array_flags & 0x100) != 0;
+		const u8 per_item_size = (u8)(array_flags & 0xff);
+		const bool has_index = (array_flags & 0x100) != 0;
 
 		// make sure we have the right item size
-		if( (u8)sizeof( I ) != per_item_size )
+		const u8 value_size = u8(sizeof( type_information<T>::value_type ));
+		if( value_size != per_item_size )
 			{
 			ISDErrorLog << "The size of the items in the stream does not match the expected size" << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
 
 		// read in the item count
+		const u64 item_count = sstream.Read<u64>();
 
-			// write the item count and items
-			dstream.Write( u64(data_items_count) );
-			dstream.Write( data_items, data_items_count );
+		// make sure the item count is plausible before allocating the vector
+		const u64 maximum_possible_item_count = (expected_end_position - sstream.GetPosition()) / value_size;
+		if( item_count > maximum_possible_item_count )
+			{
+			ISDErrorLog << "The array item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
+			return reader_status::fail;
+			}
 
-			// if we have an index, write it 
-			if( data_index != nullptr )
+		// resize the destination vector
+		const u64 type_count = item_count / type_information<T>::value_count;
+		dest_items->resize( type_count );
+
+		// read in the data
+		T *p_data = dest_items->data();
+		const u64 read_item_count = sstream.Read( value_ptr( *p_data ), item_count );
+		if( read_item_count != item_count )
+			{
+			ISDErrorLog << "The stream could not read all the items for the array" << ISDErrorLogEnd;
+			return reader_status::fail;
+			}
+
+		// if we have an index, read it
+		if( has_index )
+			{
+			// make sure we DO expect an index
+			if( !dest_index )
 				{
-				// cast to u64* and write to stream 
-				// (the code assumes size_t and u64 are the same size, and can be cast, look at static_assert above)
-				dstream.Write( data_index, data_index_count );
+				ISDErrorLog << "Invalid array type: The stream type has an index, but the destination object does not." << ISDErrorLogEnd;
+				return reader_status::fail;
 				}
 
-			// make sure all data was written
-			expected_end_pos = start_pos
-				+ sizeof( u16 ) // the flags
-				+ sizeof( u64 ) // the item count
-				+ (data_items_count * sizeof( I )) // the items
-				+ ((data_index_count * sizeof( u64 ))); // the list of indices, if any
+			// read in the size of the index
+			ISDSanityCheckCoreDebugMacro( expected_end_position >= sstream.GetPosition() );
+			const u64 index_count = sstream.Read<u64>();
+			const u64 maximum_possible_index_count = (expected_end_position - sstream.GetPosition()) / sizeof( u64 );
+			if( index_count > maximum_possible_index_count )
+				{
+				ISDErrorLog << "The index item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
+
+			// resize the dest vector
+			dest_index->resize( index_count );
+
+			// read in the data
+			u64 *p_index_data = dest_index->data();
+			sstream.Read( p_index_data, index_count );
+			}
+		else
+			{
+			// make sure we do NOT expect an index
+			if( dest_index )
+				{
+				ISDErrorLog << "Invalid array type: The stream type has does not have an index, but the destination object does." << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
 			}
 
 		// make sure we are at the expected end pos
-		const u64 end_pos = dstream.GetPosition();
-		if( end_pos != expected_end_pos )
+		if( !end_read_large_block( sstream, expected_end_position ) )
 			{
-			ISDErrorLog << "End position of data " << end_pos << " do not equal the expected end position which is " << expected_end_pos << ISDErrorLogEnd;
-			return false;
+			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
+			return reader_status::fail;
 			}
 
-		return true;
+		return reader_status::success;
 		}
 
+		// read_array implementation for bool arrays (which need specific packing)
+		template <> reader_status read_array<ValueType::VT_Array_Bool, bool>( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<bool> *dest_items, std::vector<size_t> *dest_index )
+			{
+			ISDSanityCheckCoreDebugMacro( dest_items );
 
-	// VT_Bool 
-	template <> bool EntityReader::Read<bool>( const char *key, const u8 key_length, bool &value )
-		{
-		u8 u8val;
-		if( read_small_block<ValueType::VT_Bool, u8, 1, false>( this->sstream, key, key_length, &u8val ) == reader_status::fail )
-			return false;
-		value = (bool)u8val;
-		return true;
-		}
-	
-	template <> bool EntityReader::Read<optional_value<bool>>( const char *key, const u8 key_length, optional_value<bool> &value )
-		{
-		u8 u8val;
-		reader_status status = read_small_block<ValueType::VT_Bool,u8,1,true>( this->sstream, key, key_length, &u8val );
+			// read block header
+			const u64 expected_end_position = begin_read_large_block( sstream, ValueType::VT_Array_Bool, key, key_size_in_bytes );
+			if( expected_end_position == 0 )
+				{
+				ISDErrorLog << "begin_write_large_block() failed unexpectedly" << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
 
-		if( status == reader_status::fail ) 
-			return false;
-		else if( status == reader_status::success )
-			value.set( (bool)u8val );
-		else
-			value.clear();
+			// read in flags
+			const u16 array_flags = sstream.Read<u16>();
+			if( array_flags == 0 )
+				{
+				// marked as empty, check that this is allowed
+				if( empty_value_is_allowed )
+					{
+					// empty value is allowed, early out if the block end checks out
+					if( !end_read_large_block( sstream, expected_end_position ) )
+						{
+						ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
+						return reader_status::fail;
+						}
 
-		return true;
-		}
+					// all good
+					return reader_status::success_empty;
+					}
+				else
+					{
+					// empty is not allowed
+					ISDErrorLog << "The read stream value is empty, which is not allowed for value \"" << key << "\"" << ISDErrorLogEnd;
+					return reader_status::fail;
+					}
+				}
+
+			// non-empty, decode the data
+			const bool has_index = (array_flags & 0x100) != 0;
+
+			// read in the item count
+			const u64 value_count = sstream.Read<u64>();
+
+			// calculate the number of packed items.
+			// round up, should the last u8 be not fully filled
+			const u64 number_of_packed_u8s = (value_count+7) / 8; 
+
+			// make sure the item count is plausible before allocating the vector
+			const u64 maximum_possible_item_count = (expected_end_position - sstream.GetPosition());
+			if( number_of_packed_u8s > maximum_possible_item_count )
+				{
+				ISDErrorLog << "The array item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
+
+			// resize the destination vector
+			dest_items->resize( value_count );
+
+			// read in a u8 vector with the packed values
+			std::vector<u8> packed_vec( number_of_packed_u8s );
+			sstream.Read( packed_vec.data(), number_of_packed_u8s );
+
+			// unpack the bool vector from the u8 vector
+			for( u64 bool_index = 0; bool_index < value_count; ++bool_index )
+				{
+				const size_t packed_index = bool_index >> 3; // bool_index / 8
+				const size_t packed_subindex = bool_index & 0x7; // bool_index % 8
+				(*dest_items)[bool_index] = ((packed_vec[packed_index]) & (1 << packed_subindex)) != 0;
+				}
+
+			// if we have an index, read it
+			if( has_index )
+				{
+				// make sure we DO expect an index
+				if( !dest_index )
+					{
+					ISDErrorLog << "Invalid array type: The stream type has an index, but the destination object does not." << ISDErrorLogEnd;
+					return reader_status::fail;
+					}
+
+				// read in the size of the index
+				ISDSanityCheckCoreDebugMacro( expected_end_position >= sstream.GetPosition() );
+				const u64 index_count = sstream.Read<u64>();
+				const u64 maximum_possible_index_count = (expected_end_position - sstream.GetPosition()) / sizeof( u64 );
+				if( index_count > maximum_possible_index_count )
+					{
+					ISDErrorLog << "The index item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
+					return reader_status::fail;
+					}
+
+				// resize the dest vector
+				dest_index->resize( index_count );
+
+				// read in the data
+				u64 *p_index_data = dest_index->data();
+				sstream.Read( p_index_data, index_count );
+				}
+			else
+				{
+				// make sure we do NOT expect an index
+				if( dest_index )
+					{
+					ISDErrorLog << "Invalid array type: The stream type has does not have an index, but the destination object does." << ISDErrorLogEnd;
+					return reader_status::fail;
+					}
+				}
+
+			// make sure we are at the expected end pos
+			if( !end_read_large_block( sstream, expected_end_position ) )
+				{
+				ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
+
+			return reader_status::success;
+			}
 
 	};

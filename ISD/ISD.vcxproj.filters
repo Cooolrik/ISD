@@ -47,10 +47,13 @@
     <ClInclude Include="ISD_DataTypes.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_DataItemPointers.h">
+    <ClInclude Include="ISD_EntityWriter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_EntityWriter.h">
+    <ClInclude Include="ISD_DataValuePointers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_EntityReader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,6 +71,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ISD_EntityWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_DataTypes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_EntityReader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

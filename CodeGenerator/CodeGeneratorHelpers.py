@@ -33,6 +33,7 @@ base_type_UVec4 =  BaseType('UVec4',[BaseTypeVariant('u8vec4','u8',4),BaseTypeVa
 base_type_Mat2 =  BaseType('Mat2',[BaseTypeVariant('fmat2','float',4),BaseTypeVariant('dmat2','double',4)])    
 base_type_Mat3 =  BaseType('Mat3',[BaseTypeVariant('fmat3','float',9),BaseTypeVariant('dmat3','double',9)])    
 base_type_Mat4 =  BaseType('Mat4',[BaseTypeVariant('fmat4','float',16),BaseTypeVariant('dmat4','double',16)])
+base_type_Quat =  BaseType('Quat',[BaseTypeVariant('fquat','float',4),BaseTypeVariant('dquat','double',4)])
 base_type_UUID =  BaseType('UUID',[BaseTypeVariant('UUID','UUID',1)])
 
 base_types = [base_type_Bool,
@@ -51,6 +52,7 @@ base_types = [base_type_Bool,
               base_type_Mat2,
               base_type_Mat3,
               base_type_Mat4,
+              base_type_Quat,
               base_type_UUID]
 
 def run_module( name ):

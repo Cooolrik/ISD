@@ -58,27 +58,63 @@ namespace UnitTests
 			MemoryReadStream rs( ws.GetData(), ws.GetSize(), ws.GetFlipByteOrder() );
 			EntityReader er( rs );
 			rs.SetPosition( start_pos );
+
+			// read back value
 			T read_back_value;
 			bool read_successfully = er.Read( key.c_str() , (u8)key.size(), read_back_value );
 			Assert::IsTrue( read_successfully );
-			Assert::IsTrue( memcmp( &value, &read_back_value, sizeof( value ) ) == 0 );
+			Assert::IsTrue( value == read_back_value );
 
-			// read back the optional value as well
+			// read back optional value
 			optional_value<T> read_back_opt_value;
 			read_successfully = er.Read( key.c_str() , (u8)key.size(), read_back_opt_value );
 			Assert::IsTrue( read_successfully );
 			Assert::IsTrue( opt_value.has_value() == read_back_opt_value.has_value() );
 			if( opt_value.has_value() )
 				{
-				const T val1 = opt_value.value();
-				const T val2 = read_back_opt_value.value();
-				Assert::IsTrue( memcmp( &val1, &val2, sizeof( val1 ) ) == 0 );
+				Assert::IsTrue( opt_value.value() == read_back_opt_value.value() );
 				}
+
+			// read back vector of values
+			std::vector<T> read_back_value_vec;
+			read_successfully = er.Read( key.c_str() , (u8)key.size(), read_back_value_vec );
+			Assert::IsTrue( read_successfully );
+			Assert::IsTrue( value_vec == read_back_value_vec );
+
+			// read back optional vector of values
+			optional_value<std::vector<T>> read_back_opt_value_vec;
+			read_successfully = er.Read( key.c_str() , (u8)key.size(), read_back_opt_value_vec );
+			Assert::IsTrue( read_successfully );
+			Assert::IsTrue( opt_value_vec.has_value() == read_back_opt_value_vec.has_value() );
+			if( opt_value_vec.has_value() )
+				{
+				Assert::IsTrue( opt_value_vec.value() == read_back_opt_value_vec.value() );
+				}
+
+			// read back indexed_array of values
+			indexed_array<T> read_back_value_inxarr;
+			read_successfully = er.Read( key.c_str() , (u8)key.size(), read_back_value_inxarr );
+			Assert::IsTrue( read_successfully );
+			Assert::IsTrue( value_inxarr.values() == read_back_value_inxarr.values() );
+			Assert::IsTrue( value_inxarr.index() == read_back_value_inxarr.index() );
+
+			// read back optional indexed_array of values
+			optional_value<indexed_array<T>> read_back_opt_value_inxarr;
+			read_successfully = er.Read( key.c_str() , (u8)key.size(), read_back_opt_value_inxarr );
+			Assert::IsTrue( read_successfully );
+			Assert::IsTrue( read_back_opt_value_inxarr.has_value() == read_back_opt_value_inxarr.has_value() );
+			if( opt_value_inxarr.has_value() )
+				{
+				Assert::IsTrue( opt_value_inxarr.value().values() == read_back_opt_value_inxarr.value().values() );
+				Assert::IsTrue( opt_value_inxarr.value().index() == read_back_opt_value_inxarr.value().index() );
+				}
+
+
 			}
 
 		TEST_METHOD( TestEntityWriterAndReadback )
 			{
-			random_seed();
+			random_seed(0);
 
 			for( uint swap_byte_order_flag=0; swap_byte_order_flag<2; ++swap_byte_order_flag )
 				{
@@ -102,7 +138,7 @@ namespace UnitTests
 					};
 
 				TestEntityWriter_TestValueType<bool>( ws, ew, key_names );
-
+				
 				TestEntityWriter_TestValueType<i8>( ws, ew, key_names );
 				TestEntityWriter_TestValueType<i16>( ws, ew, key_names );
 				TestEntityWriter_TestValueType<i32>( ws, ew, key_names );

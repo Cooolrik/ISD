@@ -82,9 +82,10 @@
   <ItemGroup>
     <ClInclude Include="ISD.h" />
     <ClInclude Include="ISD_Blob.h" />
-    <ClInclude Include="ISD_DataItemPointers.h" />
     <ClInclude Include="ISD_DataTypes.h" />
+    <ClInclude Include="ISD_DataValuePointers.h" />
     <ClInclude Include="ISD_Entity.h" />
+    <ClInclude Include="ISD_EntityReader.h" />
     <ClInclude Include="ISD_EntitySerializer.h" />
     <ClInclude Include="ISD_EntityWriter.h" />
     <ClInclude Include="ISD_Log.h" />
@@ -96,6 +97,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
+    <ClCompile Include="ISD_DataTypes.cpp" />
+    <ClCompile Include="ISD_EntityReader.cpp" />
     <ClCompile Include="ISD_EntitySerializer.cpp" />
     <ClCompile Include="ISD_EntityWriter.cpp" />
     <ClCompile Include="ISD_SHA256.cpp">

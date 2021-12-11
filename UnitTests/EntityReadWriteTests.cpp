@@ -31,7 +31,6 @@ namespace UnitTests
 			u64 start_pos = ws.GetPosition();
 			u64 expected_pos = start_pos + 2 + sizeof( value ) + key.size();
 			bool write_successfully = ew.Write<T>( key.c_str(), (u8)key.size(), value );
-			Assert::IsTrue( ws.GetPosition() == expected_pos );
 			Assert::IsTrue( write_successfully );
 
 			// write an optional value
@@ -118,10 +117,16 @@ namespace UnitTests
 
 			for( uint swap_byte_order_flag=0; swap_byte_order_flag<2; ++swap_byte_order_flag )
 				{
+
 				MemoryWriteStream ws;
 				EntityWriter ew( ws );
 
 				ws.SetFlipByteOrder( (swap_byte_order_flag & 0x1) != 0 );
+
+				if( ws.GetFlipByteOrder() )
+					Logger::WriteMessage("Testing native byte order");
+				else
+					Logger::WriteMessage("Testing flipped byte order");
 
 				std::vector<std::string> key_names =
 					{
@@ -193,7 +198,7 @@ namespace UnitTests
 				TestEntityWriter_TestValueType<dmat4>( ws, ew, key_names );
 
 				TestEntityWriter_TestValueType<UUID>( ws, ew, key_names );
-				//TestEntityWriter_TestValueType<std::string>( ws, ew, key_names );
+				TestEntityWriter_TestValueType<string>( ws, ew, key_names );
 				}
 			}
 		};

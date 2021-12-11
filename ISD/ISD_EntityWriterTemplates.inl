@@ -102,7 +102,7 @@ namespace ISD
 		// record start of the array data, for error check
 		const u64 string_data_start_pos = dstream.GetPosition();
 
-		// if empty string
+		// if empty value (not same as empty string, which just has size 0)
 		if( !string_value )
 			{
 			// empty string, early out 
@@ -114,7 +114,7 @@ namespace ISD
 			return true;
 			}
 
-		// write the size of the string, and the actual string
+		// write the size of the string, and the actual string values
 		const u64 character_count = u64( string_value->size() );
 		const u64 values_size = character_count + sizeof( u64 );
 		dstream.Write( character_count );

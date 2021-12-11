@@ -85,3 +85,5 @@ template <> dmat4 random_value<dmat4>() { return dmat4(
 ) ; }
 
 template <> UUID random_value<UUID>() { return uuid_rand() ; }
+
+template <> std::string random_value<std::string>() { return str_rand(); }

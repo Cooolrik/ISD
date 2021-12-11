@@ -43,13 +43,14 @@ inline UUID uuid_rand()
 //// random string
 inline std::string str_rand( size_t min_len = 0 , size_t max_len = 1000 )
 	{
-	std::string str;
 	size_t strl = (rand() % (max_len-min_len)) + min_len;
+	std::string str;
+	str.resize( strl );
 	for( size_t i = 0; i < strl; ++i )
 		{
-		char s = (char)((rand() % 0x60) + 0x20); // generate ASCII values in the range 0x20 - 0x7f
-		str += s;
+		str[i] = (char)((rand() % 0x60) + 0x20); // generate ASCII values in the range 0x20 - 0x7f
 		}
+	return str;
 	}
 
 inline size_t capped_rand( size_t minv, size_t maxv )

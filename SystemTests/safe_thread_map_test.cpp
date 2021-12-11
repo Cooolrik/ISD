@@ -12,7 +12,7 @@ class uint_string_map_test_class
 	public:
 		static void uint_string_map_test_thread( void * ptr )
 			{
-			uint list[num_iters];
+			std::vector<uint> list(num_iters);
 			uint_string_map_test_class *pthis = (uint_string_map_test_class *)ptr;
 
 			// insert values into list

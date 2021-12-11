@@ -28,7 +28,7 @@ def ISD_EntityWriter_h():
 	lines.append('            // The Write function template, specifically implemented below for all supported value types.')
 	lines.append('            template <class T> bool Write( const char *key, const u8 key_length, const T &value );')
 	lines.append('')
-
+	
 	# print the base types
 	for basetype in hlp.base_types:
 		type_name = 'VT_' + basetype.name
@@ -91,7 +91,7 @@ def ISD_EntityWriter_cpp():
 			lines.append(f'	// {type_name}: {implementing_type}')
 			lines.append(f'	template <> bool EntityWriter::Write<{implementing_type}>( const char *key, const u8 key_length, const {implementing_type} &src_variable )')
 			lines.append(f'		{{')
-			lines.append(f'		return write_small_block<ValueType::{type_name},{implementing_type}>( this->dstream, key, key_length, &src_variable );')
+			lines.append(f'		return write_single_value<ValueType::{type_name},{implementing_type}>( this->dstream, key, key_length, &src_variable );')
 			lines.append(f'		}}')
 			lines.append(f'')
 			
@@ -99,7 +99,7 @@ def ISD_EntityWriter_cpp():
 			lines.append(f'	template <> bool EntityWriter::Write<optional_value<{implementing_type}>>( const char *key, const u8 key_length, const optional_value<{implementing_type}> &src_variable )')
 			lines.append(f'		{{')
 			lines.append(f'		const {implementing_type} *p_src_variable = (src_variable.has_value()) ? &(src_variable.value()) : nullptr;')
-			lines.append(f'		return write_small_block<ValueType::{type_name},{implementing_type}>( this->dstream, key, key_length, p_src_variable );')
+			lines.append(f'		return write_single_value<ValueType::{type_name},{implementing_type}>( this->dstream, key, key_length, p_src_variable );')
 			lines.append(f'		}}')
 			lines.append(f'')
 			

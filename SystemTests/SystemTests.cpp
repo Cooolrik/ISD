@@ -7,9 +7,7 @@
 #include "../ISD/ISD_TestNode.h"
 #include "../ISD/ISD_Log.h"
 #include "../ISD/ISD_EntityWriter.h"
-
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "../ISD/ISD_EntityReader.h"
 
 #include <Rpc.h>
 extern void safe_thread_map_test();
@@ -19,100 +17,97 @@ extern void safe_thread_map_test();
 	name();\
 	printf(" - Test: " #name " done\n");
 
-namespace ISD
-	{
-	typedef ver1::TestNode TestNode;
-	}
+using namespace ISD;
 
+bool LoadFile( std::string file_path , std::vector<u8> &allocation )
+	{
+	// open the file
+	HANDLE file_handle = ::CreateFileA( file_path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, nullptr );
+	if( file_handle == INVALID_HANDLE_VALUE )
+		{
+		// failed to open the file
+		return false;
+		}
+
+	// get the size
+	LARGE_INTEGER dfilesize = {};
+	if( !::GetFileSizeEx( file_handle, &dfilesize ) )
+		{
+		// failed to get the size
+		return false;
+		}
+	u64 total_bytes_to_read = dfilesize.QuadPart;
+
+	// read in all of the file
+	allocation.resize( total_bytes_to_read );
+	if( allocation.size() != total_bytes_to_read )
+		{
+		// failed to allocate the memory
+		return false;
+		}
+	u8 *buffer = allocation.data();
+
+	u64 bytes_read = 0;
+	while( bytes_read < total_bytes_to_read )
+		{
+		// check how much to read and cap each read at UINT_MAX
+		u64 bytes_left = total_bytes_to_read - bytes_read;
+		u32 bytes_to_read_this_time = UINT_MAX;
+		if( bytes_left < UINT_MAX )
+			bytes_to_read_this_time = (u32)bytes_left;
+
+		// read in bytes into the memory allocation
+		DWORD bytes_that_were_read = 0;
+		if( !::ReadFile( file_handle, &buffer[bytes_read], bytes_to_read_this_time, &bytes_that_were_read, nullptr ) )
+			{
+			// failed to read
+			return false;
+			}
+
+		// update number of bytes that were read
+		bytes_read += bytes_that_were_read;
+		}
+
+	::CloseHandle( file_handle );
+	return true;
+	}
 
 int main()
 	{
+	indexed_array<vec3> Vertices;
 
-	auto *coords = new std::vector<glm::vec3>( 100000 );
-	auto *coords_index = new std::vector<size_t>( 300000 );
-	auto *myarray = new ISD::indexed_array<glm::vec3>(*coords,*coords_index);
-	delete coords;
-	delete coords_index;
-	
-	ISD::MemoryWriteStream ws;
-	ISD::EntityWriter ew( ws );
-	
-	ew.Write( "mykey", 5, *myarray );
-	delete myarray;
-	
-	bool val = false;
-	ew.Write( "mykey2", 6, val );
-	
-	printf( "stream size: %lld", ws.GetPosition() );
-	
+	auto &values = Vertices.values();
+	auto &index = Vertices.index();
 
+	values.resize( 10000000 );
+	index.resize( 10000000 );
+	for( size_t i = 0; i < 10000000; ++i )
+		{
+		values[i] = vec3( i, i, i );
+		index[i] = i;
+		}
 
-	//glm::vec2 v;
+	MemoryWriteStream ws;
+	EntityWriter wr(ws);
 
-	//ISD::Log::Error() << "In read_small_block, the type in the input stream:" << 1 << " does not match expected type: " << 3 << std::endl;
+	wr.Write( "Vertices", 8, Vertices );
 
-	//BoolWriter(  )
-	//
-	//auto val = glm::value_ptr( v );
-	//
-	//std::vector<double> dat1 = {1,2,3,4,5,6,7,8,9,10};
-	//std::vector<double> dat2 = {1,2,3,4,5,6,7,8,9,10};
-	//
-	//ISD::indexed_array<double> arr1( dat1 );
-	//ISD::indexed_array<double> arr2( dat2 );
-	//
-	//const auto val1 = arr1.Index();
-	//const auto val2 = arr2.Index();
-	//
-	//const void *p1 = &(val1.second);
-	//const void *p2 = &(val2.second);
+	FILE *fp;
+	if( fopen_s( &fp, "test_write.dat", "wb" ) == 0 )
+		{
+		fwrite( ws.GetData(), ws.GetSize(), 1, fp );
+		fclose( fp );
+		}
 
-	//ISD::TestNode tn;
+	std::vector<u8> allocation;
+	LoadFile( "test_write.dat", allocation );
 
-	//tn.GetName();
+	MemoryReadStream rs(allocation.data(),allocation.size());
+	EntityReader er( rs );
 
-	//const auto &t = tn.GetTransformation();
+	indexed_array<vec3> DestVertices;
 
-	//const auto &tr = t.GetTranslation();
-
-	//RUN_TEST( safe_thread_map_test );
-
-	//EntityLoader load;
-
-	//u8 val[8] = {};
-	//float val32 = 10.f;
-	//bigendian_from_value<u32>( val, (u32)val32 );
-
-	//load.Initialize( "../../ISDDir" );
-
-	//UUID id;
-
-	//::UuidCreate( &id );
-
-	//MemoryWriteStream *ws = new MemoryWriteStream(4);
-	//ws->Write( id );
-
-	//std::wstring name = value_to_hex_wstring( id );
-
-	//std::wstring top_byte = value_to_hex_wstring( (u8)((id.Data1 >> 24) & 0xff) );
-
-	//// read the header
-	//u8 arr[256];
-	//for( size_t i = 0; i < 256; ++i )
-	//	{
-	//	arr[i] = (u8)i;
-	//	}
-
-	//MemoryReadStream *pstream = new MemoryReadStream( arr , sizeof(arr) , false );
-
-	//std::vector<float> vec;
-	//*((u64 *)arr) = 12;
-	//bool succ = pstream->Read( &vec );
-
-
-	//q t;
-	//t.t = pstream->Read<time_t>();
-	//t.t2 = pstream->Read<time_t>();
+	er.Read( "Vertices", 8, DestVertices );
 
 	return 0;
 	}

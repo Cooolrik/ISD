@@ -193,6 +193,7 @@ namespace UnitTests
 				TestEntityWriter_TestValueType<dmat4>( ws, ew, key_names );
 
 				TestEntityWriter_TestValueType<UUID>( ws, ew, key_names );
+				//TestEntityWriter_TestValueType<std::string>( ws, ew, key_names );
 				}
 			}
 		};

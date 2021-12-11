@@ -39,6 +39,8 @@ def ISD_DataTypes_h():
 	for bit_size in int_bit_range:
 		lines.append(f"\ttypedef std::uint{bit_size}_t u{bit_size};")
 	lines.append('')
+	lines.append(f"\ttypedef std::string string;")
+	lines.append('')
 
 	# typedef vector types
 	lines.append(f"\t// vector types")
@@ -119,6 +121,9 @@ def ISD_DataTypes_h():
 	# UUID info
 	lines.extend(print_type_information_header('UUID','UUID',1))
 
+	# string info
+	lines.extend(print_type_information_header('string','string',1))
+
 	# { static_assert(false, "Error: type_information template: The value type T does not have type information"); }
 	# end of file
 	lines.append('    };')
@@ -175,7 +180,10 @@ def ISD_DataTypes_cpp():
 
 	# UUID info
 	lines.extend(print_type_information_source('UUID','UUID',1))
-	
+
+	# std::string info
+	lines.extend(print_type_information_source('string','string',1))
+		
 	lines.append('    };')
 	hlp.write_lines_to_file("../ISD/ISD_DataTypes.cpp",lines)
 
@@ -239,6 +247,9 @@ def ISD_DataValuePointers_h():
 	lines.append('')
 	for const_type in nonconst_const_range:
 		lines.append(f"\tinline {const_type}UUID *value_ptr( {const_type}UUID &value ) {{ return &value; }}")
+	lines.append('')
+	for const_type in nonconst_const_range:
+		lines.append(f"\tinline {const_type}string *value_ptr( {const_type}string &value ) {{ return &value; }}")
 
 	# end of namespace
 	lines.append('    };')

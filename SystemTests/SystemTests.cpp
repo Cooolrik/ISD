@@ -72,9 +72,29 @@ bool LoadFile( std::string file_path , std::vector<u8> &allocation )
 	return true;
 	}
 
+class named_object
+	{
+	public:
+		optional_value<std::string> object_name;
+	};
+
 int main()
 	{
-	indexed_array<vec3> Vertices;
+	std::vector<std::unique_ptr<named_object>> object_vector;
+	object_vector.resize( 1000 );
+	for( size_t i = 0; i < 1000; ++i )
+		{
+		object_vector[i] = std::make_unique<named_object>();
+		object_vector[i]->object_name.set( "hej" );
+		}
+
+	optional_vector<std::unique_ptr<named_object>> opt_object_vector;
+	opt_object_vector.set();
+	std::move( std::begin(object_vector), std::end(object_vector), std::back_inserter(opt_object_vector.vector()) );
+
+	printf( "hej" );
+
+	/*idx_vector<vec3> Vertices;
 
 	auto &values = Vertices.values();
 	auto &index = Vertices.index();
@@ -84,7 +104,7 @@ int main()
 	for( size_t i = 0; i < 10000000; ++i )
 		{
 		values[i] = vec3( i, i, i );
-		index[i] = i;
+		index[i] = (int)i;
 		}
 
 	MemoryWriteStream ws;
@@ -105,9 +125,9 @@ int main()
 	MemoryReadStream rs(allocation.data(),allocation.size());
 	EntityReader er( rs );
 
-	indexed_array<vec3> DestVertices;
+	idx_vector<vec3> DestVertices;
 
-	er.Read( "Vertices", 8, DestVertices );
+	er.Read( "Vertices", 8, DestVertices );*/
 
 	return 0;
 	}

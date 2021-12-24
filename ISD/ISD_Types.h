@@ -263,6 +263,112 @@ namespace ISD
 			}
 		}
 
+	// idx_vector: std::vector of values, with an std::vector of int as index into the values
+	template <class _Ty, class _Alloc = std::allocator<_Ty>, class _IdxAlloc = std::allocator<i32>>
+	class idx_vector 
+		{
+		public:
+			using value_type = _Ty;
+			using allocator_type = _Alloc;
+			using pointer = typename std::vector<_Ty,_Alloc>::pointer;
+			using const_pointer = typename std::vector<_Ty,_Alloc>::const_pointer;
+			using reference = typename std::vector<_Ty,_Alloc>::reference;
+			using const_reference = typename std::vector<_Ty,_Alloc>::const_reference;
+			using size_type = typename std::vector<_Ty,_Alloc>::size_type;
+
+		private:
+			std::vector<_Ty,_Alloc> values_m;
+			std::vector<i32,_IdxAlloc> index_m;
+
+		public:
+			idx_vector() = default;
+			idx_vector( const idx_vector &_other ) : values_m( _other.values_m ) , index_m(_other.index_m) {}
+			idx_vector &operator = ( const idx_vector &_other ) { this->values_m = _other.values_m; this->index_m = _other.index_m; return *this; }
+
+			void clear() { this->values_m.clear(); this->index_m .clear(); }
+
+			std::vector<_Ty,_Alloc> &values() { return this->values_m; }
+			const std::vector<_Ty,_Alloc> &values() const { return this->values_m; }
+
+			std::vector<i32,_IdxAlloc> &index() { return this->index_m; }
+			const std::vector<i32,_IdxAlloc> &index() const { return this->index_m; }
+		};
+
+	// optional_vector: optional std::vector 
+	template <class _Ty, class _Alloc = std::allocator<_Ty>>
+	class optional_vector 
+		{
+		public:
+			using value_type = _Ty;
+			using allocator_type = _Alloc;
+			using pointer = typename std::vector<_Ty,_Alloc>::pointer;
+			using const_pointer = typename std::vector<_Ty,_Alloc>::const_pointer;
+			using reference = typename std::vector<_Ty,_Alloc>::reference;
+			using const_reference = typename std::vector<_Ty,_Alloc>::const_reference;
+			using size_type = typename std::vector<_Ty,_Alloc>::size_type;
+
+		private:
+			std::vector<_Ty,_Alloc> vector_m;
+			bool has_value_m = false;
+
+		public:
+			optional_vector() = default;
+			optional_vector( const optional_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
+			optional_vector &operator = ( const optional_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
+
+			void clear() { this->has_value_m = false; this->vector_m.clear(); }
+			void set() { this->has_value_m = true; this->vector_m.clear(); }
+			void set( const std::vector<_Ty,_Alloc> &_values ) { this->has_value_m = true; this->vector_m = _values; }
+			bool has_value() const { return this->has_value_m; }
+
+			std::vector<_Ty,_Alloc> &vector() { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
+			const std::vector<_Ty,_Alloc> &vector() const { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
+
+			std::vector<_Ty,_Alloc> &values() { return vector(); }
+			const std::vector<_Ty,_Alloc> &values() const { return vector(); }
+
+			operator std::vector<_Ty, _Alloc> &() { return vector(); }
+			operator const std::vector<_Ty,_Alloc> &() const { return vector(); }
+		};
+
+	// optional_idx_vector: optional idx_vector 
+	template <class _Ty, class _Alloc = std::allocator<_Ty>, class _IdxAlloc = std::allocator<i32>>
+	class optional_idx_vector 
+		{
+		public:
+			using value_type = _Ty;
+			using allocator_type = _Alloc;
+			using pointer = typename std::vector<_Ty,_Alloc>::pointer;
+			using const_pointer = typename std::vector<_Ty,_Alloc>::const_pointer;
+			using reference = typename std::vector<_Ty,_Alloc>::reference;
+			using const_reference = typename std::vector<_Ty,_Alloc>::const_reference;
+			using size_type = typename std::vector<_Ty,_Alloc>::size_type;
+
+		private:
+			idx_vector<_Ty,_Alloc> vector_m;
+			bool has_value_m = false;
+
+		public:
+			optional_idx_vector() = default;
+			optional_idx_vector( const optional_idx_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
+			optional_idx_vector &operator = ( const optional_idx_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
+
+			void clear() { this->has_value_m = false; this->vector_m.clear(); }
+			void set() { this->has_value_m = true; this->vector_m.clear(); }
+			void set( const idx_vector<_Ty,_Alloc,_IdxAlloc> &_vector ) { this->has_value_m = true; this->vector_m = _vector; }
+			void set( const std::vector<_Ty,_Alloc> &_values , const std::vector<i32,_IdxAlloc> &_index ) { this->has_value_m = true; this->vector_m.values() = _values; this->vector_m.index() = _index; }
+			bool has_value() const { return this->has_value_m; }
+
+			idx_vector<_Ty,_Alloc> &vector() { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
+			const idx_vector<_Ty,_Alloc> &vector() const { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
+
+			std::vector<_Ty,_Alloc> &values() { return this->vector().values(); }
+			const std::vector<_Ty,_Alloc> &values() const { return this->vector().values(); }
+
+			std::vector<i32,_IdxAlloc> &index() { return this->vector().index(); }
+			const std::vector<i32,_IdxAlloc> &index() const { return this->vector().index(); }
+		};
+
 	template<class T> class optional_value
 		{
 		protected:
@@ -273,54 +379,17 @@ namespace ISD
 			optional_value() = default;
 			optional_value( const T &_value ) : value_m( _value ), has_value_m( true ) {}
 			optional_value( const optional_value &other ) : value_m( other.value_m ) , has_value_m( other.has_value_m ) {}
+			optional_value &operator = ( const optional_value &_other ) { this->has_value_m = _other.has_value_m; this->value_m = _other.value_m; return *this; }
 
-			void clear() { this->value_m = {}; this->has_value_m = false; }
+			void clear() { this->has_value_m = false; this->value_m = {}; }
 			void set( const T &_value = {} ) { this->has_value_m = true; this->value_m = _value; }
 			bool has_value() const { return this->has_value_m; }
-			const T& value() const 
-				{ 
-				//ISDSanityCheckDebugMacro( this->has_value_m );
-				return this->value_m; 
-				}
 			
-			T &value() 
-				{ 
-				//ISDSanityCheckDebugMacro( this->has_value_m );
-				return this->value_m; 
-				}
+			T& value() { ISDSanityCheckDebugMacro( this->has_value_m ); return this->value_m; }
+			const T& value() const { ISDSanityCheckDebugMacro( this->has_value_m );	return this->value_m; }
+
+			operator T& () { return value(); }
+			operator const T& () const { return value(); }
 		};
-
-	template<class T> class indexed_array
-		{
-		protected:
-			std::vector<T> values_m;
-			std::vector<size_t> index_m;
-			
-		public:
-			indexed_array() = default;
-			indexed_array( const std::vector<T> &_values, const std::vector<size_t> &_index ) : values_m( _values ) , index_m(_index) {}
-			indexed_array( const indexed_array &_other ) : values_m( _other.values_m ) , index_m(_other.index_m) {}
-
-			std::vector<T> &values()
-				{ 
-				return this->values_m; 
-				}
-
-			std::vector<size_t> &index() 
-				{ 
-				return this->index_m;
-				}
-
-			const std::vector<T> &values() const 
-				{ 
-				return this->values_m; 
-				}
-
-			const std::vector<size_t> &index() const 
-				{ 
-				return this->index_m;
-				}
-		};
-
 
 	};

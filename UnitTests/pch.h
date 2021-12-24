@@ -16,15 +16,14 @@
 
 using namespace ISD;
 
-inline void random_seed( i64 seed = -1 )
-	{
-	if( seed == -1 )
-		{
-		seed = i64(time( nullptr ));
-		srand(uint( seed & 0xffffffff ));
-		}
-	}
+const i64 global_random_seed = 12876123876;
+const size_t global_number_of_passes = 10;
 
+inline void setup_random_seed()
+	{
+	i64 seed = (global_random_seed == -1) ? i64( time( nullptr ) ) : global_random_seed;
+	srand(uint( seed & 0xffffffff ));
+	}
 
 // add headers that you want to pre-compile here
 inline u8 u8_rand() { return (u8)(rand() & 0xff); } 
@@ -60,7 +59,7 @@ inline size_t capped_rand( size_t minv, size_t maxv )
 
 template<class T> T random_value();
 
-template<class T> optional_value<T> optional_random_value()
+template<class T> optional_value<T> random_optional_value()
 	{
 	optional_value<T> val;
 	if( random_value<bool>() )
@@ -70,50 +69,61 @@ template<class T> optional_value<T> optional_random_value()
 	return val;
 	}
 
-template <class T> std::vector<T> random_vector( size_t minc = 10, size_t maxc = 1000 )
+template <class T> void random_vector( std::vector<T> &dest , size_t minc = 10, size_t maxc = 1000 )
 	{
 	size_t len = capped_rand( minc, maxc );
-	std::vector<T> vals(len);
+	dest.resize(len);
 	for( size_t i = 0; i < len; ++i )
 		{
-		vals[i] = random_value<T>();
+		dest[i] = random_value<T>();
 		}
-	return vals;
 	}
 
-template<class T> optional_value<std::vector<T>> optional_random_vector()
+template<class T> void random_optional_vector( optional_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
 	{
-	optional_value<std::vector<T>> val;
 	if( random_value<bool>() )
 		{
-		val.set( random_vector<T>() );
+		dest.set();
+		random_vector<T>( dest.vector(), minc, maxc );
 		}
-	return val;
+	else
+		{
+		dest.clear();
+		}
 	}
 
-template <class T> indexed_array<T> random_indexed_array( size_t minc = 10, size_t maxc = 1000 )
+template <class T> void random_idx_vector( idx_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
 	{
 	// generate a random indexed array
-	std::vector<T> vals = random_vector<T>( minc, maxc );
-	size_t len = vals.size();
-
-	size_t index_len = capped_rand( minc, maxc );
-	std::vector<size_t> indices(index_len);
-	for( size_t i = 0; i < index_len; ++i )
+	random_vector<T>( dest.values(), minc, maxc );
+	i32 index_maxval = (i32)dest.values().size();
+	auto indices = dest.index();
+	if( index_maxval > 0 )
 		{
-		indices[i] = capped_rand( 0, len ); // make sure all indices are actually valid
+		size_t index_len = capped_rand( minc, maxc );
+		indices.resize( index_len );
+		for( size_t i = 0; i < index_len; ++i )
+			{
+			indices[i] = (i32)capped_rand( 0, index_maxval ); // make sure all indices are actually valid
+			}
 		}
-	return indexed_array<T>(vals,indices);
+	else
+		{
+		indices.clear();
+		}
 	}
 
-template<class T> optional_value<indexed_array<T>> optional_random_indexed_array()
+template<class T> void random_optional_idx_vector( optional_idx_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
 	{
-	optional_value<indexed_array<T>> val;
 	if( random_value<bool>() )
 		{
-		val.set( random_indexed_array<T>() );
+		dest.set();
+		random_idx_vector<T>( dest.vector(), minc, maxc );
 		}
-	return val;
+	else
+		{
+		dest.clear();
+		}
 	}
 
 #endif //PCH_H

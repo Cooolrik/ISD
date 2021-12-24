@@ -67,6 +67,7 @@ def ISD_DataTypes_h():
 	lines.append('')
 
 	# typedef quaternions
+	lines.append(f"\t// quaternion types")
 	lines.append(f"\ttypedef glm::qua<glm::f32,glm::packed_highp> fquat;")
 	lines.append(f"\ttypedef glm::qua<glm::f64,glm::packed_highp> dquat;")
 	lines.append('')

@@ -24,7 +24,7 @@ namespace ISD
 		// write empty stand in value for now (MAXi64 on purpose), which is definitely 
 		// wrong, as to trigger any test if the value is not overwritten with the correct value
 		dstream.Write( value_type );
-		dstream.Write( (u64)MAXINT );
+		dstream.Write( (u64)MAXINT64 );
 		dstream.Write( key_size_in_bytes );
 		dstream.Write( (i8*)key, key_size_in_bytes );
 
@@ -147,11 +147,11 @@ namespace ISD
 		}
 
 	// write indexed array to stream
-	template<ValueType VT, class T> bool write_array( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<T> *items, const std::vector<size_t> *index )
+	template<ValueType VT, class T> bool write_array( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<T> *items, const std::vector<i32> *index )
 		{
 		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_UUID), "Invalid type for write_array");
 		static_assert(sizeof( type_information<T>::value_type ) <= 0xff, "Invalid value size, cannot exceed 255 bytes");
-		static_assert(sizeof( u64 ) == sizeof( size_t ), "Unsupported size_t, current code requires it to be 8 bytes in size, equal to an u64"); // assuming sizeof(u64) == sizeof(size_t)
+		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at most 8 bytes in size, equal to an u64"); // assuming sizeof(u64) >= sizeof(size_t)
 		const size_t value_size = sizeof( type_information<T>::value_type );
 		const size_t value_count = type_information<T>::value_count;
 
@@ -199,13 +199,11 @@ namespace ISD
 			u64 index_size = 0;
 			if( index != nullptr )
 				{
-				// cast to u64* and write to stream 
-				// (the code assumes size_t and u64 are the same size, and can be cast, look at static_assert above)
 				const u64 index_count = index->size();
 				dstream.Write( index_count );
 				dstream.Write( index->data(), index_count );
 
-				index_size = (index_count * sizeof( u64 )) + sizeof( u64 ); // the index values and the value count
+				index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
 				}
 
 			// make sure all data was written
@@ -237,7 +235,7 @@ namespace ISD
 
 
 	// specialization of write_array for bool arrays
-	template<> bool write_array<ValueType::VT_Array_Bool, bool>( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<bool> *items, const std::vector<size_t> *index )
+	template<> bool write_array<ValueType::VT_Array_Bool, bool>( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<bool> *items, const std::vector<i32> *index )
 		{
 		// record start position, we need this in the end block
 		const u64 start_pos = dstream.GetPosition();
@@ -296,13 +294,11 @@ namespace ISD
 			u64 index_size = 0;
 			if( index != nullptr )
 				{
-				// cast to u64* and write to stream 
-				// (the code assumes size_t and u64 are the same size, and can be cast, look at static_assert above)
 				const u64 index_count = index->size();
 				dstream.Write( index_count );
 				dstream.Write( index->data(), index_count );
 
-				index_size = (index_count * sizeof( u64 )) + sizeof( u64 ); // the index values and the value count
+				index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
 				}
 
 			// make sure all data was written
@@ -333,7 +329,7 @@ namespace ISD
 		}
 
 	// specialization of write_array for string arrays
-	template<> bool write_array<ValueType::VT_Array_String, std::string>( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<std::string> *items, const std::vector<size_t> *index )
+	template<> bool write_array<ValueType::VT_Array_String, std::string>( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<std::string> *items, const std::vector<i32> *index )
 		{
 		// record start position, we need this in the end block
 		const u64 start_pos = dstream.GetPosition();
@@ -389,13 +385,11 @@ namespace ISD
 			u64 index_size = 0;
 			if( index != nullptr )
 				{
-				// cast to u64* and write to stream 
-				// (the code assumes size_t and u64 are the same size, and can be cast, look at static_assert above)
 				const u64 index_count = index->size();
 				dstream.Write( index_count );
 				dstream.Write( index->data(), index_count );
 
-				index_size = (index_count * sizeof( u64 )) + sizeof( u64 ); // the index values and the value count
+				index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
 				}
 
 			// make sure all data was written
@@ -424,4 +418,221 @@ namespace ISD
 		// succeeded
 		return true;
 		}
+
+	EntityWriter::~EntityWriter()
+		{
+		if( this->active_subsection )
+			{
+			ISDErrorLog << "EntityWriter still has an active subsection. You need to close any active subsection before deleting the object" << ISDErrorLogEnd;
+			}
+		}
+
+	// Build a section. 
+	EntityWriter *EntityWriter::BeginSection( const char *key, const u8 key_length )
+		{
+		if( this->active_subsection )
+			{
+			ISDErrorLog << "There is already an active subsection." << ISDErrorLogEnd;
+			return nullptr;
+			}
+
+		this->active_subsection = new EntityWriter( this->dstream );
+
+		if( !begin_write_large_block( this->dstream, ValueType::VT_Subsection, key, key_length ) )
+			{
+			ISDErrorLog << "begin_write_large_block failed to write header." << ISDErrorLogEnd;
+			return nullptr;
+			}
+
+		return this->active_subsection;
+		}
+
+	bool EntityWriter::EndSection( const EntityWriter *section_writer )
+		{
+		if( section_writer != this->active_subsection )
+			{
+			ISDErrorLog << "Invalid parameter section_writer, it does not match the internal value." << ISDErrorLogEnd;
+			return false;
+			}
+
+		if( !end_write_large_block( this->dstream, this->active_subsection->start_position ) )
+			{
+			ISDErrorLog << "end_write_large_block failed unexpectedly." << ISDErrorLogEnd;
+			return false;
+			}
+
+		delete this->active_subsection;
+		active_subsection = nullptr;
+		return true;
+		}
+
+	bool EntityWriter::WriteNullSection( const char *key, const u8 key_length )
+		{
+		EntityWriter *subsection = this->BeginSection( key, key_length );
+		if( !subsection )
+			{
+			return false;
+			}
+		return this->EndSection( subsection );
+		}
+
+	EntityWriter *EntityWriter::BeginSectionsArray( const char *key, const u8 key_length, const size_t array_size , const std::vector<i32> *index )
+		{
+		if( this->active_subsection )
+			{
+			ISDErrorLog << "There is already an active subsection" << ISDErrorLogEnd;
+			return nullptr;
+			}
+
+		// create a writer for the array
+		this->active_subsection = new EntityWriter( this->dstream );
+
+		if( !begin_write_large_block( this->dstream, ValueType::VT_Array_Subsection, key, key_length ) )
+			{
+			ISDErrorLog << "begin_write_large_block failed to write header." << ISDErrorLogEnd;
+			return nullptr;
+			}
+
+		const u64 start_pos = dstream.GetPosition();
+
+		// reset the size and write index in the array
+		this->active_subsection_index = ~0;
+		this->active_subsection_start_pos = 0;
+
+		// special case: nullptr array marked with ~0
+		if( array_size == ~0 )
+			{
+			this->active_subsection_array_size = 0;
+
+			// array is null array, write empty flags item and exit
+			const u16 array_flags = 0;
+			dstream.Write( array_flags );
+
+			// make sure we are at the correct position
+			const u64 expected_end_pos = start_pos + sizeof( u16 );
+			if( dstream.GetPosition() != expected_end_pos )
+				{
+				ISDErrorLog << "unexpectedly could not write to the stream." << ISDErrorLogEnd;
+				return nullptr;
+				}
+
+			// ok, return
+			return this->active_subsection;
+			}
+		else
+			{
+			this->active_subsection_array_size = array_size;
+			}
+
+		// flags section
+		const u16 has_index = (index) ? (0x100) : (0);
+		const u16 array_flags = has_index | 0x1; // lowest bit marks that the array is not empty
+		dstream.Write( array_flags );
+
+		// write index 
+		u64 index_size = 0;
+		if( index != nullptr )
+			{
+			const u64 index_count = index->size();
+			dstream.Write( index_count );
+			dstream.Write( index->data(), index_count );
+
+			index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
+			}
+
+		// write out the size of the array
+		this->dstream.Write( u64( this->active_subsection_array_size ) );
+
+		// check the position
+		const u64 expected_end_pos = start_pos + sizeof( u16 ) + sizeof( u64 ) + index_size;
+		if( dstream.GetPosition() != expected_end_pos )
+			{
+			ISDErrorLog << "unexpectedly could not write to the stream." << ISDErrorLogEnd;
+			return nullptr;
+			}
+				
+		return this->active_subsection;
+		}
+
+	bool EntityWriter::BeginSectionInArray( const EntityWriter *sections_array_writer, const size_t section_index )
+		{
+		if( this->active_subsection != sections_array_writer )
+			{
+			ISDErrorLog << "Synch error, currently not writing a subsection array" << ISDErrorLogEnd;
+			return false;
+			}
+		if( (this->active_subsection_index+1) != section_index )
+			{
+			ISDErrorLog << "Synch error, incorrect subsection index" << ISDErrorLogEnd;
+			return false;
+			}
+		if( section_index >= this->active_subsection_array_size )
+			{
+			ISDErrorLog << "Incorrect subsection index, out of array bounds" << ISDErrorLogEnd;
+			return false;
+			}
+
+		this->active_subsection_index = section_index;
+		this->active_subsection_start_pos = this->dstream.GetPosition();
+
+		// write a temporary subsection size
+		dstream.Write( (u64)MAXINT64 );
+
+		return dstream.GetPosition() == (this->active_subsection_start_pos + sizeof( u64 ));
+		}
+
+	bool EntityWriter::EndSectionInArray( const EntityWriter *sections_array_writer, const size_t section_index )
+		{
+		if( this->active_subsection != sections_array_writer || this->active_subsection_index != section_index )
+			{
+			ISDErrorLog << "Synch error, currently not writing a subsection array, or incorrect section index" << ISDErrorLogEnd;
+			return false;
+			}
+
+		const u64 end_pos = dstream.GetPosition();
+		const u64 block_size = end_pos - this->active_subsection_start_pos - 8; // total block size - ( sizeof( section_size_value )=8 )
+		dstream.SetPosition( this->active_subsection_start_pos ); 
+		dstream.Write( block_size );
+		dstream.SetPosition( end_pos ); // move back the where we were
+		return (end_pos > this->active_subsection_start_pos); // only thing we really can check
+		}
+
+	bool EntityWriter::EndSectionsArray( const EntityWriter *sections_array_writer )
+		{
+		if( this->active_subsection != sections_array_writer )
+			{
+			ISDErrorLog << "Synch error, currently not writing a subsection array" << ISDErrorLogEnd;
+			return false;
+			}
+		if( (this->active_subsection_index+1) != this->active_subsection_array_size )
+			{
+			ISDErrorLog << "Synch error, the subsection index does not equal the end of the array" << ISDErrorLogEnd;
+			return false;
+			}
+
+		if( !end_write_large_block( this->dstream, this->active_subsection->start_position ) )
+			{
+			ISDErrorLog << "end_write_large_block failed unexpectedly." << ISDErrorLogEnd;
+			return false;
+			}
+
+		// release active subsection writer
+		delete this->active_subsection;
+		this->active_subsection = nullptr;
+		this->active_subsection_index = ~0;
+		this->active_subsection_start_pos = 0;
+		this->active_subsection_array_size = 0;
+		return true;
+		}
+
+	bool EntityWriter::WriteNullSectionsArray( const char *key, const u8 key_length )
+		{
+		EntityWriter *subsection = this->BeginSectionsArray( key, key_length, ~0, nullptr );
+		if( !subsection )
+			{
+			return false;
+			}
+		return this->EndSectionsArray( subsection );
+		}
+
 	};

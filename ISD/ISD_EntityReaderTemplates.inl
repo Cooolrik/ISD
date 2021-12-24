@@ -278,7 +278,7 @@ namespace ISD
 			}
 		}
 
-	bool read_array_index( MemoryReadStream &sstream, const bool has_index , const u64 expected_end_position , std::vector<size_t> *dest_index )
+	bool read_array_index( MemoryReadStream &sstream, const bool has_index , const u64 expected_end_position , std::vector<i32> *dest_index )
 		{
 		// if we have an index, read it
 		if( has_index )
@@ -293,7 +293,7 @@ namespace ISD
 			// read in the size of the index
 			ISDSanityCheckCoreDebugMacro( expected_end_position >= sstream.GetPosition() );
 			const u64 index_count = sstream.Read<u64>();
-			const u64 maximum_possible_index_count = (expected_end_position - sstream.GetPosition()) / sizeof( u64 );
+			const u64 maximum_possible_index_count = (expected_end_position - sstream.GetPosition()) / sizeof( u32 );
 			if( index_count > maximum_possible_index_count )
 				{
 				ISDErrorLog << "The index item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
@@ -304,7 +304,7 @@ namespace ISD
 			dest_index->resize( index_count );
 
 			// read in the data
-			u64 *p_index_data = dest_index->data();
+			i32 *p_index_data = dest_index->data();
 			sstream.Read( p_index_data, index_count );
 			}
 		else
@@ -319,10 +319,10 @@ namespace ISD
 		return true;
 		}
 
-	template<ValueType VT, class T> reader_status read_array( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<T> *dest_items, std::vector<size_t> *dest_index )
+	template<ValueType VT, class T> reader_status read_array( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<T> *dest_items, std::vector<i32> *dest_index )
 		{
 		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_UUID), "Invalid type for generic read_array template");
-		static_assert(sizeof( u64 ) == sizeof( size_t ), "Unsupported size_t, current code requires it to be 8 bytes in size, equal to u64");
+		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at max 8 bytes in size, equal to u64");
 
 		ISDSanityCheckCoreDebugMacro( dest_items );
 
@@ -394,7 +394,7 @@ namespace ISD
 		}
 
 	// read_array implementation for bool arrays (which need specific packing)
-	template <> reader_status read_array<ValueType::VT_Array_Bool, bool>( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<bool> *dest_items, std::vector<size_t> *dest_index )
+	template <> reader_status read_array<ValueType::VT_Array_Bool, bool>( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<bool> *dest_items, std::vector<i32> *dest_index )
 		{
 		ISDSanityCheckCoreDebugMacro( dest_items );
 
@@ -462,7 +462,7 @@ namespace ISD
 		return reader_status::success;
 		}
 
-	template<> reader_status read_array<ValueType::VT_Array_String, string>( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<string> *dest_items, std::vector<size_t> *dest_index )
+	template<> reader_status read_array<ValueType::VT_Array_String, string>( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<string> *dest_items, std::vector<i32> *dest_index )
 		{
 		static_assert(sizeof( u64 ) == sizeof( size_t ), "Unsupported size_t, current code requires it to be 8 bytes in size, equal to u64");
 

@@ -23,6 +23,8 @@ namespace UnitTests
 
 		TEST_METHOD( MemoryWriteReadStream )
 			{
+			setup_random_seed();
+
 			// run twice, one with flipped, one with non-flipped byte order
 			for( int byteorder = 0; byteorder < 2; ++byteorder )
 				{
@@ -36,7 +38,7 @@ namespace UnitTests
 				const UUID id = {u32_rand(), u16_rand(), u16_rand(), { u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand() }};
 
 				// set up a random order of the values to write and read
-				const uint num_values = 100000;
+				const uint num_values = 1000;
 				int order[num_values];
 
 				// write random stuff to write stream

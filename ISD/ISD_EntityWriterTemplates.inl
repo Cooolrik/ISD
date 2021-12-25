@@ -146,6 +146,53 @@ namespace ISD
 		return true;
 		}
 
+	// reads an array header and value size from the stream, and decodes into flags, then reads the index if one exists. 
+	bool write_array_metadata_and_index( MemoryWriteStream &dstream, size_t per_item_size, size_t item_count, const std::vector<i32> *index )
+		{
+		static_assert(sizeof( u64 ) <= sizeof( size_t ), "Unsupported size_t, current code requires it to be at least 8 bytes in size, equal to u64");
+		ISDSanityCheckDebugMacro( per_item_size <= 0xff );
+
+		const u64 start_pos = dstream.GetPosition();
+
+		// indexed array flags: size of each item (if need to decode array outside regular decoding) and bit set if index is used 
+		const u16 has_index = (index) ? (0x100) : (0);
+		const u16 index_is_64bit = 0; // we do not support 64 bit indices yet
+		const u16 array_flags = has_index | index_is_64bit | u16(per_item_size);
+		dstream.Write( array_flags );
+
+		// write the number of items
+		dstream.Write( u64(item_count) );
+
+		// if we have an index, write it 
+		u64 index_size = 0;
+		if( index != nullptr )
+			{
+			const u64 index_count = index->size();
+			dstream.Write( index_count );
+			dstream.Write( index->data(), index_count );
+
+			index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
+			}
+
+		// make sure all data was written
+		const u64 expected_end_pos = 
+			start_pos
+			+ sizeof( u16 ) // the flags
+			+ sizeof( u64 ) // the item count
+			+ index_size; // the (optional) index
+
+		const u64 end_pos = dstream.GetPosition();
+		if( end_pos != expected_end_pos )
+			{
+			ISDErrorLog << "End position of data " << end_pos << " does not equal the expected end position which is " << expected_end_pos << ISDErrorLogEnd;
+			return false;
+			}
+
+		return true;
+		}
+
+
+
 	// write indexed array to stream
 	template<ValueType VT, class T> bool write_array( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<T> *items, const std::vector<i32> *index )
 		{
@@ -153,7 +200,7 @@ namespace ISD
 		static_assert(sizeof( type_information<T>::value_type ) <= 0xff, "Invalid value size, cannot exceed 255 bytes");
 		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at most 8 bytes in size, equal to an u64"); // assuming sizeof(u64) >= sizeof(size_t)
 		const size_t value_size = sizeof( type_information<T>::value_type );
-		const size_t value_count = type_information<T>::value_count;
+		const size_t values_per_type = type_information<T>::value_count;
 
 		// record start position, we need this in the end block
 		const u64 start_pos = dstream.GetPosition();
@@ -165,74 +212,43 @@ namespace ISD
 			return false;
 			}
 		
-		// record start of the array data, for error check
-		const u64 array_data_start_pos = dstream.GetPosition();
-
-		// if empty items vector
-		u64 expected_end_pos = 0;
-		if( !items )
+		// write data if we have it
+		if( items )
 			{
-			// empty data, mark flags field as empty
-			dstream.Write( (u16)0 );
-
-			// calc the end position, which is only the flags field 
-			expected_end_pos = array_data_start_pos + sizeof( u16 );
-			}
-		else
-			{
-			// indexed array flags: size of each item (if need to decode array outside regular decoding) and bit set if index is used 
-			const u16 has_index = (index) ? (0x100) : (0);
-			const u16 array_flags = has_index | u16(value_size);
-			dstream.Write( array_flags );
-
-			// write the value count and values
-			const u64 values_count = items->size() * value_count;
-			const u64 values_size = (values_count * value_size) + sizeof( u64 );
-			dstream.Write( values_count );
+			const u64 values_count = items->size() * values_per_type;
+			if( !write_array_metadata_and_index( dstream, value_size, values_count, index ) )
+				{
+				return false;
+				}
+			
+			// write the values
 			if( values_count > 0 )
 				{
 				const type_information<T>::value_type *p_values = value_ptr( *(items->data()) );
+
+				const u64 values_expected_end_pos = dstream.GetPosition() + (values_count * value_size);
 				dstream.Write( p_values , values_count );
+				const u64 values_end_pos = dstream.GetPosition();
+
+				// make sure all were written
+				if( values_end_pos != values_expected_end_pos )
+					{
+					ISDErrorLog << "End position of data " << values_end_pos << " does not equal the expected end position which is " << values_expected_end_pos << ISDErrorLogEnd;
+					return false;
+					}
 				}
-
-			// if we have an index, write it 
-			u64 index_size = 0;
-			if( index != nullptr )
-				{
-				const u64 index_count = index->size();
-				dstream.Write( index_count );
-				dstream.Write( index->data(), index_count );
-
-				index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
-				}
-
-			// make sure all data was written
-			expected_end_pos = 
-				array_data_start_pos
-				+ sizeof( u16 ) // the flags
-				+ values_size // the values 
-				+ index_size; // the (optional) index
 			}
 
-		// end the block by going back to the start and writing the start position offset
+		// end the block by going back to the start and writing the size of the payload
 		if( !end_write_large_block( dstream, start_pos ) )
 			{
 			ISDErrorLog << "end_write_large_block() failed unexpectedly" << ISDErrorLogEnd;
 			return false;
 			}
 
-		// make sure we are at the expected end pos
-		const u64 end_pos = dstream.GetPosition();
-		if( end_pos != expected_end_pos )
-			{
-			ISDErrorLog << "End position of data " << end_pos << " does not equal the expected end position which is " << expected_end_pos << ISDErrorLogEnd;
-			return false;
-			}
-
 		// succeeded
 		return true;
 		}
-
 
 	// specialization of write_array for bool arrays
 	template<> bool write_array<ValueType::VT_Array_Bool, bool>( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<bool> *items, const std::vector<i32> *index )
@@ -247,32 +263,19 @@ namespace ISD
 			return false;
 			}
 
-		// record start of the array data, for error check
-		const u64 array_data_start_pos = dstream.GetPosition();
-
-		// if empty items vector
-		u64 expected_end_pos = 0;
-		if( !items )
+		// write data if we have it
+		if( items )
 			{
-			// empty data, mark flags field as empty
-			dstream.Write( (u16)0 );
-
-			// calc the end position, which is only the flags field 
-			expected_end_pos = array_data_start_pos + sizeof( u16 );
-			}
-		else
-			{
-			const u16 has_index = (index) ? (0x100) : (0);
-			const u16 array_flags = has_index | 0x1; // lowest bit marks that the array is not empty
-			dstream.Write( array_flags );
-
 			// write the item count and items
-			const u64 items_count = u64( items->size() );
-			const u64 number_of_packed_u8s = (items_count+7) / 8; 
-			const u64 values_size = number_of_packed_u8s + sizeof( u64 );
-			dstream.Write( items_count );
-			if( items_count > 0 )
+			if( !write_array_metadata_and_index( dstream, 0, items->size(), index ) )
 				{
+				return false;
+				}
+
+			if( items->size() > 0 )
+				{
+				const u64 number_of_packed_u8s = (items->size()+7) / 8; 
+
 				// pack the bool vector to a temporary u8 vector
 				// round up, should the last u8 be not fully filled
 				std::vector<u8> packed_vec( number_of_packed_u8s );
@@ -287,40 +290,23 @@ namespace ISD
 					}
 
 				// write u8 vector to stream
+				const u64 values_expected_end_pos = dstream.GetPosition() + number_of_packed_u8s;
 				dstream.Write( packed_vec.data(), number_of_packed_u8s );
+				const u64 values_end_pos = dstream.GetPosition();
+
+				// make sure all were written
+				if( values_end_pos != values_expected_end_pos )
+					{
+					ISDErrorLog << "End position of data " << values_end_pos << " does not equal the expected end position which is " << values_expected_end_pos << ISDErrorLogEnd;
+					return false;
+					}
 				}
-
-			// if we have an index, write it 
-			u64 index_size = 0;
-			if( index != nullptr )
-				{
-				const u64 index_count = index->size();
-				dstream.Write( index_count );
-				dstream.Write( index->data(), index_count );
-
-				index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
-				}
-
-			// make sure all data was written
-			expected_end_pos = 
-				array_data_start_pos
-				+ sizeof( u16 ) // the flags
-				+ values_size // the values 
-				+ index_size; // the (optional) index
 			}
 
 		// end the block by going back to the start and writing the start position offset
 		if( !end_write_large_block( dstream, start_pos ) )
 			{
 			ISDErrorLog << "end_write_large_block() failed unexpectedly" << ISDErrorLogEnd;
-			return false;
-			}
-
-		// make sure we are at the expected end pos
-		const u64 end_pos = dstream.GetPosition();
-		if( end_pos != expected_end_pos )
-			{
-			ISDErrorLog << "End position of data " << end_pos << " does not equal the expected end position which is " << expected_end_pos << ISDErrorLogEnd;
 			return false;
 			}
 
@@ -341,31 +327,23 @@ namespace ISD
 			return false;
 			}
 
-		// record start of the array data, for error check
-		const u64 array_data_start_pos = dstream.GetPosition();
-
-		// if empty items vector
-		u64 expected_end_pos = 0;
-		if( !items )
+		// write data if we have it
+		if( items )
 			{
-			// empty data, mark flags field as empty
-			dstream.Write( (u16)0 );
-
-			// calc the end position, which is only the flags field 
-			expected_end_pos = array_data_start_pos + sizeof( u16 );
-			}
-		else
-			{
-			const u16 has_index = (index) ? (0x100) : (0);
-			const u16 array_flags = has_index | 0x1; // lowest bit marks that the array is not empty
-			dstream.Write( array_flags );
-
-			// write the item count and string items
-			const u64 items_count = u64( items->size() );
-			u64 values_size = sizeof( u64 ) + (sizeof( u64 ) * items_count);
-			dstream.Write( items_count );
-			if( items_count > 0 )
+			// write the item count and items
+			if( !write_array_metadata_and_index( dstream, 0, items->size(), index ) )
 				{
+				return false;
+				}
+
+			if( items->size() > 0 )
+				{
+				const u64 values_start_pos = dstream.GetPosition();
+
+				// this is the minimum size, with only empty strings. each string will add to the values_size
+				u64 values_size = sizeof( u64 ) * items->size();
+
+				// write each string in the array
 				for( size_t string_index = 0; string_index < items->size(); ++string_index )
 					{
 					u64 string_length = (*items)[string_index].size();
@@ -379,25 +357,18 @@ namespace ISD
 						values_size += string_length;
 						}
 					}
+
+				const u64 values_expected_end_pos = values_start_pos + values_size;
+				const u64 values_end_pos = dstream.GetPosition();
+
+				// make sure we are at the expected end pos
+				if( values_end_pos != values_expected_end_pos )
+					{
+					ISDErrorLog << "End position of data " << values_end_pos << " does not equal the expected end position which is " << values_expected_end_pos << ISDErrorLogEnd;
+					return false;
+					}
+
 				}
-
-			// if we have an index, write it 
-			u64 index_size = 0;
-			if( index != nullptr )
-				{
-				const u64 index_count = index->size();
-				dstream.Write( index_count );
-				dstream.Write( index->data(), index_count );
-
-				index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
-				}
-
-			// make sure all data was written
-			expected_end_pos = 
-				array_data_start_pos
-				+ sizeof( u16 ) // the flags
-				+ values_size // the values 
-				+ index_size; // the (optional) index
 			}
 
 		// end the block by going back to the start and writing the start position offset
@@ -407,28 +378,12 @@ namespace ISD
 			return false;
 			}
 
-		// make sure we are at the expected end pos
-		const u64 end_pos = dstream.GetPosition();
-		if( end_pos != expected_end_pos )
-			{
-			ISDErrorLog << "End position of data " << end_pos << " does not equal the expected end position which is " << expected_end_pos << ISDErrorLogEnd;
-			return false;
-			}
-
 		// succeeded
 		return true;
 		}
 
-	EntityWriter::~EntityWriter()
-		{
-		if( this->active_subsection )
-			{
-			ISDErrorLog << "EntityWriter still has an active subsection. You need to close any active subsection before deleting the object" << ISDErrorLogEnd;
-			}
-		}
-
 	// Build a section. 
-	EntityWriter *EntityWriter::BeginSection( const char *key, const u8 key_length )
+	EntityWriter *EntityWriter::BeginWriteSection( const char *key, const u8 key_length )
 		{
 		if( this->active_subsection )
 			{
@@ -436,7 +391,8 @@ namespace ISD
 			return nullptr;
 			}
 
-		this->active_subsection = new EntityWriter( this->dstream );
+		// create a writer for the array, to store the start position before calling the begin large block 
+		this->active_subsection = std::unique_ptr<EntityWriter>(new EntityWriter( this->dstream ));
 
 		if( !begin_write_large_block( this->dstream, ValueType::VT_Subsection, key, key_length ) )
 			{
@@ -444,12 +400,12 @@ namespace ISD
 			return nullptr;
 			}
 
-		return this->active_subsection;
+		return this->active_subsection.get();
 		}
 
-	bool EntityWriter::EndSection( const EntityWriter *section_writer )
+	bool EntityWriter::EndWriteSection( const EntityWriter *section_writer )
 		{
-		if( section_writer != this->active_subsection )
+		if( this->active_subsection.get() != section_writer )
 			{
 			ISDErrorLog << "Invalid parameter section_writer, it does not match the internal value." << ISDErrorLogEnd;
 			return false;
@@ -461,22 +417,21 @@ namespace ISD
 			return false;
 			}
 
-		delete this->active_subsection;
-		active_subsection = nullptr;
+		this->active_subsection.reset();
 		return true;
 		}
 
 	bool EntityWriter::WriteNullSection( const char *key, const u8 key_length )
 		{
-		EntityWriter *subsection = this->BeginSection( key, key_length );
+		EntityWriter *subsection = this->BeginWriteSection( key, key_length );
 		if( !subsection )
 			{
 			return false;
 			}
-		return this->EndSection( subsection );
+		return this->EndWriteSection( subsection );
 		}
 
-	EntityWriter *EntityWriter::BeginSectionsArray( const char *key, const u8 key_length, const size_t array_size , const std::vector<i32> *index )
+	EntityWriter *EntityWriter::BeginWriteSectionsArray( const char *key, const u8 key_length, const size_t array_size , const std::vector<i32> *index )
 		{
 		if( this->active_subsection )
 			{
@@ -484,8 +439,8 @@ namespace ISD
 			return nullptr;
 			}
 
-		// create a writer for the array
-		this->active_subsection = new EntityWriter( this->dstream );
+		// create a writer for the array, to store the start position before calling the begin large block 
+		this->active_subsection = std::unique_ptr<EntityWriter>(new EntityWriter( this->dstream ));
 
 		if( !begin_write_large_block( this->dstream, ValueType::VT_Array_Subsection, key, key_length ) )
 			{
@@ -493,118 +448,77 @@ namespace ISD
 			return nullptr;
 			}
 
-		const u64 start_pos = dstream.GetPosition();
-
-		// reset the size and write index in the array
-		this->active_subsection_index = ~0;
-		this->active_subsection_start_pos = 0;
-
-		// special case: nullptr array marked with ~0
+		// if array_size is ~0, the array is null, so end directly
 		if( array_size == ~0 )
 			{
-			this->active_subsection_array_size = 0;
-
-			// array is null array, write empty flags item and exit
-			const u16 array_flags = 0;
-			dstream.Write( array_flags );
-
-			// make sure we are at the correct position
-			const u64 expected_end_pos = start_pos + sizeof( u16 );
-			if( dstream.GetPosition() != expected_end_pos )
-				{
-				ISDErrorLog << "unexpectedly could not write to the stream." << ISDErrorLogEnd;
-				return nullptr;
-				}
-
-			// ok, return
-			return this->active_subsection;
-			}
-		else
-			{
-			this->active_subsection_array_size = array_size;
+			this->active_array_size = 0;
+			return this->active_subsection.get();
 			}
 
-		// flags section
-		const u16 has_index = (index) ? (0x100) : (0);
-		const u16 array_flags = has_index | 0x1; // lowest bit marks that the array is not empty
-		dstream.Write( array_flags );
-
-		// write index 
-		u64 index_size = 0;
-		if( index != nullptr )
+		// write out flags, index and array size
+		if( !write_array_metadata_and_index( dstream, 0, array_size, index ) )
 			{
-			const u64 index_count = index->size();
-			dstream.Write( index_count );
-			dstream.Write( index->data(), index_count );
-
-			index_size = (index_count * sizeof( i32 )) + sizeof( u64 ); // the index values and the value count
-			}
-
-		// write out the size of the array
-		this->dstream.Write( u64( this->active_subsection_array_size ) );
-
-		// check the position
-		const u64 expected_end_pos = start_pos + sizeof( u16 ) + sizeof( u64 ) + index_size;
-		if( dstream.GetPosition() != expected_end_pos )
-			{
-			ISDErrorLog << "unexpectedly could not write to the stream." << ISDErrorLogEnd;
 			return nullptr;
 			}
-				
-		return this->active_subsection;
+
+		// reset the size and write index in the array
+		this->active_array_size = array_size;
+		this->active_array_index = ~0;
+		this->active_array_index_start_position = 0;
+		return this->active_subsection.get();
 		}
 
-	bool EntityWriter::BeginSectionInArray( const EntityWriter *sections_array_writer, const size_t section_index )
+	bool EntityWriter::BeginWriteSectionInArray( const EntityWriter *sections_array_writer, const size_t section_index )
 		{
-		if( this->active_subsection != sections_array_writer )
+		if( this->active_subsection.get() != sections_array_writer )
 			{
 			ISDErrorLog << "Synch error, currently not writing a subsection array" << ISDErrorLogEnd;
 			return false;
 			}
-		if( (this->active_subsection_index+1) != section_index )
+		if( (this->active_array_index+1) != section_index )
 			{
 			ISDErrorLog << "Synch error, incorrect subsection index" << ISDErrorLogEnd;
 			return false;
 			}
-		if( section_index >= this->active_subsection_array_size )
+		if( section_index >= this->active_array_size )
 			{
 			ISDErrorLog << "Incorrect subsection index, out of array bounds" << ISDErrorLogEnd;
 			return false;
 			}
 
-		this->active_subsection_index = section_index;
-		this->active_subsection_start_pos = this->dstream.GetPosition();
+		this->active_array_index = section_index;
+		this->active_array_index_start_position = this->dstream.GetPosition();
 
 		// write a temporary subsection size
 		dstream.Write( (u64)MAXINT64 );
 
-		return dstream.GetPosition() == (this->active_subsection_start_pos + sizeof( u64 ));
+		return dstream.GetPosition() == (this->active_array_index_start_position + sizeof( u64 ));
 		}
 
-	bool EntityWriter::EndSectionInArray( const EntityWriter *sections_array_writer, const size_t section_index )
+	bool EntityWriter::EndWriteSectionInArray( const EntityWriter *sections_array_writer, const size_t section_index )
 		{
-		if( this->active_subsection != sections_array_writer || this->active_subsection_index != section_index )
+		if( this->active_subsection.get() != sections_array_writer || this->active_array_index != section_index )
 			{
 			ISDErrorLog << "Synch error, currently not writing a subsection array, or incorrect section index" << ISDErrorLogEnd;
 			return false;
 			}
 
 		const u64 end_pos = dstream.GetPosition();
-		const u64 block_size = end_pos - this->active_subsection_start_pos - 8; // total block size - ( sizeof( section_size_value )=8 )
-		dstream.SetPosition( this->active_subsection_start_pos ); 
+		const u64 block_size = end_pos - this->active_array_index_start_position - sizeof(u64); // total block size - ( sizeof( section_size_value )=8 )
+		dstream.SetPosition( this->active_array_index_start_position ); 
 		dstream.Write( block_size );
 		dstream.SetPosition( end_pos ); // move back the where we were
-		return (end_pos > this->active_subsection_start_pos); // only thing we really can check
+		return (end_pos > this->active_array_index_start_position); // only thing we really can check
 		}
 
-	bool EntityWriter::EndSectionsArray( const EntityWriter *sections_array_writer )
+	bool EntityWriter::EndWriteSectionsArray( const EntityWriter *sections_array_writer )
 		{
-		if( this->active_subsection != sections_array_writer )
+		if( this->active_subsection.get() != sections_array_writer )
 			{
 			ISDErrorLog << "Synch error, currently not writing a subsection array" << ISDErrorLogEnd;
 			return false;
 			}
-		if( (this->active_subsection_index+1) != this->active_subsection_array_size )
+		if( (this->active_array_index+1) != this->active_array_size )
 			{
 			ISDErrorLog << "Synch error, the subsection index does not equal the end of the array" << ISDErrorLogEnd;
 			return false;
@@ -617,22 +531,21 @@ namespace ISD
 			}
 
 		// release active subsection writer
-		delete this->active_subsection;
-		this->active_subsection = nullptr;
-		this->active_subsection_index = ~0;
-		this->active_subsection_start_pos = 0;
-		this->active_subsection_array_size = 0;
+		this->active_subsection.reset();
+		this->active_array_size = 0;
+		this->active_array_index = ~0;
+		this->active_array_index_start_position = 0;
 		return true;
 		}
 
 	bool EntityWriter::WriteNullSectionsArray( const char *key, const u8 key_length )
 		{
-		EntityWriter *subsection = this->BeginSectionsArray( key, key_length, ~0, nullptr );
+		EntityWriter *subsection = this->BeginWriteSectionsArray( key, key_length, ~0, nullptr );
 		if( !subsection )
 			{
 			return false;
 			}
-		return this->EndSectionsArray( subsection );
+		return this->EndWriteSectionsArray( subsection );
 		}
 
 	};

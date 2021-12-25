@@ -17,7 +17,7 @@
 using namespace ISD;
 
 const i64 global_random_seed = 12876123876;
-const size_t global_number_of_passes = 10;
+const size_t global_number_of_passes = 1000;
 
 inline void setup_random_seed()
 	{
@@ -88,7 +88,7 @@ template<class T> void random_optional_vector( optional_vector<T> &dest, size_t 
 		}
 	else
 		{
-		dest.clear();
+		dest.reset();
 		}
 	}
 
@@ -122,7 +122,7 @@ template<class T> void random_optional_idx_vector( optional_idx_vector<T> &dest,
 		}
 	else
 		{
-		dest.clear();
+		dest.reset();
 		}
 	}
 

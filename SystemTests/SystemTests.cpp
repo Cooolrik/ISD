@@ -78,30 +78,16 @@ class named_object
 		optional_value<std::string> object_name;
 	};
 
-int main()
+void write_geometry()
 	{
-	std::vector<std::unique_ptr<named_object>> object_vector;
-	object_vector.resize( 1000 );
-	for( size_t i = 0; i < 1000; ++i )
-		{
-		object_vector[i] = std::make_unique<named_object>();
-		object_vector[i]->object_name.set( "hej" );
-		}
+	idx_vector<vec3> *Vertices = new idx_vector<vec3>();
 
-	optional_vector<std::unique_ptr<named_object>> opt_object_vector;
-	opt_object_vector.set();
-	std::move( std::begin(object_vector), std::end(object_vector), std::back_inserter(opt_object_vector.vector()) );
+	auto &values = Vertices->values();
+	auto &index = Vertices->index();
 
-	printf( "hej" );
-
-	/*idx_vector<vec3> Vertices;
-
-	auto &values = Vertices.values();
-	auto &index = Vertices.index();
-
-	values.resize( 10000000 );
-	index.resize( 10000000 );
-	for( size_t i = 0; i < 10000000; ++i )
+	values.resize( 100000000 );
+	index.resize( 100000000 );
+	for( size_t i = 0; i < 100000000; ++i )
 		{
 		values[i] = vec3( i, i, i );
 		index[i] = (int)i;
@@ -110,7 +96,9 @@ int main()
 	MemoryWriteStream ws;
 	EntityWriter wr(ws);
 
-	wr.Write( "Vertices", 8, Vertices );
+	wr.Write( "Vertices", 8, *Vertices );
+
+	delete Vertices;
 
 	FILE *fp;
 	if( fopen_s( &fp, "test_write.dat", "wb" ) == 0 )
@@ -118,7 +106,10 @@ int main()
 		fwrite( ws.GetData(), ws.GetSize(), 1, fp );
 		fclose( fp );
 		}
+	}
 
+void read_geometry()
+	{
 	std::vector<u8> allocation;
 	LoadFile( "test_write.dat", allocation );
 
@@ -127,7 +118,13 @@ int main()
 
 	idx_vector<vec3> DestVertices;
 
-	er.Read( "Vertices", 8, DestVertices );*/
+	er.Read( "Vertices", 8, DestVertices );
+	}
+
+int main()
+	{
+	write_geometry();
+	read_geometry();
 
 	return 0;
 	}

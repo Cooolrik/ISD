@@ -25,6 +25,7 @@ typedef GUID UUID;
 #include <vector>
 
 #include "ISD_DataTypes.h"
+#include "ISD_Log.h"
 
 #define ISDErrorLog Log::Error( __FUNCSIG__ , __FILE__ , __LINE__ ) 
 #define ISDErrorLogEnd std::endl
@@ -51,7 +52,7 @@ namespace ISD
 		EUndefined = -1, // undefined error
 		EParam = -2, // invalid parameter in method call
 		ENotInitialized = -3, // the system is not initialized
-		EAlreadyInitialized = -4, // the system is not initialized
+		EAlreadyInitialized = -4, // the system or class is already initialized or in a specific state
 		ECantAllocate = -5, // cant allocate memory
 		ECantOpen = -6, // cant open file or handle
 		ECantRead = -7, // cant read from file or handle
@@ -285,7 +286,7 @@ namespace ISD
 			idx_vector( const idx_vector &_other ) : values_m( _other.values_m ) , index_m(_other.index_m) {}
 			idx_vector &operator = ( const idx_vector &_other ) { this->values_m = _other.values_m; this->index_m = _other.index_m; return *this; }
 
-			void clear() { this->values_m.clear(); this->index_m .clear(); }
+			void clear() { this->values_m.clear(); this->index_m.clear(); }
 
 			std::vector<_Ty,_Alloc> &values() { return this->values_m; }
 			const std::vector<_Ty,_Alloc> &values() const { return this->values_m; }
@@ -316,7 +317,7 @@ namespace ISD
 			optional_vector( const optional_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
 			optional_vector &operator = ( const optional_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
 
-			void clear() { this->has_value_m = false; this->vector_m.clear(); }
+			void reset() { this->has_value_m = false; this->vector_m.clear(); }
 			void set() { this->has_value_m = true; this->vector_m.clear(); }
 			void set( const std::vector<_Ty,_Alloc> &_values ) { this->has_value_m = true; this->vector_m = _values; }
 			bool has_value() const { return this->has_value_m; }
@@ -353,7 +354,7 @@ namespace ISD
 			optional_idx_vector( const optional_idx_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
 			optional_idx_vector &operator = ( const optional_idx_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
 
-			void clear() { this->has_value_m = false; this->vector_m.clear(); }
+			void reset() { this->has_value_m = false; this->vector_m.clear(); }
 			void set() { this->has_value_m = true; this->vector_m.clear(); }
 			void set( const idx_vector<_Ty,_Alloc,_IdxAlloc> &_vector ) { this->has_value_m = true; this->vector_m = _vector; }
 			void set( const std::vector<_Ty,_Alloc> &_values , const std::vector<i32,_IdxAlloc> &_index ) { this->has_value_m = true; this->vector_m.values() = _values; this->vector_m.index() = _index; }
@@ -381,7 +382,7 @@ namespace ISD
 			optional_value( const optional_value &other ) : value_m( other.value_m ) , has_value_m( other.has_value_m ) {}
 			optional_value &operator = ( const optional_value &_other ) { this->has_value_m = _other.has_value_m; this->value_m = _other.value_m; return *this; }
 
-			void clear() { this->has_value_m = false; this->value_m = {}; }
+			void reset() { this->has_value_m = false; this->value_m = {}; }
 			void set( const T &_value = {} ) { this->has_value_m = true; this->value_m = _value; }
 			bool has_value() const { return this->has_value_m; }
 			

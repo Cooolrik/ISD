@@ -26,7 +26,7 @@ namespace UnitTests
 			setup_random_seed();
 
 			// run twice, one with flipped, one with non-flipped byte order
-			for( int byteorder = 0; byteorder < 2; ++byteorder )
+			for( uint pass_index = 0; pass_index < 2*global_number_of_passes; ++pass_index )
 				{
 				// random values
 				const u8 u8val = u8_rand();
@@ -44,7 +44,18 @@ namespace UnitTests
 				// write random stuff to write stream
 				u64 expected_size = 0;
 				MemoryWriteStream *ws = new MemoryWriteStream();
-				ws->SetFlipByteOrder( (bool)byteorder );
+				ws->SetFlipByteOrder( (pass_index & 0x1) != 0 );
+
+				// log the pass
+				std::stringstream ss;
+				ss << "Pass #" << (pass_index / 2)+1 << " ";
+				if( ws->GetFlipByteOrder() )
+					ss << "Testing native byte order\n";
+				else
+					ss << "Testing flipped byte order\n";
+				Logger::WriteMessage(ss.str().c_str());
+
+
 				for( int i = 0; i < num_values; ++i )
 					{
 					int item_type = rand() % 7;
@@ -88,7 +99,7 @@ namespace UnitTests
 
 				// read back everything in the same order
 				MemoryReadStream *rs = new MemoryReadStream( memdata.data(), expected_size );
-				rs->SetFlipByteOrder( (bool)byteorder );
+				rs->SetFlipByteOrder( (pass_index & 0x1) != 0 );
 				for( int i = 0; i < num_values; ++i )
 					{
 					int item_type = order[i];

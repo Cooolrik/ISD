@@ -147,9 +147,8 @@ namespace ISD
 		if( read_key_length != (u64)key_size_in_bytes
 			|| memcmp( key, read_key, (u64)key_size_in_bytes ) != 0 )
 			{
-			ISDSanityCheckCoreDebugMacro( read_key_length < (u64)key_size_in_bytes );
 			std::string expected_key_name( key, key_size_in_bytes );
-			std::string read_key_name( read_key, read_key_length );
+			std::string read_key_name( read_key, key_size_in_bytes ); // cap string at lenght of expected data
 			ISDErrorLog << "Unexpected key name in the stream. Expected name: " << expected_key_name << " read name: " << read_key_name << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
@@ -237,12 +236,15 @@ namespace ISD
 		dest_data->resize( string_size );
 
 		// read in the string data
-		i8 *p_data = (i8 *)&(dest_data->front());
-		const u64 read_item_count = sstream.Read( p_data, string_size );
-		if( read_item_count != string_size )
+		if( string_size > 0 )
 			{
-			ISDErrorLog << "The stream could not read the whole string" << ISDErrorLogEnd;
-			return reader_status::fail;
+			i8 *p_data = (i8 *)&(dest_data->front());
+			const u64 read_item_count = sstream.Read( p_data, string_size );
+			if( read_item_count != string_size )
+				{
+				ISDErrorLog << "The stream could not read the whole string" << ISDErrorLogEnd;
+				return reader_status::fail;
+				}
 			}
 
 		// make sure we are at the expected end pos
@@ -278,8 +280,29 @@ namespace ISD
 			}
 		}
 
-	bool read_array_index( MemoryReadStream &sstream, const bool has_index , const u64 expected_end_position , std::vector<i32> *dest_index )
+	// reads an array header and value size from the stream, and decodes into flags, then reads the index if one exists. 
+	bool read_array_metadata_and_index( MemoryReadStream &sstream, size_t &out_per_item_size, size_t &out_item_count, const u64 block_end_position , std::vector<i32> *dest_index )
 		{
+		static_assert(sizeof( u64 ) <= sizeof( size_t ), "Unsupported size_t, current code requires it to be at least 8 bytes in size, equal to u64");
+
+		const u64 start_position = sstream.GetPosition();
+		u64 expected_end_position = start_position + sizeof( u16 ) + sizeof( u64 );
+
+		const u16 array_flags = sstream.Read<u16>();
+		out_per_item_size = (size_t)(array_flags & 0xff);
+		const bool has_index = (array_flags & 0x100) != 0;
+		const bool index_is_64bit = (array_flags & 0x200) != 0;
+
+		// we don't support 64 bit index (yet)
+		if( index_is_64bit )
+			{
+			ISDErrorLog << "The block has a 64 bit index, which is not supported" << ISDErrorLogEnd;
+			return false;
+			}
+
+		// read in the item count
+		out_item_count = (size_t)sstream.Read<u64>();
+
 		// if we have an index, read it
 		if( has_index )
 			{
@@ -291,9 +314,9 @@ namespace ISD
 				}
 
 			// read in the size of the index
-			ISDSanityCheckCoreDebugMacro( expected_end_position >= sstream.GetPosition() );
+			ISDSanityCheckCoreDebugMacro( block_end_position >= sstream.GetPosition() );
 			const u64 index_count = sstream.Read<u64>();
-			const u64 maximum_possible_index_count = (expected_end_position - sstream.GetPosition()) / sizeof( u32 );
+			const u64 maximum_possible_index_count = (block_end_position - sstream.GetPosition()) / sizeof( u32 );
 			if( index_count > maximum_possible_index_count )
 				{
 				ISDErrorLog << "The index item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
@@ -306,6 +329,9 @@ namespace ISD
 			// read in the data
 			i32 *p_index_data = dest_index->data();
 			sstream.Read( p_index_data, index_count );
+
+			// modify the expected end position
+			expected_end_position += sizeof( u64 ) + (index_count * sizeof( i32 ));
 			}
 		else
 			{
@@ -316,6 +342,13 @@ namespace ISD
 				return false;
 				}
 			}
+
+		if( expected_end_position != sstream.GetPosition() )
+			{
+			ISDErrorLog << "Failed to read full array header from block." << ISDErrorLogEnd;
+			return false;
+			}
+
 		return true;
 		}
 
@@ -323,41 +356,39 @@ namespace ISD
 		{
 		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_UUID), "Invalid type for generic read_array template");
 		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at max 8 bytes in size, equal to u64");
+		const size_t value_size = sizeof( type_information<T>::value_type );
 
 		ISDSanityCheckCoreDebugMacro( dest_items );
 
-		// read block header
-		const u64 expected_end_position = begin_read_large_block( sstream, VT, key, key_size_in_bytes );
-		if( expected_end_position == 0 )
+		// read block header. if we are already at the end, the block is empty, end the block and make sure empty is allowed
+		const u64 block_end_position = begin_read_large_block( sstream, VT, key, key_size_in_bytes );
+		if( block_end_position == 0 )
 			{
 			ISDErrorLog << "begin_read_large_block() failed unexpectedly" << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
-
-		// read in flags, if 0 the block is empty
-		const u16 array_flags = sstream.Read<u16>();
-		if( array_flags == 0 )
+		else if( block_end_position == sstream.GetPosition() )
 			{
-			return end_read_empty_large_block( sstream, key, empty_value_is_allowed, expected_end_position );
+			return end_read_empty_large_block( sstream, key, empty_value_is_allowed, block_end_position );
 			}
 
-		// non-empty, decode the data
-		const u8 per_item_size = (u8)(array_flags & 0xff);
-		const bool has_index = (array_flags & 0x100) != 0;
+		// read item size & count and index if it exists, or make sure we do not expect an index
+		size_t per_item_size = 0;
+		size_t item_count = 0;
+		if( !read_array_metadata_and_index( sstream, per_item_size, item_count, block_end_position, dest_index ) )
+			{
+			return reader_status::fail;
+			}
 
 		// make sure we have the right item size
-		const u8 value_size = u8(sizeof( type_information<T>::value_type ));
 		if( value_size != per_item_size )
 			{
 			ISDErrorLog << "The size of the items in the stream does not match the expected size" << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
 
-		// read in the item count
-		const u64 item_count = sstream.Read<u64>();
-
 		// make sure the item count is plausible before allocating the vector
-		const u64 maximum_possible_item_count = (expected_end_position - sstream.GetPosition()) / value_size;
+		const u64 maximum_possible_item_count = (block_end_position - sstream.GetPosition()) / value_size;
 		if( item_count > maximum_possible_item_count )
 			{
 			ISDErrorLog << "The array item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
@@ -377,16 +408,10 @@ namespace ISD
 			return reader_status::fail;
 			}
 
-		// read index if it exists, or make sure we do not expect an index
-		if( !read_array_index( sstream, has_index, expected_end_position, dest_index ) )
-			{
-			return reader_status::fail;
-			}
-
 		// make sure we are at the expected end pos
-		if( !end_read_large_block( sstream, expected_end_position ) )
+		if( !end_read_large_block( sstream, block_end_position ) )
 			{
-			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
+			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << block_end_position << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
 
@@ -398,33 +423,32 @@ namespace ISD
 		{
 		ISDSanityCheckCoreDebugMacro( dest_items );
 
-		// read block header
-		const u64 expected_end_position = begin_read_large_block( sstream, ValueType::VT_Array_Bool, key, key_size_in_bytes );
-		if( expected_end_position == 0 )
+		// read block header. if we are already at the end, the block is empty, end the block and make sure empty is allowed
+		const u64 block_end_position = begin_read_large_block( sstream, ValueType::VT_Array_Bool, key, key_size_in_bytes );
+		if( block_end_position == 0 )
 			{
 			ISDErrorLog << "begin_read_large_block() failed unexpectedly" << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
-
-		// read in flags, if 0 the block is empty
-		const u16 array_flags = sstream.Read<u16>();
-		if( array_flags == 0 )
+		else if( block_end_position == sstream.GetPosition() )
 			{
-			return end_read_empty_large_block( sstream, key, empty_value_is_allowed, expected_end_position );
+			return end_read_empty_large_block( sstream, key, empty_value_is_allowed, block_end_position );
 			}
 
-		// non-empty, decode the data
-		const bool has_index = (array_flags & 0x100) != 0;
-
-		// read in the item count
-		const u64 value_count = sstream.Read<u64>();
+		// read item size & count and index if it exists, or make sure we do not expect an index
+		size_t per_item_size = 0;
+		size_t bool_count = 0;
+		if( !read_array_metadata_and_index( sstream, per_item_size, bool_count, block_end_position, dest_index ) )
+			{
+			return reader_status::fail;
+			}
 
 		// calculate the number of packed items.
 		// round up, should the last u8 be not fully filled
-		const u64 number_of_packed_u8s = (value_count+7) / 8; 
+		const u64 number_of_packed_u8s = (bool_count+7) / 8; 
 
 		// make sure the item count is plausible before allocating the vector
-		const u64 maximum_possible_item_count = (expected_end_position - sstream.GetPosition());
+		const u64 maximum_possible_item_count = (block_end_position - sstream.GetPosition());
 		if( number_of_packed_u8s > maximum_possible_item_count )
 			{
 			ISDErrorLog << "The array item count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
@@ -432,30 +456,24 @@ namespace ISD
 			}
 
 		// resize the destination vector
-		dest_items->resize( value_count );
+		dest_items->resize( bool_count );
 
 		// read in a u8 vector with the packed values
 		std::vector<u8> packed_vec( number_of_packed_u8s );
 		sstream.Read( packed_vec.data(), number_of_packed_u8s );
 
 		// unpack the bool vector from the u8 vector
-		for( u64 bool_index = 0; bool_index < value_count; ++bool_index )
+		for( u64 bool_index = 0; bool_index < bool_count; ++bool_index )
 			{
 			const size_t packed_index = bool_index >> 3; // bool_index / 8
 			const size_t packed_subindex = bool_index & 0x7; // bool_index % 8
 			(*dest_items)[bool_index] = ((packed_vec[packed_index]) & (1 << packed_subindex)) != 0;
 			}
 
-		// read index if it exists, or make sure we do not expect an index
-		if( !read_array_index( sstream, has_index, expected_end_position, dest_index ) )
-			{
-			return reader_status::fail;
-			}
-
 		// make sure we are at the expected end pos
-		if( !end_read_large_block( sstream, expected_end_position ) )
+		if( !end_read_large_block( sstream, block_end_position ) )
 			{
-			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
+			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << block_end_position << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
 
@@ -468,30 +486,29 @@ namespace ISD
 
 		ISDSanityCheckCoreDebugMacro( dest_items );
 
-		// read block header
-		const u64 expected_end_position = begin_read_large_block( sstream, ValueType::VT_Array_String, key, key_size_in_bytes );
-		if( expected_end_position == 0 )
+		// read block header. if we are already at the end, the block is empty, end the block and make sure empty is allowed
+		const u64 block_end_position = begin_read_large_block( sstream, ValueType::VT_Array_String, key, key_size_in_bytes );
+		if( block_end_position == 0 )
 			{
 			ISDErrorLog << "begin_read_large_block() failed unexpectedly" << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
-
-		// read in flags, if 0 the block is empty
-		const u16 array_flags = sstream.Read<u16>();
-		if( array_flags == 0 )
+		else if( block_end_position == sstream.GetPosition() )
 			{
-			return end_read_empty_large_block( sstream, key, empty_value_is_allowed, expected_end_position );
+			return end_read_empty_large_block( sstream, key, empty_value_is_allowed, block_end_position );
 			}
 
-		// non-empty, decode the data
-		const bool has_index = (array_flags & 0x100) != 0;
-
-		// read in the number of strings in the array
-		const u64 string_count = sstream.Read<u64>();
+		// read item size & count and index if it exists, or make sure we do not expect an index
+		size_t per_item_size = 0;
+		size_t string_count = 0;
+		if( !read_array_metadata_and_index( sstream, per_item_size, string_count, block_end_position, dest_index ) )
+			{
+			return reader_status::fail;
+			}
 
 		// make sure the item count is plausible before allocating the vector
-		// (the size is assuming only empty strings, so only the size u64 per string)
-		const u64 maximum_possible_item_count = (expected_end_position - sstream.GetPosition()) / sizeof(u64); 
+		// (the size is assuming only empty strings, so only the size of the string size (sizeof(u64)) per string)
+		const u64 maximum_possible_item_count = (block_end_position - sstream.GetPosition()) / sizeof(u64); 
 		if( string_count > maximum_possible_item_count )
 			{
 			ISDErrorLog << "The array string count in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
@@ -509,7 +526,7 @@ namespace ISD
 			const u64 string_size = sstream.Read<u64>();
 
 			// make sure the string is not outsize of possible size
-			const u64 maximum_possible_string_size = (expected_end_position - sstream.GetPosition()); 
+			const u64 maximum_possible_string_size = (block_end_position - sstream.GetPosition()); 
 			if( string_size > maximum_possible_string_size )
 				{
 				ISDErrorLog << "A string size in a string array in the stream is invalid, it is beyond the size of the block" << ISDErrorLogEnd;
@@ -530,22 +547,189 @@ namespace ISD
 				}
 			}
 
-		// read index if it exists, or make sure we do not expect an index
-		if( !read_array_index( sstream, has_index, expected_end_position, dest_index ) )
-			{
-			return reader_status::fail;
-			}
-
 		// make sure we are at the expected end pos
-		if( !end_read_large_block( sstream, expected_end_position ) )
+		if( !end_read_large_block( sstream, block_end_position ) )
 			{
-			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << expected_end_position << ISDErrorLogEnd;
+			ISDErrorLog << "End position of data " << sstream.GetPosition() << " does not equal the expected end position which is " << block_end_position << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
 
 		return reader_status::success;
 		}
 
+	// Read a section. 
+	// If the section is null, the section is directly closed, nullptr+success is returned 
+	// from BeginReadSection, and EndReadSection shall not be called.
+	std::tuple<EntityReader *, bool> EntityReader::BeginReadSection( const char *key, const u8 key_length, const bool null_section_is_allowed )
+		{
+		if( this->active_subsection )
+			{
+			ISDErrorLog << "There is already an active subsection." << ISDErrorLogEnd;
+			return std::tuple<EntityReader *, bool>( nullptr, false );
+			}
 
+		// read block header
+		const u64 end_of_section = begin_read_large_block( sstream, ValueType::VT_Subsection, key, key_length );
+		if( end_of_section == 0 )
+			{
+			ISDErrorLog << "begin_read_large_block() failed unexpectedly, stream is probably corrupted" << ISDErrorLogEnd;
+			return std::tuple<EntityReader *, bool>( nullptr, false );
+			}
+		else if( end_of_section == sstream.GetPosition() )
+			{
+			if( end_read_empty_large_block( sstream, key, null_section_is_allowed, end_of_section ) == reader_status::fail )
+				{
+				return std::pair<EntityReader *, bool>( nullptr, false );
+				}
+			return std::tuple<EntityReader *, bool>( nullptr, true );
+			}
+
+		// allocate the subsection and return it to the caller to be used to read items in the subsection
+		this->active_subsection = std::unique_ptr<EntityReader>( new EntityReader( this->sstream , end_of_section ) );
+		return std::tuple<EntityReader *, bool>( this->active_subsection.get(), true );
+		}
+
+	bool EntityReader::EndReadSection( const EntityReader *section_reader )
+		{
+		if( section_reader != this->active_subsection.get() )
+			{
+			ISDErrorLog << "Invalid parameter section_reader, it does not match the internal expected value." << ISDErrorLogEnd;
+			return false;
+			}
+
+		if( !end_read_large_block( this->sstream, this->active_subsection->end_position ) )
+			{
+			ISDErrorLog << "end_read_large_block failed unexpectedly, the stream is probably corrupted." << ISDErrorLogEnd;
+			return false;
+			}
+
+		this->active_subsection.reset();
+		this->active_subsection_end_pos = 0;
+		return true;
+		}
+
+	// Build a sections array. 
+	// If the section is null, the section array is directly closed, nullptr+success is returned 
+	// from BeginReadSectionsArray, and EndReadSectionsArray shall not be called.
+	std::tuple<EntityReader *, size_t, bool> EntityReader::BeginReadSectionsArray( const char *key, const u8 key_length, const bool null_section_array_is_allowed, std::vector<i32> *dest_index )
+		{
+		if( this->active_subsection )
+			{
+			ISDErrorLog << "There is already an active subsection." << ISDErrorLogEnd;
+			return std::tuple<EntityReader *, size_t, bool>( nullptr, 0, false );
+			}
+
+		// read block header. if we are already at the end, the block is empty, end the block and make sure empty is allowed
+		const u64 end_of_section = begin_read_large_block( sstream, ValueType::VT_Array_Subsection, key, key_length );
+		if( end_of_section == 0 )
+			{
+			ISDErrorLog << "begin_read_large_block() failed unexpectedly, stream is probably corrupted" << ISDErrorLogEnd;
+			return std::tuple<EntityReader *, size_t, bool>( nullptr, 0, false );
+			}
+		else if( end_of_section == sstream.GetPosition() )
+			{
+			if( end_read_empty_large_block( sstream, key, null_section_array_is_allowed, end_of_section ) == reader_status::fail )
+				{
+				return std::tuple<EntityReader *, size_t, bool>( nullptr, 0, false );
+				}
+			return std::tuple<EntityReader *, size_t, bool>( nullptr, 0, true );
+			}
+
+		// read item size & count and index if it exists, or make sure we do not expect an index
+		size_t per_item_size = 0;
+		if( !read_array_metadata_and_index( sstream, per_item_size, this->active_subsection_array_size, end_of_section, dest_index ) )
+			{
+			return std::tuple<EntityReader *, size_t, bool>( nullptr, 0, false );
+			}
+		this->active_subsection_index = ~0;
+
+		// allocate the subsection and return it to the caller to be used to read items in the subsection
+		this->active_subsection = std::unique_ptr<EntityReader>( new EntityReader( this->sstream , end_of_section ) );
+		return std::tuple<EntityReader *, size_t, bool>( this->active_subsection.get(), this->active_subsection_array_size, true );
+		}
+
+	bool EntityReader::BeginReadSectionInArray( const EntityReader *sections_array_reader , const size_t section_index, bool *dest_section_has_data )
+		{
+		if( this->active_subsection.get() != sections_array_reader )
+			{
+			ISDErrorLog << "Synch error, currently not writing a subsection array" << ISDErrorLogEnd;
+			return false;
+			}
+		if( (this->active_subsection_index+1) != section_index )
+			{
+			ISDErrorLog << "Synch error, incorrect subsection index" << ISDErrorLogEnd;
+			return false;
+			}
+		if( section_index >= this->active_subsection_array_size )
+			{
+			ISDErrorLog << "Incorrect subsection index, out of array bounds" << ISDErrorLogEnd;
+			return false;
+			}
+
+		this->active_subsection_index = section_index;
+		const u64 section_size = sstream.Read<u64>();
+		this->active_subsection_end_pos = sstream.GetPosition() + section_size;
+
+		if( dest_section_has_data == nullptr )
+			{
+			// make sure that the section size is not empty
+			if( section_size == 0 )
+				{
+				ISDErrorLog << "Section in array in stream is marked as null, but this is not allowed for the array it is read into" << ISDErrorLogEnd;
+				return false;
+				}
+			}
+		else
+			{
+			*dest_section_has_data = (section_size != 0);
+			}
+
+		return true;
+		}
+
+	bool EntityReader::EndReadSectionInArray( const EntityReader *sections_array_reader, const size_t section_index )
+		{
+		if( this->active_subsection.get() != sections_array_reader || this->active_subsection_index != section_index )
+			{
+			ISDErrorLog << "Synch error, currently not reading a subsection array, or incorrect section index" << ISDErrorLogEnd;
+			return false;
+			}
+
+		const u64 end_pos = sstream.GetPosition();
+
+		if( end_pos != this->active_subsection_end_pos )
+			{
+			ISDErrorLog << "The current subsection did not end where expected" << ISDErrorLogEnd;
+			return false;
+			}
+
+		return true;
+		}
+
+	bool EntityReader::EndReadSectionsArray( const EntityReader *sections_array_reader )
+		{
+		if( this->active_subsection.get() != sections_array_reader )
+			{
+			ISDErrorLog << "Invalid parameter section_reader, it does not match the internal expected value." << ISDErrorLogEnd;
+			return false;
+			}
+		if( (this->active_subsection_index+1) != this->active_subsection_array_size )
+			{
+			ISDErrorLog << "Synch error, the subsection index does not equal the end of the array" << ISDErrorLogEnd;
+			return false;
+			}
+
+		if( !end_read_large_block( this->sstream, this->active_subsection->end_position ) )
+			{
+			ISDErrorLog << "end_read_large_block failed unexpectedly, the stream is probably corrupted." << ISDErrorLogEnd;
+			return false;
+			}
+
+		this->active_subsection.reset();
+		this->active_subsection_array_size = 0;
+		this->active_subsection_index = ~0;
+		this->active_subsection_end_pos = 0;
+		return true;
+		}
 
 	};

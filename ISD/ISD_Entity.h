@@ -11,9 +11,7 @@
 namespace ISD
 	{
 	class EntityFactory;
-
 	
-
 	class Entity
 		{
 		protected:

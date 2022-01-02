@@ -12,12 +12,17 @@
 #ifndef UUID_DEFINED
 #define UUID_DEFINED
 typedef GUID UUID;
+
 #ifdef _WIN32
 #ifndef uuid_t
 #define uuid_t UUID
 #endif//uuid_t
 #endif//_WIN32
-#endif
+inline bool operator < ( const UUID &Left, const UUID &Right ) 
+	{
+	return memcmp( &Left, &Right, sizeof( UUID ) ) < 0;
+	};
+#endif//UUID_DEFINED
 
 #include <utility>
 #include <map>
@@ -37,6 +42,8 @@ typedef GUID UUID;
 #define ISDSanityCheckDebugMacro( statement ) 
 #define ISDSanityCheckCoreDebugMacro( statement ) 
 #endif
+
+#define ISDKeyMacro( name ) name , (u8)(strlen(name))
 
 namespace ISD
 	{

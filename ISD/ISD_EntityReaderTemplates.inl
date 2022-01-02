@@ -33,7 +33,7 @@ namespace ISD
 		if( value_type != (u8)VT )
 			{
 			// not the expected type
-			ISDErrorLog << "The type in the input stream:" << value_type << " does not match expected type: " << (u8)VT << ISDErrorLogEnd;
+			ISDErrorLog << "The type in the input stream:" << (u32)value_type << " does not match expected type: " << (u32)VT << ISDErrorLogEnd;
 			return 0;
 			}
 
@@ -43,7 +43,7 @@ namespace ISD
 		if( expected_end_pos > sstream.GetSize() )
 			{
 			// not the expected type
-			ISDErrorLog << "The block size:" << block_size << " points beyond the end of the stream size: " << (u8)VT << ISDErrorLogEnd;
+			ISDErrorLog << "The block size:" << block_size << " points beyond the end of the stream size" << ISDErrorLogEnd;
 			return 0;
 			}
 
@@ -53,7 +53,7 @@ namespace ISD
 			{
 			// not the expected type
 			std::string expected_key_name( key, key_size_in_bytes );
-			ISDErrorLog << "The size of the input key:" << read_key_size_in_bytes << " does not match expected size: " << key_size_in_bytes << " for key: \"" << expected_key_name << "\"" << ISDErrorLogEnd;
+			ISDErrorLog << "The size of the input key:" << (u32)read_key_size_in_bytes << " does not match expected size: " << (u32)key_size_in_bytes << " for key: \"" << expected_key_name << "\"" << ISDErrorLogEnd;
 			return 0;
 			}
 
@@ -95,7 +95,7 @@ namespace ISD
 		if( value_type != (u8)VT )
 			{
 			// not the expected type
-			ISDErrorLog << "The type in the input stream:" << value_type << " does not match expected type: " << (u8)VT << ISDErrorLogEnd;
+			ISDErrorLog << "The type in the input stream:" << (u32)value_type << " does not match expected type: " << (u32)VT << ISDErrorLogEnd;
 			return reader_status::fail;
 			}
 

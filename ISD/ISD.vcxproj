@@ -94,6 +94,7 @@
     <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_TestNode.h" />
     <ClInclude Include="ISD_Types.h" />
+    <ClInclude Include="ISD_Dictionary.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />

@@ -32,7 +32,6 @@ namespace UnitTests
 
 		// write value
 		u64 start_pos = ws.GetPosition();
-		u64 expected_pos = start_pos + 2 + sizeof( value ) + key.size();
 		bool write_successfully = ew.Write<T>( key.c_str(), (u8)key.size(), value );
 		Assert::IsTrue( write_successfully );
 

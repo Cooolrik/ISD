@@ -157,6 +157,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DictionaryTests.cpp" />
     <ClCompile Include="RandomFileDataReadTest.cpp" />
     <ClCompile Include="ReadWriteTests.cpp" />
     <ClCompile Include="EntityReadWriteTests.cpp" />

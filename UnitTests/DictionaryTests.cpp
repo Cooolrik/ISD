@@ -12,25 +12,43 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_EntityWriter.h"
 #include "..\ISD\ISD_EntityReader.h"
 #include "..\ISD\ISD_Dictionary.h"
+#include "..\ISD\ISD_EntityValidator.h"
 
 namespace UnitTests
 	{
 	class TestEntity
 		{
-		public:
-			std::string Name;
+		std::string Name;
 
-			bool Write( EntityWriter &writer )
+		public:
+			class MF;
+			friend MF;
+
+			void SetName( std::string &name ) { this->Name = name; }
+			std::string GetName() { return this->Name; }
+		};
+
+	class TestEntity::MF
+		{
+		using _MgmCl = TestEntity;
+
+		public:
+			static bool Write( _MgmCl &obj , EntityWriter &writer )
 				{
-				if( !writer.Write( ISDKeyMacro( "Name" ), this->Name ) )
+				if( !writer.Write( ISDKeyMacro( "Name" ), obj.Name ) )
 					return false;
 				return true;
 				}
 
-			bool Read( EntityReader &reader )
+			static bool Read( _MgmCl &obj , EntityReader &reader )
 				{
-				if( !reader.Read( ISDKeyMacro( "Name" ), this->Name ) )
+				if( !reader.Read( ISDKeyMacro( "Name" ), obj.Name ) )
 					return false;
+				return true;
+				}
+
+			static bool Validate( _MgmCl &obj )
+				{
 				return true;
 				}
 		};
@@ -39,11 +57,13 @@ namespace UnitTests
 		{
 		template<class T> void DictionaryReadWriteTests_TestKeyType( const MemoryWriteStream &ws, EntityWriter &ew )
 			{
-			Dictionary<T, TestEntity> random_dict;
+			typedef Dictionary<T, TestEntity> Dict;
+
+			Dict random_dict;
 
 			size_t dict_size = capped_rand( 0, 100 );
 
-			// create random dictionary with random entries
+			// create random dictionary with random entries (half of them null)
 			for( size_t i = 0; i < dict_size; ++i )
 				{
 				T key = random_value<T>();
@@ -51,7 +71,7 @@ namespace UnitTests
 				if( random_value<bool>() )
 					{
 					random_dict.GetEntities()[key] = std::make_unique<TestEntity>();
-					random_dict.GetEntities()[key]->Name = random_value<std::string>();
+					random_dict.GetEntities()[key]->SetName( random_value<std::string>() );
 					}
 				else
 					{
@@ -59,34 +79,42 @@ namespace UnitTests
 					}
 				}
 
+			EntityValidator validator;
+
+			// validate
+			Assert::IsTrue( Dict::MF::Validate( random_dict , validator ) );
+
 			// write dictionary to stream
 			u64 start_pos = ws.GetPosition();
-			Assert::IsTrue( random_dict.Write( ew ) );
+			Assert::IsTrue( Dict::MF::Write( random_dict , ew ) );
 
 			// set up a temporary entity reader 
 			MemoryReadStream rs( ws.GetData(), ws.GetSize(), ws.GetFlipByteOrder() );
 			EntityReader er( rs );
 			rs.SetPosition( start_pos );
-
-			// read back the dicitonary 
-			Dictionary<T, TestEntity> readback_dict;
-			Assert::IsTrue( readback_dict.Read( er ) );
+			
+			// read back the dictionary 
+			Dict readback_dict;
+			Assert::IsTrue( Dict::MF::Read( readback_dict , er ) );
+			
+			// validate
+			Assert::IsTrue( Dict::MF::Validate( readback_dict , validator ) );
 
 			// compare the values in the dictionaries
 			Assert::IsTrue( random_dict.GetEntities().size() == readback_dict.GetEntities().size() );
-			Dictionary<T, TestEntity>::iterator it1 = random_dict.GetEntities().begin();
-			Dictionary<T, TestEntity>::iterator it2 = readback_dict.GetEntities().begin();
+			Dict::iterator it1 = random_dict.GetEntities().begin();
+			Dict::iterator it2 = readback_dict.GetEntities().begin();
 			while( it1 != random_dict.GetEntities().end() )
 				{
 				bool has_1 = it1->second != nullptr;
 				bool has_2 = it2->second != nullptr;
-
+			
 				Assert::IsTrue( has_1 == has_2 );
 				if( has_1 )
 					{
-					Assert::IsTrue( it1->second->Name == it2->second->Name );
+					Assert::IsTrue( it1->second->GetName() == it2->second->GetName() );
 					}
-
+			
 				++it1;
 				++it2;
 				}

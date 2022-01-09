@@ -1,0 +1,32 @@
+// ISD Copyright (c) 2021 Ulrik Lindahl
+// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
+
+#pragma once
+
+#include "ISD_Types.h"
+
+#include <map>
+#include <mutex>
+
+namespace ISD
+	{
+	struct ValidationError 
+		{
+		static const u64 NoError		= 0x00; 
+		static const u64 InvalidCount	= 0x01;	// an invalid size of lists etc
+		static const u64 NullNotAllowed	= 0x02;	// an object is empty/null, and this is not allowed in the type
+		static const u64 MissingObject	= 0x04;	// a required object is missing
+		static const u64 InvalidObject	= 0x08;	// an object is invalid or used in an invalid way
+		static const u64 InvalidSetup	= 0x10;	// the set up of an object or system is invalid 
+		};
+
+	class EntityValidator
+		{
+		public:
+			std::ostream &ReportError( u64 errorid , const char *funcsig, const char *filename, int fileline ) 
+				{ 
+				std::cout << "Validation error: errorid=" << errorid << "\n" << "\t";
+				return std::cout; 
+				}
+		};
+	};

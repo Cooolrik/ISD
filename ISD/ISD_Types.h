@@ -26,14 +26,18 @@ inline bool operator < ( const UUID &Left, const UUID &Right )
 
 #include <utility>
 #include <map>
+
 #include <mutex>
 #include <vector>
 
 #include "ISD_DataTypes.h"
 #include "ISD_Log.h"
 
-#define ISDErrorLog Log::Error( __FUNCSIG__ , __FILE__ , __LINE__ ) 
+#define ISDErrorLog Log::Error( __func__ , __FILE__ , __LINE__ ) 
 #define ISDErrorLogEnd std::endl
+
+#define ISDValidationError( errorid ) validator.ReportError( errorid , __func__ , __FILE__ , __LINE__ ) 
+#define ISDValidationErrorEnd std::endl
 
 #ifdef _DEBUG
 #define ISDSanityCheckDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Sanity debug check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception(); }

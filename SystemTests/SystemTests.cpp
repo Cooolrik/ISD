@@ -8,8 +8,11 @@
 #include "../ISD/ISD_Log.h"
 #include "../ISD/ISD_EntityWriter.h"
 #include "../ISD/ISD_EntityReader.h"
+#include "../ISD/ISD_EntityValidator.h"
 
 #include <Rpc.h>
+#include "../ISD/ISD_Dictionary.h"
+#include "../ISD/ISD_DirectedGraph.h"
 extern void safe_thread_map_test();
 
 #define RUN_TEST( name )\
@@ -123,10 +126,43 @@ void read_geometry()
 
 int main()
 	{
-	write_geometry();
-	read_geometry();
+	//write_geometry();
+	//read_geometry();
+
+	typedef DirectedGraph<int, 0xffffffff> Graph;
+
+	Graph dg;
+
+	dg.GetGraph().emplace(0,1);
+	dg.GetGraph().emplace(1,2);
+	dg.GetGraph().emplace(2,3);
+	dg.GetGraph().emplace(3,1);
+	
+	dg.GetGraph().emplace(5,6);
+	dg.GetGraph().emplace(6,7);
+	//dg.GetGraph().emplace(7,5);
+
+	dg.GetRoots().insert(0);
+	dg.GetRoots().insert(5);
+
+	EntityValidator validator;
+
+	Graph::MF::Validate( dg, validator );
+
+
+	//
+	//MemoryWriteStream ws;
+	//EntityWriter writer(ws);
+	//
+	//DirectedGraph<int>::MF::Write( dg, writer );
+	//
+	//DirectedGraph<int> dg_read;
+	//
+	//MemoryReadStream rs( ws.GetData(), ws.GetSize() );
+	//EntityReader reader(rs);
+	//
+	//DirectedGraph<int>::MF::Read( dg_read, reader );
 
 	return 0;
 	}
-
 

@@ -59,6 +59,12 @@
     <ClInclude Include="ISD_Dictionary.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="ISD_DirectedGraph.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_EntityValidator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp">

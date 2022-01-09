@@ -84,9 +84,11 @@
     <ClInclude Include="ISD_Blob.h" />
     <ClInclude Include="ISD_DataTypes.h" />
     <ClInclude Include="ISD_DataValuePointers.h" />
+    <ClInclude Include="ISD_DirectedGraph.h" />
     <ClInclude Include="ISD_Entity.h" />
     <ClInclude Include="ISD_EntityReader.h" />
     <ClInclude Include="ISD_EntitySerializer.h" />
+    <ClInclude Include="ISD_EntityValidator.h" />
     <ClInclude Include="ISD_EntityWriter.h" />
     <ClInclude Include="ISD_Log.h" />
     <ClInclude Include="ISD_MemoryReadStream.h" />

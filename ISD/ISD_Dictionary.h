@@ -9,145 +9,166 @@
 
 namespace ISD
 	{
-	template<class _Kty, class _Ty, bool _null_entites_allowed = true, class _Pr = std::less<_Kty>, class _Alloc = std::allocator<std::pair<const _Kty, std::unique_ptr<_Ty>>>>
+	enum DictionaryFlags : uint
+		{
+		ValidationNoNullEntities = 0x1, // if set, validation will fail if null entities exist in the dictionary
+		};
+
+	template<class _Kty, class _Ty, uint _Flags = 0, class _Pr = std::less<_Kty>, class _Alloc = std::allocator<std::pair<const _Kty, std::unique_ptr<_Ty>>>>
 	class Dictionary
 		{
 		public:
 			using key_type = _Kty;
-			using mapped_type = std::unique_ptr<_Ty>;
+			using mapped_type = _Ty;
 			using key_compare = _Pr;
 			using allocator_type = _Alloc;
+
 			using map_type = std::map<_Kty, std::unique_ptr<_Ty>, _Pr, _Alloc>;
-			using map_type_ref = std::map<_Kty, std::unique_ptr<_Ty>, _Pr, _Alloc> &;
-			using const_map_type_ref = const map_type_ref;
 			using value_type = typename map_type::value_type;
 			using iterator = typename map_type::iterator;
+
+			class MF;
+			friend MF;
 
 		private:
 			map_type Entities = {};
 
 		public:
-			bool Write( EntityWriter &writer );
-			bool Read( EntityReader &reader );
-
-			map_type_ref GetEntities() { return this->Entities; }
-			const_map_type_ref GetEntities() const { return this->Entities; }
+			map_type &GetEntities() { return this->Entities; }
+			const map_type &GetEntities() const { return this->Entities; }
 		};
 
-	template<class _Kty, class _Ty, bool _null_entites_allowed, class _Pr, class _Alloc>
-	bool Dictionary<_Kty,_Ty, _null_entites_allowed,_Pr,_Alloc>::Write( EntityWriter &writer )
+	class EntityWriter;
+	class EntityReader;
+	class EntityValidator;
+
+	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
+	class Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF
 		{
-		// collect the keys into a vector, and store in stream as an array
-		std::vector<_Kty> keys(this->Entities.size());
-		size_t index = 0;
-		for( auto it = this->Entities.begin(); it != this->Entities.end(); ++it, ++index )
-			{
-			keys[index] = it->first;
-			}
-		if( !writer.Write( ISDKeyMacro("IDs"), keys ) )
-			return false;
-		keys.clear();
+		using _MgmCl = Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>;
 
-		// create a sections array for the entities
-		EntityWriter *section_writer = writer.BeginWriteSectionsArray( ISDKeyMacro("Entities"), this->Entities.size() );
-		if( !section_writer )
-			return false;
-
-		// write out all the entities as an array
-		// for each non-empty entity, call the write method of the entity
-		index = 0;
-		for( auto it = this->Entities.begin(); it != this->Entities.end(); ++it, ++index )
-			{
-			if( !writer.BeginWriteSectionInArray( section_writer, index ) )
-				return false;
-			if( it->second )
+		public:
+			static bool Write( _MgmCl &obj , EntityWriter &writer )
 				{
-				if( !it->second->Write( *section_writer ) )
-					return false;
-				}
-			if( !writer.EndWriteSectionInArray( section_writer, index ) )
-				return false;
-			}
-
-		// sanity check, make sure all sections were written
-		ISDSanityCheckDebugMacro( index == this->Entities.size() );
-
-		// end the Entities sections array
-		if( !writer.EndWriteSectionsArray( section_writer ) )
-			return false;
-
-		return true;
-		}
-
-	template<class _Kty, class _Ty, bool _null_entites_allowed, class _Pr, class _Alloc>
-	bool Dictionary<_Kty,_Ty, _null_entites_allowed,_Pr,_Alloc>::Read( EntityReader &reader )
-		{
-		EntityReader *section_reader = {};
-		size_t map_size = {};
-		bool success = {};
-		iterator it = {};
-
-		// read in the keys as a vector
-		std::vector<_Kty> keys;
-		if( !reader.Read( ISDKeyMacro("IDs"), keys ) )
-			return false;
-
-		// begin the named sections array
-		std::tie( section_reader, map_size, success ) = reader.BeginReadSectionsArray( ISDKeyMacro("Entities"), false );
-		if( !success )
-			return false;
-		ISDSanityCheckDebugMacro( section_reader );
-		if( map_size != keys.size() )
-			{
-			ISDErrorLog << "Invalid size in Dictionary, the Keys and Entities arrays do not match in size." << ISDErrorLogEnd;
-			return false;
-			}
-
-		// read in all the entities, push into map as key-value pairs
-		this->Entities.clear();
-		for( size_t index = 0; index < map_size ; ++index )
-			{
-			bool has_data = false;
-			if( !reader.BeginReadSectionInArray( section_reader, index, &has_data ) )
-				return false;
-
-			if( has_data )
-				{
-				// create the entity, and read in its contents
-				std::tie(it,success) = this->Entities.emplace( keys[index], std::make_unique<_Ty>() );
-				if( !success )
+				// collect the keys into a vector, and store in stream as an array
+				std::vector<_Kty> keys(obj.Entities.size());
+				size_t index = 0;
+				for( auto it = obj.Entities.begin(); it != obj.Entities.end(); ++it, ++index )
 					{
-					ISDErrorLog << "Failed inserting key-value pair in Dictionary" << ISDErrorLogEnd;
+					keys[index] = it->first;
+					}
+				if( !writer.Write( ISDKeyMacro("IDs"), keys ) )
+					return false;
+				keys.clear();
+
+				// create a sections array for the entities
+				EntityWriter *section_writer = writer.BeginWriteSectionsArray( ISDKeyMacro("Entities"), obj.Entities.size() );
+				if( !section_writer )
+					return false;
+
+				// write out all the entities as an array
+				// for each non-empty entity, call the write method of the entity
+				index = 0;
+				for( auto it = obj.Entities.begin(); it != obj.Entities.end(); ++it, ++index )
+					{
+					if( !writer.BeginWriteSectionInArray( section_writer, index ) )
+						return false;
+					if( it->second )
+						{
+						if( !_Ty::MF::Write( *(it->second), *(section_writer) ) )
+							return false;
+						}
+					if( !writer.EndWriteSectionInArray( section_writer, index ) )
+						return false;
+					}
+
+				// sanity check, make sure all sections were written
+				ISDSanityCheckDebugMacro( index == obj.Entities.size() );
+
+				// end the Entities sections array
+				if( !writer.EndWriteSectionsArray( section_writer ) )
+					return false;
+
+				return true;
+				}
+
+			static bool Read( _MgmCl &obj , EntityReader &reader )
+				{
+				EntityReader *section_reader = {};
+				size_t map_size = {};
+				bool success = {};
+				typename _MgmCl::iterator it = {};
+
+				// read in the keys as a vector
+				std::vector<_Kty> keys;
+				if( !reader.Read( ISDKeyMacro("IDs"), keys ) )
+					return false;
+
+				// begin the named sections array
+				std::tie( section_reader, map_size, success ) = reader.BeginReadSectionsArray( ISDKeyMacro("Entities"), false );
+				if( !success )
+					return false;
+				ISDSanityCheckDebugMacro( section_reader );
+				if( map_size != keys.size() )
+					{
+					ISDErrorLog << "Invalid size in Dictionary, the Keys and Entities arrays do not match in size." << ISDErrorLogEnd;
 					return false;
 					}
-				if( !it->second->Read( *section_reader ) )
-					return false;
-				}
-			else if( _null_entites_allowed )
-				{
-				std::tie(it,success) = this->Entities.emplace( keys[index], nullptr );
-				if( !success )
+
+				// read in all the entities, push into map as key-value pairs
+				obj.Entities.clear();
+				for( size_t index = 0; index < map_size ; ++index )
 					{
-					ISDErrorLog << "Failed inserting nullptr key-value pair in Dictionary" << ISDErrorLogEnd;
-					return false;
+					bool has_data = false;
+					if( !reader.BeginReadSectionInArray( section_reader, index, &has_data ) )
+						return false;
+
+					if( has_data )
+						std::tie(it,success) = obj.Entities.emplace( keys[index], std::make_unique<_Ty>() );
+					else 
+						std::tie(it,success) = obj.Entities.emplace( keys[index], nullptr );
+
+					if( !success )
+						{
+						ISDErrorLog << "Failed inserting key-value pair in Dictionary" << ISDErrorLogEnd;
+						return false;
+						}
+
+					if( it->second )
+						{
+						if( !_Ty::MF::Read( *(it->second), *(section_reader) ) )
+							return false;
+						}
+
+					if( !reader.EndReadSectionInArray( section_reader, index ) )
+						return false;
 					}
+
+				// end the sections array
+				if( !reader.EndReadSectionsArray( section_reader ) )
+					return false;
+
+				return true;
 				}
-			else
+
+			static bool Validate( const _MgmCl &obj , EntityValidator &validator )
 				{
-				ISDErrorLog << "Null entity found in Dictionary, but is not allowed" << ISDErrorLogEnd;
-				return false;
+				for( auto it = obj.Entities.begin(); it != obj.Entities.end(); ++it )
+					{
+					if( it->second )
+						{
+						if( !_Ty::MF::Validate( *(it->second) ) )
+							return false;
+						}
+					else if( (_Flags & DictionaryFlags::ValidationNoNullEntities) != 0 )
+						{
+						ISDValidationError( ValidationError::NullNotAllowed ) << "Null entities are not allowed in this Directory" << ISDErrorLogEnd;
+						return false;
+						}
+					}
+				return true;
 				}
-
-			if( !reader.EndReadSectionInArray( section_reader, index ) )
-				return false;
-			}
-
-		// end the sections array
-		if( !reader.EndReadSectionsArray( section_reader ) )
-			return false;
-
-		return true;
-		}
+		};
 
 
 	};

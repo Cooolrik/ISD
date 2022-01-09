@@ -17,7 +17,7 @@
 using namespace ISD;
 
 const i64 global_random_seed = 12876123876;
-const size_t global_number_of_passes = 1000;
+const size_t global_number_of_passes = 1;
 
 inline void setup_random_seed()
 	{

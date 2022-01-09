@@ -18,7 +18,7 @@ namespace ISD
 		public:
 			static std::ostream &Error( const char *funcsig, const char *filename, int fileline ) 
 				{ 
-				std::cout << "Error: "; 
+				std::cout << "Error: " << "\n" << "\t";
 				return std::cout; 
 				}
 

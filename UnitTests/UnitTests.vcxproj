@@ -158,6 +158,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DictionaryTests.cpp" />
+    <ClCompile Include="DirectedGraphTests.cpp" />
     <ClCompile Include="RandomFileDataReadTest.cpp" />
     <ClCompile Include="ReadWriteTests.cpp" />
     <ClCompile Include="EntityReadWriteTests.cpp" />

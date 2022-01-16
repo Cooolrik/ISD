@@ -22,11 +22,20 @@ namespace ISD
 
 	class EntityValidator
 		{
+		uint ErrorCount = 0;
+		u64 ErrorIds = 0;
+
 		public:
 			std::ostream &ReportError( u64 errorid , const char *funcsig, const char *filename, int fileline ) 
 				{ 
 				std::cout << "Validation error: errorid=" << errorid << "\n" << "\t";
+				++this->ErrorCount;
+				this->ErrorIds |= errorid;
 				return std::cout; 
 				}
+
+			void ClearErrorCount() { this->ErrorCount = 0; }
+			uint GetErrorCount() const { return this->ErrorCount; }
+			u64 GetErrorIds() const { return this->ErrorIds; }
 		};
 	};

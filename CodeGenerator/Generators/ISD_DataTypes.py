@@ -8,14 +8,45 @@ float_type_range = ['float','double']
 vector_dimension_range = [2,3,4] 
 nonconst_const_range = ['','const ']
 
+def print_UUID_header():
+	lines = []
+	lines.append('// define GUID stuff from windows')
+	lines.append('#ifdef _WIN32')
+	lines.append('#include <guiddef.h>')
+	lines.append('#endif//_WIN32')
+	lines.append('')
+	lines.append('// define UUID')
+	lines.append('#ifndef UUID_DEFINED')
+	lines.append('#define UUID_DEFINED')
+	lines.append('typedef GUID UUID;')
+	lines.append('')
+	lines.append('#ifdef _WIN32')
+	lines.append('#ifndef uuid_t')
+	lines.append('#define uuid_t UUID')
+	lines.append('#endif//uuid_t')
+	lines.append('#endif//_WIN32')
+	lines.append('')
+	lines.append('inline bool operator<( const UUID &Left, const UUID &Right ) ')
+	lines.append('	{')
+	lines.append('	return memcmp( &Left, &Right, sizeof( UUID ) ) < 0;')
+	lines.append('	};')
+	lines.append('')
+	lines.append('std::ostream &operator<<( std::ostream &os, const UUID &guid );')
+	lines.append('')
+	lines.append('#endif//UUID_DEFINED')
+	return lines
+
 def print_type_information_header( type , value , value_count ):
 	lines = []
 	lines.append(f'\ttemplate<> struct type_information<{type}>')
 	lines.append( '\t	{')
-	lines.append(f'\t	typedef {value} value_type; // the value type of {type} ( {value} )')
-	lines.append(f'\t	static const size_t value_count = {value_count}; // the number of values in {type} ( {value_count} )')
-	lines.append(f'\t	static const char *value_name; // name of the value in {type} ( "{value}" ) ')
-	lines.append(f'\t	static const char *type_name; // name of the type ( "{type}" ) ')
+	lines.append(f'\t	using value_type = {value}; // the value type of {type} ( {value} )')
+	lines.append(f'\t	static constexpr size_t value_count = {value_count}; // the number of values in {type} ( {value_count} )')
+	lines.append(f'\t	static constexpr const char * value_name = "{value}"; // name of the value in {type} ( "{value}" ) ')
+	lines.append(f'\t	static constexpr const char * type_name = "{type}"; // name of the type ( "{type}" ) ')
+	lines.append(f'\t	static const {type} inf; // limit inferior (minimum possible value) of {type}')
+	if type != 'string':
+		lines.append(f'\t	static const {type} sup; // limit superior (maximum possible value) of {type}')
 	lines.append( '\t	};')
 	lines.append('')
 	return lines
@@ -26,6 +57,8 @@ def ISD_DataTypes_h():
 	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
 	lines.append('')
 	lines.append('#pragma once')
+	lines.append('')
+	lines.extend(print_UUID_header())
 	lines.append('')
 	lines.append('#include <glm/fwd.hpp>')
 	lines.append('')
@@ -40,6 +73,28 @@ def ISD_DataTypes_h():
 		lines.append(f"\ttypedef std::uint{bit_size}_t u{bit_size};")
 	lines.append('')
 	lines.append(f"\ttypedef std::string string;")
+	lines.append('')
+
+	# const min/max values of the standard types
+	lines.append('\t// scalar types, minimum possible ("inf", limit inferior) and maximum possible values ("sup", limit superior)')
+	lines.append('\tconstexpr bool bool_inf = false;')
+	lines.append('\tconstexpr bool bool_sup = true;')
+	for bit_size in int_bit_range:
+		lines.append(f"\tconstexpr i{bit_size} i{bit_size}_inf = INT{bit_size}_MIN;")
+		lines.append(f"\tconstexpr i{bit_size} i{bit_size}_sup = INT{bit_size}_MAX;")
+	for bit_size in int_bit_range:
+		lines.append(f"\tconstexpr u{bit_size} u{bit_size}_inf = 0;")
+		lines.append(f"\tconstexpr u{bit_size} u{bit_size}_sup = UINT{bit_size}_MAX;")
+	lines.append('')
+	lines.append('\tconstexpr float float_inf = -FLT_MAX;')
+	lines.append('\tconstexpr float float_sup = FLT_MAX;')
+	lines.append('\tconstexpr double double_inf = -FLT_MAX;')
+	lines.append('\tconstexpr double double_sup = FLT_MAX;')
+	lines.append('')
+	lines.append('\tconst string string_inf;')
+	lines.append('')
+	lines.append('\tconstexpr UUID UUID_inf = {0,0,0,{0,0,0,0,0,0,0,0}};')
+	lines.append('\tconstexpr UUID UUID_sup = {0xffffffff,0xffff,0xffff,{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};')
 	lines.append('')
 
 	# typedef vector types
@@ -130,10 +185,29 @@ def ISD_DataTypes_h():
 	lines.append('    };')
 	hlp.write_lines_to_file("../ISD/ISD_DataTypes.h",lines)
 
+def print_UUID_source():
+	lines = []
+	lines.append('std::ostream &operator<<( std::ostream &os, const UUID &guid )')
+	lines.append('    {')
+	lines.append('    return os;')
+	lines.append('    }')
+	lines.append('')
+	return lines
+
 def print_type_information_source( type , value , value_count ):
 	lines = []
-	lines.append(f'\tconst char *type_information<{type}>::value_name = "{value}";')
-	lines.append(f'\tconst char *type_information<{type}>::type_name = "{type}";')
+	
+	inf = sup = ''
+	for i in range(value_count):
+		inf += f'{value}_inf'
+		sup += f'{value}_sup'
+		if i < value_count-1:
+			inf += ','
+			sup += ','
+
+	lines.append(f'\tconst {type} type_information<{type}>::inf = {type}({inf}); // limit inferior (minimum bound) of {type}')
+	if type != 'string':
+		lines.append(f'\tconst {type} type_information<{type}>::sup = {type}({sup}); // limit superior (maximum bound) of {type}')
 	lines.append('')
 	return lines
 
@@ -142,9 +216,12 @@ def ISD_DataTypes_cpp():
 	lines.append('// ISD Copyright (c) 2021 Ulrik Lindahl')
 	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
 	lines.append('')
-	lines.append('#pragma once')
+	lines.append('#include <glm/glm.hpp>')
+	lines.append('#include <glm/gtc/type_ptr.hpp>')
 	lines.append('')
 	lines.append('#include "ISD_Types.h"')
+	lines.append('')
+	lines.extend(print_UUID_source())
 	lines.append('')
 	lines.append('namespace ISD')
 	lines.append('    {')

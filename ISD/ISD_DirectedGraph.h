@@ -14,9 +14,10 @@ namespace ISD
 	{
 	struct DirectedGraphFlags 
 		{
-		static const uint ValidationAcyclic = 0x1; // if set, validation make sure the directed graph is acyclic (DAG)
-		static const uint ValidationRooted = 0x2; // if set, validation will make sure all graph vertices can be reachable from the root(s)
-		static const uint ValidationSingleRoot = 0x4; // if set, validation will make sure there is a single graph root vertex
+		static const uint Acyclic = 0x1; // if set, validation make sure the directed graph is acyclic (DAG)
+		static const uint Rooted = 0x2; // if set, validation will make sure all graph vertices can be reachable from the root(s)
+		static const uint SingleRoot = 0x4; // if set, validation will make sure there is a single graph root vertex
+		static const uint UniqueEdges = 0x8; // if set, validation will make sure that there are only unique edges (key-value pairs) in the graph 
 		};
 
 	template<class _Ty, uint _Flags = 0, class _Alloc = std::allocator<std::pair<const _Ty, _Ty>>>
@@ -31,20 +32,55 @@ namespace ISD
 			using value_type = typename map_type::value_type;
 			using iterator = typename map_type::iterator;
 
+			static const bool type_acyclic = (_Flags & DirectedGraphFlags::Acyclic) != 0;
+			static const bool type_rooted = (_Flags & DirectedGraphFlags::Rooted) != 0;
+			static const bool type_single_root = (_Flags & DirectedGraphFlags::SingleRoot) != 0;
+			static const bool type_unique_edges = (_Flags & DirectedGraphFlags::UniqueEdges) != 0;
+
 			class MF;
 			friend MF;
 
 		private:
 			std::set<_Ty> Roots = {};
-			map_type Graph = {};
+			map_type Edges = {};
 
 		public:
-			map_type &GetGraph() { return this->Graph; }
-			const map_type &GetGraph() const { return this->Graph; }
+			// inserts an edge, but if flags is set to UniqueEdges, will first check if it already exists, and only insert if not found
+			void InsertEdge( const key_type &key, const mapped_type &value ) noexcept;
 
-			std::set<_Ty> &GetRoots() { return this->Roots; }
-			const std::set<_Ty> &GetRoots() const { return this->Roots; }
+			// find a particular key-value pair (directed edge)
+			const bool HasEdge( const key_type &key, const mapped_type &value ) const noexcept;
+
+			// direct access to edges structure
+			map_type &GetEdges() noexcept { return this->Edges; }
+			const map_type &GetEdges() const noexcept { return this->Edges; }
+
+			// direct access to roots set
+			std::set<_Ty> &GetRoots() noexcept { return this->Roots; }
+			const std::set<_Ty> &GetRoots() const noexcept { return this->Roots; }
 		};
+
+	template<class _Ty, uint _Flags, class _Alloc>
+	inline void DirectedGraph<_Ty, _Flags, _Alloc>::InsertEdge( const key_type &key, const mapped_type &value ) noexcept
+		{
+		if( type_unique_edges && HasEdge( key, value ) )
+			return;
+		this->Edges.emplace( key, value );
+		}
+
+	template<class _Ty, uint _Flags, class _Alloc>
+	inline const bool DirectedGraph<_Ty,_Flags,_Alloc>::HasEdge( const key_type &key, const mapped_type &value ) const noexcept
+		{
+		auto itr = this->Edges.lower_bound( key );
+		auto itr_end = this->Edges.upper_bound( key );
+		while( itr != itr_end )
+			{
+			if( itr->second == value )
+				return true;
+			++itr;
+			}
+		return false;
+		}
 
 	class EntityWriter;
 	class EntityReader;
@@ -69,18 +105,18 @@ namespace ISD
 					return false;
 
 				// collect the keys-value pairs into a vector and store as an array
-				std::vector<_Ty> graph_pairs(obj.Graph.size()*2);
+				std::vector<_Ty> graph_pairs(obj.Edges.size()*2);
 				size_t index = 0;
-				for( auto it = obj.Graph.begin(); it != obj.Graph.end(); ++it, ++index )
+				for( auto it = obj.Edges.begin(); it != obj.Edges.end(); ++it, ++index )
 					{
 					graph_pairs[index*2+0] = it->first;
 					graph_pairs[index*2+1] = it->second;
 					}
-				if( !writer.Write( ISDKeyMacro("Graph"), graph_pairs ) )
+				if( !writer.Write( ISDKeyMacro("Edges"), graph_pairs ) )
 					return false;
 
 				// sanity check, make sure all sections were written
-				ISDSanityCheckDebugMacro( index == obj.Graph.size() );
+				ISDSanityCheckDebugMacro( index == obj.Edges.size() );
 
 				return true;
 				}
@@ -99,16 +135,16 @@ namespace ISD
 				
 				// read in the graph pairs
 				std::vector<_Ty> graph_pairs;
-				if( !reader.Read( ISDKeyMacro("Graph"), graph_pairs ) )
+				if( !reader.Read( ISDKeyMacro("Edges"), graph_pairs ) )
 					return false;
 				
 				// insert into map
-				obj.Graph.clear();
+				obj.Edges.clear();
 				map_size = graph_pairs.size() / 2;
 				for( size_t index = 0; index < map_size; ++index )
 					{
-					it = obj.Graph.emplace( graph_pairs[index * 2 + 0], graph_pairs[index * 2 + 1] );
-					if( it == obj.Graph.end() )
+					it = obj.Edges.emplace( graph_pairs[index * 2 + 0], graph_pairs[index * 2 + 1] );
+					if( it == obj.Edges.end() )
 						{
 						ISDErrorLog << "Failed inserting key-value pair into DirectedGraph" << ISDErrorLogEnd;
 						return false;
@@ -195,7 +231,7 @@ namespace ISD
 				std::set<_Ty> reached;
 
 				// push all the roots onto the queue
-				for( auto n : roots )
+				for( const auto &n : roots )
 					{
 					queue.push( n );
 					}
@@ -207,8 +243,11 @@ namespace ISD
 					_Ty curr = queue.front();
 					queue.pop();
 
+					// if already reached, skip
+					if( set_contains( reached, curr ) )
+						continue;
+
 					// mark it as reached
-					ISDSanityCheckCoreDebugMacro( !set_contains( reached, curr ) );
 					reached.insert( curr );
 
 					// check downstream nodes
@@ -245,13 +284,9 @@ namespace ISD
 		public:
 			static bool Validate( const _MgmCl &obj, EntityValidator &validator )
 				{
-				const bool type_acyclic = (_Flags & DirectedGraphFlags::ValidationAcyclic) != 0;
-				const bool type_rooted = (_Flags & DirectedGraphFlags::ValidationRooted) != 0;
-				const bool type_single_root = (_Flags & DirectedGraphFlags::ValidationSingleRoot) != 0;
-
 				// make a set of all nodes with incoming edges
 				std::set<_Ty> downstream_nodes;
-				for( auto p : obj.Graph )
+				for( const auto &p : obj.Edges )
 					{
 					if( !set_contains( downstream_nodes , p.second ) )
 						downstream_nodes.insert( p.second );
@@ -259,7 +294,7 @@ namespace ISD
 
 				// the rest of the nodes are root nodes (no incoming edges)
 				std::set<_Ty> root_nodes;
-				for( auto p : obj.Graph )
+				for( const auto &p : obj.Edges )
 					{
 					if( !set_contains( downstream_nodes , p.first ) )
 						root_nodes.insert( p.first );
@@ -308,13 +343,13 @@ namespace ISD
 						}
 
 					// make sure no node is unreachable from the roots
-					ValidateRooted( obj.Roots, downstream_nodes, obj.Graph, validator );
+					ValidateRooted( obj.Roots, downstream_nodes, obj.Edges, validator );
 					}
 
 				// check for cycles if the graph is acyclic
 				if( type_acyclic )
 					{
-					ValidateNoCycles( obj.Graph, validator );
+					ValidateNoCycles( obj.Edges, validator );
 					}
 
 				return true;

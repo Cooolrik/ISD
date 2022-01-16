@@ -3,27 +3,6 @@
 
 #pragma once
 
-// define GUID stuff from windows
-#ifdef _WIN32
-#include <guiddef.h>
-#endif//_WIN32
-
-// define UUID
-#ifndef UUID_DEFINED
-#define UUID_DEFINED
-typedef GUID UUID;
-
-#ifdef _WIN32
-#ifndef uuid_t
-#define uuid_t UUID
-#endif//uuid_t
-#endif//_WIN32
-inline bool operator < ( const UUID &Left, const UUID &Right ) 
-	{
-	return memcmp( &Left, &Right, sizeof( UUID ) ) < 0;
-	};
-#endif//UUID_DEFINED
-
 #include <utility>
 #include <map>
 

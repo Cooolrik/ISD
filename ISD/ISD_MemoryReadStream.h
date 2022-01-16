@@ -213,41 +213,4 @@ namespace ISD
 		return count;
 		}
 
-	//// std::strings
-	//inline u64 MemoryReadStream::Read( std::string *dest, u64 count ) 
-	//	{ 
-	//	for( uint i = 0; i < count; ++i )
-	//		{
-	//		// read string length
-	//		u64 strl = 0;
-	//		if( this->Read( &strl, 1 ) != 1 )
-	//			return i; // failed reading, at end of stream, so return number of successful reads
-
-	//		// make sure there are enough bytes left in the stream to assign from the data
-	//		u64 data_left = this->DataSize - this->DataPosition;
-	//		if( data_left < strl )
-	//			return i; // failed reading, at end of stream, so return number of successful reads
-
-	//		// assign to string directly from the data.
-	//		// NOTE ON CODE: this is OK since we have already checked the bounds, and this is a string of bytes, so no endianness issues arise
-	//		dest[i].assign( (const char*)(&this->Data[this->DataPosition]), strl );
-	//		this->DataPosition += strl;
-	//		}
-
-	//	return count; // all OK
-	//	}
-
-	//// std::vector
-	//template<class T> bool MemoryReadStream::Read( std::vector<T> *dest )
-	//	{
-	//	u64 count = 0;
-	//	if( this->Read( &count, 1 ) != 1 )
-	//		return false; // could not read array
-
-	//	// resize array 
-	//	dest->resize( count );
-
-	//	// read in values, return true if all values could be read
-	//	return (this->Read( dest->data(), count ) == count);
-	//	}
 	};

@@ -124,23 +124,37 @@ void read_geometry()
 	er.Read( "Vertices", 8, DestVertices );
 	}
 
+//std::set<std::pair<vec3, vec3>> multi_set;
+
 int main()
 	{
 	//write_geometry();
 	//read_geometry();
 
+	//multi_set.insert( std::pair<vec3, vec3>( {}, {} ) );
+	//multi_set.insert( std::pair<vec3, vec3>( {}, {} ) );
+	//
+	//auto it1 = multi_set.lower_bound( std::pair<vec3, vec3>( {}, {} ) );
+	//auto it2 = multi_set.upper_bound( std::pair<vec3, vec3>( {}, {} ) );
+
+	const char * tn = type_information<dvec3>::value_name;
+
 	typedef DirectedGraph<int, 0xffffffff> Graph;
 
 	Graph dg;
 
-	dg.GetGraph().emplace(0,1);
-	dg.GetGraph().emplace(1,2);
-	dg.GetGraph().emplace(2,3);
-	dg.GetGraph().emplace(3,1);
+	dg.InsertEdge(0,1);
+	dg.InsertEdge(0,2);
+	dg.InsertEdge(0,1);
+	dg.InsertEdge(0,3);
+
+	dg.InsertEdge(0,1);
+	dg.InsertEdge(1,2);
+	dg.InsertEdge(2,3);
+	dg.InsertEdge(3,1);
 	
-	dg.GetGraph().emplace(5,6);
-	dg.GetGraph().emplace(6,7);
-	//dg.GetGraph().emplace(7,5);
+	dg.InsertEdge(5,6);
+	dg.InsertEdge(6,7);
 
 	dg.GetRoots().insert(0);
 	dg.GetRoots().insert(5);
@@ -148,7 +162,6 @@ int main()
 	EntityValidator validator;
 
 	Graph::MF::Validate( dg, validator );
-
 
 	//
 	//MemoryWriteStream ws;

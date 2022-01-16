@@ -221,7 +221,6 @@ namespace ISD
 	inline void MemoryWriteStream::Write( const UUID &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const float &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const double &src ) { this->Write( &src, 1 ); }
-	//inline void MemoryWriteStream::Write( const std::string &src ) { this->Write( &src, 1 ); }
 
 	// 8 bit data
 	inline void MemoryWriteStream::Write( const i8 *src, u64 count ) { return this->WriteValues<u8>( (const u8*)src, count ); }
@@ -259,29 +258,5 @@ namespace ISD
 			this->Write( rawbytes, 16 );
 			}
 		}
-
-	//// std::strings
-	//inline void MemoryWriteStream::Write( const std::string *src, u64 count ) 
-	//	{ 
-	//	for( uint i = 0; i < count; ++i )
-	//		{
-	//		// write string length
-	//		u64 strl = src[i].length();
-	//		this->Write( &strl, 1 );
-
-	//		// write string data
-	//		this->Write( src[i].data(), strl );
-	//		}
-	//	}
-
-	//// std::vector
-	//template<class T> void MemoryWriteStream::Write( const std::vector<T> *dest )
-	//	{
-	//	u64 count = 0;
-	//	this->Write( &count, 1 );
-
-	//	// read in values, return true if all values could be read
-	//	this->Write( dest->data(), count );
-	//	}
 	
 	};

@@ -99,7 +99,7 @@ namespace ISD
 		VT_Mat3 = 0x0f, // a 3x3 matrix, can be 36 or 72 bytes in size (float or double per component)
 		VT_Mat4 = 0x10, // a 4x4 matrix, can be 64 or 128 bytes in size (float or double per component)
 		VT_Quat = 0x11, // a quaternion, can be 16 or 32 bytes in size (float or double per component)
-		VT_UUID = 0x12, // a UUID, universally unique identifier, 16 bytes in size
+		VT_Uuid = 0x12, // a UUID, universally unique identifier, 16 bytes in size
 
 		// -----------------------------------------------------------------------------------------------------------------------
 		// --- All types 0x40 and up use the larger encoding chunk, and can be up to 2^64 bytes in size
@@ -122,7 +122,7 @@ namespace ISD
 		VT_Array_Mat3 = 0x4f,  // array of VT_Mat3 
 		VT_Array_Mat4 = 0x50,  // array of VT_Mat4 
 		VT_Array_Quat = 0x51,  // array of VT_Quat 
-		VT_Array_UUID = 0x52,  // array of VT_UUID 
+		VT_Array_Uuid = 0x52,  // array of VT_Uuid
 
 		// --- Specific types: 0xd0 - 0xff
 		VT_Subsection = 0xd0, // a named subsection, containins named values and nested subsections. 
@@ -153,7 +153,7 @@ namespace ISD
 	template <> std::wstring value_to_hex_wstring<u16>( u16 value );
 	template <> std::wstring value_to_hex_wstring<u32>( u32 value );
 	template <> std::wstring value_to_hex_wstring<u64>( u64 value );
-	template <> std::wstring value_to_hex_wstring<UUID>( UUID value );
+	template <> std::wstring value_to_hex_wstring<uuid>( uuid value );
 
 	// converts file path in wstring to an absolute or full file path 
 	std::wstring full_path( const std::wstring &path );

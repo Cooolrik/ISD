@@ -124,44 +124,46 @@ void read_geometry()
 	er.Read( "Vertices", 8, DestVertices );
 	}
 
-//std::set<std::pair<vec3, vec3>> multi_set;
+std::set<std::pair<int, int>> multi_set;
+
+using SceneLayer = ISD::ver1::SceneLayer;
+
+template<class Graph>
+void GenerateRandomTreeRecursive( Graph &graph , uint total_levels , uint current_level = 0, typename Graph::node_type parent_node = random_value<Graph::node_type>() )
+	{
+	typedef Graph::node_type _Ty;
+
+	// generate a random number of subnodes
+	size_t sub_nodes = capped_rand( 1, 7 );
+
+	// add to tree
+	for( size_t i = 0; i < sub_nodes; ++i )
+		{
+		_Ty child_node = random_value<Graph::node_type>();
+
+		graph.GetEdges().insert( std::pair<_Ty, _Ty>( parent_node, child_node ) );
+
+		if( current_level < total_levels )
+			{
+			GenerateRandomTreeRecursive( graph, total_levels, current_level + 1, child_node );
+			}
+		}
+	}
 
 int main()
 	{
-	//write_geometry();
-	//read_geometry();
 
-	//multi_set.insert( std::pair<vec3, vec3>( {}, {} ) );
-	//multi_set.insert( std::pair<vec3, vec3>( {}, {} ) );
-	//
-	//auto it1 = multi_set.lower_bound( std::pair<vec3, vec3>( {}, {} ) );
-	//auto it2 = multi_set.upper_bound( std::pair<vec3, vec3>( {}, {} ) );
+	SceneLayer layer;
 
-	const char * tn = type_information<dvec3>::value_name;
-
-	typedef DirectedGraph<int, 0xffffffff> Graph;
-
-	Graph dg;
-
-	dg.InsertEdge(0,1);
-	dg.InsertEdge(0,2);
-	dg.InsertEdge(0,1);
-	dg.InsertEdge(0,3);
-
-	dg.InsertEdge(0,1);
-	dg.InsertEdge(1,2);
-	dg.InsertEdge(2,3);
-	dg.InsertEdge(3,1);
+	MemoryWriteStream ws;
+	EntityWriter writer(ws);
 	
-	dg.InsertEdge(5,6);
-	dg.InsertEdge(6,7);
+	SceneLayer::MF::Write( layer, writer );
 
-	dg.GetRoots().insert(0);
-	dg.GetRoots().insert(5);
 
-	EntityValidator validator;
+	//EntityValidator validator;
 
-	Graph::MF::Validate( dg, validator );
+	//Graph::MF::Validate( dg, validator );
 
 	//
 	//MemoryWriteStream ws;

@@ -73,6 +73,7 @@ def ISD_DataTypes_h():
 		lines.append(f"\ttypedef std::uint{bit_size}_t u{bit_size};")
 	lines.append('')
 	lines.append(f"\ttypedef std::string string;")
+	lines.append(f"\ttypedef UUID uuid;")
 	lines.append('')
 
 	# const min/max values of the standard types
@@ -93,8 +94,8 @@ def ISD_DataTypes_h():
 	lines.append('')
 	lines.append('\tconst string string_inf;')
 	lines.append('')
-	lines.append('\tconstexpr UUID UUID_inf = {0,0,0,{0,0,0,0,0,0,0,0}};')
-	lines.append('\tconstexpr UUID UUID_sup = {0xffffffff,0xffff,0xffff,{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};')
+	lines.append('\tconstexpr uuid uuid_inf = {0,0,0,{0,0,0,0,0,0,0,0}};')
+	lines.append('\tconstexpr uuid uuid_sup = {0xffffffff,0xffff,0xffff,{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};')
 	lines.append('')
 
 	# typedef vector types
@@ -174,8 +175,8 @@ def ISD_DataTypes_h():
 	lines.extend(print_type_information_header('fquat','float',4))
 	lines.extend(print_type_information_header('dquat','double',4))
 
-	# UUID info
-	lines.extend(print_type_information_header('UUID','UUID',1))
+	# uuid info
+	lines.extend(print_type_information_header('uuid','uuid',1))
 
 	# string info
 	lines.extend(print_type_information_header('string','string',1))
@@ -256,8 +257,8 @@ def ISD_DataTypes_cpp():
 	lines.extend(print_type_information_source('fquat','float',4))
 	lines.extend(print_type_information_source('dquat','double',4))
 
-	# UUID info
-	lines.extend(print_type_information_source('UUID','UUID',1))
+	# uuid info
+	lines.extend(print_type_information_source('uuid','uuid',1))
 
 	# std::string info
 	lines.extend(print_type_information_source('string','string',1))
@@ -324,7 +325,7 @@ def ISD_DataValuePointers_h():
 		lines.append(f"\tinline {const_type}double *value_ptr( {const_type}dquat &value ) {{ return glm::value_ptr(value); }}")
 	lines.append('')
 	for const_type in nonconst_const_range:
-		lines.append(f"\tinline {const_type}UUID *value_ptr( {const_type}UUID &value ) {{ return &value; }}")
+		lines.append(f"\tinline {const_type}uuid *value_ptr( {const_type}uuid &value ) {{ return &value; }}")
 	lines.append('')
 	for const_type in nonconst_const_range:
 		lines.append(f"\tinline {const_type}string *value_ptr( {const_type}string &value ) {{ return &value; }}")

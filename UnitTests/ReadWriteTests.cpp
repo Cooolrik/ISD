@@ -50,9 +50,9 @@ namespace UnitTests
 				std::stringstream ss;
 				ss << "Pass #" << (pass_index / 2)+1 << " ";
 				if( ws->GetFlipByteOrder() )
-					ss << "Testing native byte order\n";
-				else
 					ss << "Testing flipped byte order\n";
+				else
+					ss << "Testing native byte order\n";
 				Logger::WriteMessage(ss.str().c_str());
 
 

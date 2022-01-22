@@ -135,9 +135,9 @@ namespace UnitTests
 				std::stringstream ss;
 				ss << "Pass #" << (pass_index / 2)+1 << " ";
 				if( ws.GetFlipByteOrder() )
-					ss << "Testing native byte order\n";
-				else
 					ss << "Testing flipped byte order\n";
+				else
+					ss << "Testing native byte order\n";
 				Logger::WriteMessage(ss.str().c_str());
 
 				DictionaryReadWriteTests_TestKeyType<i8>( ws, ew );
@@ -153,7 +153,7 @@ namespace UnitTests
 				DictionaryReadWriteTests_TestKeyType<float>( ws, ew );
 				DictionaryReadWriteTests_TestKeyType<double>( ws, ew );
 								
-				DictionaryReadWriteTests_TestKeyType<UUID>( ws, ew );
+				DictionaryReadWriteTests_TestKeyType<uuid>( ws, ew );
 				DictionaryReadWriteTests_TestKeyType<string>( ws, ew );
 				}
 			}

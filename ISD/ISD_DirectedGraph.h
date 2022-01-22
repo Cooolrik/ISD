@@ -17,43 +17,46 @@ namespace ISD
 		static const uint Acyclic = 0x1; // if set, validation make sure the directed graph is acyclic (DAG)
 		static const uint Rooted = 0x2; // if set, validation will make sure all graph vertices can be reachable from the root(s)
 		static const uint SingleRoot = 0x4; // if set, validation will make sure there is a single graph root vertex
-		static const uint UniqueEdges = 0x8; // if set, validation will make sure that there are only unique edges (key-value pairs) in the graph 
 		};
 
-	template<class _Ty, uint _Flags = 0, class _Alloc = std::allocator<std::pair<const _Ty, _Ty>>>
+	template<class _Ty, uint _Flags = 0, class _Alloc = std::allocator<std::pair<const _Ty, const _Ty>>>
 	class DirectedGraph
 		{
 		public:
-			using key_type = _Ty;
-			using mapped_type = _Ty;
+			using node_type = _Ty;
 			using allocator_type = _Alloc;
 
-			using map_type = std::multimap<_Ty, _Ty, std::less<_Ty>, _Alloc>;
-			using value_type = typename map_type::value_type;
-			using iterator = typename map_type::iterator;
+			using pair_type = std::pair<const _Ty, const _Ty>;
+			using set_type = std::set<pair_type, std::less<pair_type>, _Alloc>;
+			using value_type = typename set_type::value_type;
+			using iterator = typename set_type::iterator;
+			using const_iterator = typename set_type::iterator;
 
 			static const bool type_acyclic = (_Flags & DirectedGraphFlags::Acyclic) != 0;
 			static const bool type_rooted = (_Flags & DirectedGraphFlags::Rooted) != 0;
 			static const bool type_single_root = (_Flags & DirectedGraphFlags::SingleRoot) != 0;
-			static const bool type_unique_edges = (_Flags & DirectedGraphFlags::UniqueEdges) != 0;
 
 			class MF;
 			friend MF;
 
 		private:
 			std::set<_Ty> Roots = {};
-			map_type Edges = {};
+			set_type Edges = {};
 
 		public:
-			// inserts an edge, but if flags is set to UniqueEdges, will first check if it already exists, and only insert if not found
-			void InsertEdge( const key_type &key, const mapped_type &value ) noexcept;
+			// inserts an edge, unless it already exists
+			void InsertEdge( const node_type &key, const node_type &value ) noexcept;
 
 			// find a particular key-value pair (directed edge)
-			const bool HasEdge( const key_type &key, const mapped_type &value ) const noexcept;
+			bool HasEdge( const node_type &key, const node_type &value ) const noexcept;
+
+			// get the range of iterators to enumerate all successors of the key, or end() if no successor exists in the graph
+			std::pair<iterator, iterator> GetSuccessors( const node_type &key ) noexcept;
+			std::pair<const_iterator,const_iterator> GetSuccessors( const node_type &key ) const noexcept;
 
 			// direct access to edges structure
-			map_type &GetEdges() noexcept { return this->Edges; }
-			const map_type &GetEdges() const noexcept { return this->Edges; }
+			set_type &GetEdges() noexcept { return this->Edges; }
+			const set_type &GetEdges() const noexcept { return this->Edges; }
 
 			// direct access to roots set
 			std::set<_Ty> &GetRoots() noexcept { return this->Roots; }
@@ -61,26 +64,37 @@ namespace ISD
 		};
 
 	template<class _Ty, uint _Flags, class _Alloc>
-	inline void DirectedGraph<_Ty, _Flags, _Alloc>::InsertEdge( const key_type &key, const mapped_type &value ) noexcept
+	inline void DirectedGraph<_Ty, _Flags, _Alloc>::InsertEdge( const node_type &key, const node_type &value ) noexcept
 		{
-		if( type_unique_edges && HasEdge( key, value ) )
-			return;
 		this->Edges.emplace( key, value );
 		}
 
 	template<class _Ty, uint _Flags, class _Alloc>
-	inline const bool DirectedGraph<_Ty,_Flags,_Alloc>::HasEdge( const key_type &key, const mapped_type &value ) const noexcept
+	inline bool DirectedGraph<_Ty,_Flags,_Alloc>::HasEdge( const node_type &key, const node_type &value ) const noexcept
 		{
-		auto itr = this->Edges.lower_bound( key );
-		auto itr_end = this->Edges.upper_bound( key );
-		while( itr != itr_end )
-			{
-			if( itr->second == value )
-				return true;
-			++itr;
-			}
-		return false;
+		return this->Edges.find( pair_type( key, value ) ) != this->Edges.end();
 		}
+
+	template<class _Ty, uint _Flags, class _Alloc>
+	inline std::pair<typename DirectedGraph<_Ty,_Flags,_Alloc>::iterator,typename DirectedGraph<_Ty,_Flags,_Alloc>::iterator> 
+		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) noexcept
+		{
+		return std::pair<iterator, iterator> (
+			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
+			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
+			); 
+		}
+
+	template<class _Ty, uint _Flags, class _Alloc>
+	inline std::pair<typename DirectedGraph<_Ty,_Flags,_Alloc>::const_iterator,typename DirectedGraph<_Ty,_Flags,_Alloc>::const_iterator> 
+		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) const noexcept
+		{
+		return std::pair<const_iterator, const_iterator> (
+			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
+			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
+			); 
+		}
+
 
 	class EntityWriter;
 	class EntityReader;
@@ -143,19 +157,14 @@ namespace ISD
 				map_size = graph_pairs.size() / 2;
 				for( size_t index = 0; index < map_size; ++index )
 					{
-					it = obj.Edges.emplace( graph_pairs[index * 2 + 0], graph_pairs[index * 2 + 1] );
-					if( it == obj.Edges.end() )
-						{
-						ISDErrorLog << "Failed inserting key-value pair into DirectedGraph" << ISDErrorLogEnd;
-						return false;
-						}
+					obj.InsertEdge( graph_pairs[index * 2 + 0], graph_pairs[index * 2 + 1] );
 					}
 
 				return true;
 				}
 
 		private:
-			static void ValidateNoCycles( const _MgmCl::map_type &graph, EntityValidator &validator )
+			static void ValidateNoCycles( const _MgmCl::set_type &edges, EntityValidator &validator )
 				{
 				// Do a depth-first search, find all nodes starting from the root nodes 
 				// Note: Only reports first found cycle, if any
@@ -164,7 +173,7 @@ namespace ISD
 				std::set<_Ty> checked;
 
 				// try all nodes
-				for( const auto &p : graph )
+				for( const auto &p : edges )
 					{
 					const _Ty &node = p.first;
 
@@ -194,9 +203,9 @@ namespace ISD
 							stack.pop();
 							}
 
-						// check nodes downstream from this
-						auto itr = graph.lower_bound( curr );
-						auto itr_end = graph.upper_bound( curr );
+						// list all nodes downstream from curr
+						auto itr = edges.lower_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::inf) );
+						auto itr_end = edges.upper_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::sup) );
 						while( itr != itr_end )
 							{
 							ISDSanityCheckCoreDebugMacro( itr->first == curr );
@@ -225,7 +234,7 @@ namespace ISD
 				// no cycles found, all good
 				}
 			
-			static void ValidateRooted( const std::set<_Ty> &roots , const std::set<_Ty> &downstream_nodes , const _MgmCl::map_type &graph, EntityValidator &validator )
+			static void ValidateRooted( const std::set<_Ty> &roots , const std::set<_Ty> &downstream_nodes , const _MgmCl::set_type &edges, EntityValidator &validator )
 				{
 				std::queue<_Ty> queue;
 				std::set<_Ty> reached;
@@ -251,8 +260,8 @@ namespace ISD
 					reached.insert( curr );
 
 					// check downstream nodes
-					auto itr = graph.lower_bound( curr );
-					auto itr_end = graph.upper_bound( curr );
+					auto itr = edges.lower_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::inf) );
+					auto itr_end = edges.upper_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::sup) );
 					while( itr != itr_end )
 						{
 						ISDSanityCheckCoreDebugMacro( itr->first == curr );

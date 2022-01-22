@@ -49,7 +49,7 @@ namespace ISD
 	// can have different bit depths, the second parameter I is the actual type of the data stored. The data can have more than one values of type I, the count is stored in IC.
 	template<ValueType VT, class T> bool write_single_value( MemoryWriteStream &dstream, const char *key, const u8 key_length, const T *data )
 		{
-		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_UUID), "Invalid type for general write_single_value template");
+		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_Uuid), "Invalid type for general write_single_value template");
 
 		const u8 value_type = (u8)VT;
 		const size_t value_size = sizeof( type_information<T>::value_type );
@@ -196,7 +196,7 @@ namespace ISD
 	// write indexed array to stream
 	template<ValueType VT, class T> bool write_array( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<T> *items, const std::vector<i32> *index )
 		{
-		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_UUID), "Invalid type for write_array");
+		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_Uuid), "Invalid type for write_array");
 		static_assert(sizeof( type_information<T>::value_type ) <= 0xff, "Invalid value size, cannot exceed 255 bytes");
 		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at most 8 bytes in size, equal to an u64"); // assuming sizeof(u64) >= sizeof(size_t)
 		const size_t value_size = sizeof( type_information<T>::value_type );

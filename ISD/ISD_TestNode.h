@@ -5,84 +5,120 @@
 
 #pragma once
 
-#include <vector>
-#include <glm/glm.hpp>
-
 #include "ISD_Types.h"
 #include "ISD_Entity.h"
+#include "ISD_EntityWriter.h"
+#include "ISD_EntityReader.h"
+#include "ISD_EntityValidator.h"
 
-namespace ISD
+#include "ISD_Dictionary.h"
+#include "ISD_DirectedGraph.h"
+
+namespace ISD 
 	{
 	namespace ver1
+		{
+		using SceneGraph = DirectedGraph<uuid, DirectedGraphFlags::Acyclic | DirectedGraphFlags::Rooted>;
+
+		class SceneNode
 			{
-			class Transformation
-				{
-				public:
-					glm::mat4 translation = {};
-					glm::mat4 rotation = {};
+			public:
+				std::string name;
+				glm::mat4 translation = {};
+				glm::mat4 rotation = {};
 
-				public:
-					const glm::mat4 &GetTranslation() const { return translation; }
-					const glm::mat4 &GetRotation() const { return rotation; }
-				};
+				class MF;
+				friend MF;
 
-			class TestNode
-				{
-				protected:
-					optional_value<std::string> name;
-					optional_value<int> id;
-					optional_value<Transformation> transformation;
-
-				public:
-					TestNode()
-						{
-						//this->Name.Set( "Name" );
-						this->id.set( -45 );
-						this->transformation.set( Transformation() );
-						}
-
-					//const std::string &GetName() const
-					//	{
-					//	return name.Value().second;
-					//	}
-
-					//const Transformation &GetTransformation() const
-					//	{
-					//	return this->transformation.Value().second;
-					//	}
-
-					//virtual std::pair<bool, ValueType> Reflection_GetValueType( const char *Key ) const
-					//	{
-					//	if( strcmp( Key, "Name" ) == 0 )
-					//		return std::pair<bool, ValueType>( true, ValueType::VT_String );
-					//	return std::pair<bool, ValueType>( false, ValueType::VT_Null );
-					//	}
-
-					//virtual std::vector<std::string> Reflection_ListKeys() const
-					//	{
-					//	std::vector<std::string> ret;
-					//	ret.push_back( "Name" );
-					//	return ret;
-					//	}
-				};
-
-			class TestNodeBuilder : public TestNode
-				{
-				public:
-					//void ClearTransformation()
-					//	{
-					//	this->transformation.Clear();
-					//	}
-					//
-					//void SetTransformation( const glm::mat4 &value )
-					//	{
-					//	this->transformation.Set( value );
-					//	}
-
-
-				};
-
-
-
+			public:
+				const std::string &GetName() const { return name; }
+				const glm::mat4 &GetTranslation() const { return translation; }
+				const glm::mat4 &GetRotation() const { return rotation; }
 			};
+
+		class SceneNode::MF
+			{
+			public:
+				static bool Write( SceneNode &obj, EntityWriter &writer )
+					{
+					if( !writer.Write<string>( ISDKeyMacro( "Name" ) , obj.name ) )
+						return false;
+					if( !writer.Write<mat4>( ISDKeyMacro( "Translation" ) , obj.translation ) )
+						return false;
+					if( !writer.Write<mat4>( ISDKeyMacro( "Rotation" ) , obj.rotation ) )
+						return false;
+					return true;
+					}
+			};
+
+		class SceneMesh
+			{
+			public:
+				uuid meshId;
+
+				class MF;
+				friend MF;
+
+			public:
+				const uuid &GetMeshId() const { return meshId; }
+			};
+
+		class SceneMesh::MF
+			{
+			public:
+				static bool Write( SceneMesh &obj, EntityWriter &writer )
+					{
+					if( !writer.Write<uuid>( ISDKeyMacro( "MeshId" ) , obj.meshId ) )
+						return false;
+					return true;
+					}
+			};
+
+		class SceneLayer
+			{
+			public:
+				SceneGraph Graph; // DAG graph of nodes in layer
+				Dictionary<uuid,SceneNode> Nodes; // all nodes in the layer
+				Dictionary<uuid,SceneMesh> Meshes; // all meshes connected to nodes 
+
+				class MF;
+				friend MF;
+
+			public:
+				SceneLayer()
+					{
+					}
+			};
+
+		class SceneLayer::MF
+			{
+			public:
+				static bool Write( SceneLayer &obj, EntityWriter &writer )
+					{
+					EntityWriter *section_writer;
+					
+					// write Graph
+					section_writer = writer.BeginWriteSection( ISDKeyMacro( "Graph" ) );
+					if( !section_writer || !SceneGraph::MF::Write( obj.Graph, *section_writer ) )
+						return false;
+					writer.EndWriteSection( section_writer );
+					
+					// write Nodes
+					section_writer = writer.BeginWriteSection( ISDKeyMacro( "Nodes" ) );
+					if( !section_writer || !Dictionary<uuid,SceneNode>::MF::Write( obj.Nodes, *section_writer ) )
+						return false;
+					writer.EndWriteSection( section_writer );
+
+					// write Meshes
+					section_writer = writer.BeginWriteSection( ISDKeyMacro( "Meshes" ) );
+					if( !section_writer || !Dictionary<uuid,SceneMesh>::MF::Write( obj.Meshes, *section_writer ) )
+						return false;
+					writer.EndWriteSection( section_writer );
+
+					return true;
+					}
+			};
+
+
+		};
 	};

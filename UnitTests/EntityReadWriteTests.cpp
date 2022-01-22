@@ -130,9 +130,9 @@ namespace UnitTests
 				std::stringstream ss;
 				ss << "Pass #" << (pass_index / 2)+1 << " ";
 				if( ws.GetFlipByteOrder() )
-					ss << "Testing native byte order\n";
-				else
 					ss << "Testing flipped byte order\n";
+				else
+					ss << "Testing native byte order\n";
 				Logger::WriteMessage(ss.str().c_str());
 
 				std::vector<std::string> key_names =
@@ -204,7 +204,7 @@ namespace UnitTests
 				TestEntityWriter_TestValueType<fmat4>( ws, ew, key_names );
 				TestEntityWriter_TestValueType<dmat4>( ws, ew, key_names );
 
-				TestEntityWriter_TestValueType<UUID>( ws, ew, key_names );
+				TestEntityWriter_TestValueType<uuid>( ws, ew, key_names );
 				TestEntityWriter_TestValueType<string>( ws, ew, key_names );
 				}
 			}

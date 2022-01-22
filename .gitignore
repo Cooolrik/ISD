@@ -6,6 +6,9 @@ ISD/ISD_EntityReader.cpp
 ISD/ISD_DataTypes.h
 ISD/ISD_DataTypes.cpp
 ISD/ISD_DataValuePointers.h
+ISD/ISD_SceneNode.h
+ISD/ISD_SceneMesh.h
+ISD/ISD_SceneLayer.h
 
 # User-specific files
 *.rsuser

@@ -72,7 +72,7 @@ namespace ISD
 		return bytes_to_hex_wstring( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<UUID>( UUID value )
+	template <> std::wstring value_to_hex_wstring<uuid>( uuid value )
 		{
 		std::wstring ret;
 

@@ -74,7 +74,7 @@ namespace ISD
 			void Write( const u16 &src );
 			void Write( const u32 &src );
 			void Write( const u64 &src );
-			void Write( const UUID &src );
+			void Write( const uuid &src );
 			void Write( const float &src );
 			void Write( const double &src );
 			//void Write( const std::string &src );
@@ -88,7 +88,7 @@ namespace ISD
 			void Write( const u16 *src , u64 count );
 			void Write( const u32 *src , u64 count );
 			void Write( const u64 *src , u64 count );
-			void Write( const UUID *src , u64 count );
+			void Write( const uuid *src , u64 count );
 			void Write( const float *src , u64 count );
 			void Write( const double *src , u64 count );
 			//void Write( const std::string *src , u64 count );
@@ -218,7 +218,7 @@ namespace ISD
 	inline void MemoryWriteStream::Write( const u16 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const u32 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const u64 &src ) { this->Write( &src, 1 ); }
-	inline void MemoryWriteStream::Write( const UUID &src ) { this->Write( &src, 1 ); }
+	inline void MemoryWriteStream::Write( const uuid &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const float &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const double &src ) { this->Write( &src, 1 ); }
 
@@ -241,13 +241,13 @@ namespace ISD
 	inline void MemoryWriteStream::Write( const double *src, u64 count ) { return this->WriteValues<u64>( (const u64*)src, count ); }
 
 	// UUIDs
-	inline void MemoryWriteStream::Write( const UUID *src, u64 count ) 
+	inline void MemoryWriteStream::Write( const uuid *src, u64 count ) 
 		{ 
 		for( u64 i = 0; i < count; ++i )
 			{
 			u8 rawbytes[16];
 
-			// we always store uuids big endian (the order which the hex values are printed when printing a UUID), regardless of machine, so write the 16 bytes
+			// we always store UUIDs big endian (the order which the hex values are printed when printing a UUID), regardless of machine, so write the 16 bytes
 			// assign the values to the raw big endian byte array 
 			bigendian_from_value<u32>( &rawbytes[0] , src[i].Data1 );
 			bigendian_from_value<u16>( &rawbytes[4] , src[i].Data2 );

@@ -61,7 +61,7 @@ namespace ISD
 			template <> u16 Read<u16>();
 			template <> u32 Read<u32>();
 			template <> u64 Read<u64>();
-			template <> UUID Read<UUID>();
+			template <> uuid Read<uuid>();
 			template <> float Read<float>();
 			template <> double Read<double>();
 			//template <> std::string Read<std::string>();
@@ -75,7 +75,7 @@ namespace ISD
 			u64 Read( u16 *dest , u64 count );
 			u64 Read( u32 *dest , u64 count );
 			u64 Read( u64 *dest , u64 count );
-			u64 Read( UUID *dest , u64 count );
+			u64 Read( uuid *dest , u64 count );
 			u64 Read( float *dest , u64 count );
 			u64 Read( double *dest , u64 count );
 			//u64 Read( std::string *dest , u64 count );
@@ -170,7 +170,7 @@ namespace ISD
 	template <> inline u16 MemoryReadStream::Read<u16>() { u16 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline u32 MemoryReadStream::Read<u32>() { u32 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline u64 MemoryReadStream::Read<u64>() { u64 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline UUID MemoryReadStream::Read<UUID>() { UUID dest = {}; this->Read( &dest, 1 ); return dest; }
+	template <> inline uuid MemoryReadStream::Read<uuid>() { uuid dest = {}; this->Read( &dest, 1 ); return dest; }
 	template <> inline float MemoryReadStream::Read<float>() { float dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline double MemoryReadStream::Read<double>() { double dest = 0; this->Read( &dest, 1 ); return dest; }
 	//template <> inline std::string MemoryReadStream::Read<std::string>() { std::string dest; this->Read( &dest, 1 ); return dest; }
@@ -194,7 +194,7 @@ namespace ISD
 	inline u64 MemoryReadStream::Read( double *dest, u64 count ) { return this->ReadValues<u64>( (u64*)dest, count ); }
 
 	// UUIDs
-	inline u64 MemoryReadStream::Read( UUID *dest, u64 count ) 
+	inline u64 MemoryReadStream::Read( uuid *dest, u64 count ) 
 		{ 
 		for( u64 i = 0; i < count; ++i )
 			{

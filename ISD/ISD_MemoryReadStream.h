@@ -64,7 +64,6 @@ namespace ISD
 			template <> uuid Read<uuid>();
 			template <> float Read<float>();
 			template <> double Read<double>();
-			//template <> std::string Read<std::string>();
 
 			// read multiple items from the memory stream. makes sure to convert endianness
 			u64 Read( i8 *dest , u64 count );
@@ -78,11 +77,6 @@ namespace ISD
 			u64 Read( uuid *dest , u64 count );
 			u64 Read( float *dest , u64 count );
 			u64 Read( double *dest , u64 count );
-			//u64 Read( std::string *dest , u64 count );
-
-			// read a std::vector of items from stream. reads in the count, and returns false if not the full vector could be read.
-			//template<class T> bool Read( std::vector<T> *dest );
-
 		};
 
 	inline u8 MemoryReadStream::Peek() const

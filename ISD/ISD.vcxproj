@@ -93,8 +93,10 @@
     <ClInclude Include="ISD_Log.h" />
     <ClInclude Include="ISD_MemoryReadStream.h" />
     <ClInclude Include="ISD_MemoryWriteStream.h" />
+    <ClInclude Include="ISD_SceneLayer.h" />
+    <ClInclude Include="ISD_SceneMesh.h" />
+    <ClInclude Include="ISD_SceneNode.h" />
     <ClInclude Include="ISD_SHA256.h" />
-    <ClInclude Include="ISD_TestNode.h" />
     <ClInclude Include="ISD_Types.h" />
     <ClInclude Include="ISD_Dictionary.h" />
   </ItemGroup>
@@ -104,6 +106,9 @@
     <ClCompile Include="ISD_EntityReader.cpp" />
     <ClCompile Include="ISD_EntitySerializer.cpp" />
     <ClCompile Include="ISD_EntityWriter.cpp" />
+    <ClCompile Include="ISD_SceneLayer.cpp" />
+    <ClCompile Include="ISD_SceneMesh.cpp" />
+    <ClCompile Include="ISD_SceneNode.cpp" />
     <ClCompile Include="ISD_SHA256.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

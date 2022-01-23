@@ -5,7 +5,6 @@
 
 #include "ISD_Types.h"
 
-#include <map>
 #include <stack>
 #include <set>
 #include <queue>
@@ -38,6 +37,13 @@ namespace ISD
 
 			class MF;
 			friend MF;
+
+			DirectedGraph() = default;
+			DirectedGraph( const DirectedGraph &other ) = default;
+			DirectedGraph &operator=( const DirectedGraph &other ) = default;
+			DirectedGraph( DirectedGraph &&other ) = default;
+			DirectedGraph &operator=( DirectedGraph &&other ) = default;
+			~DirectedGraph() = default;
 
 		private:
 			std::set<_Ty> Roots = {};
@@ -111,7 +117,7 @@ namespace ISD
 			}
 
 		public:
-			static bool Write( _MgmCl &obj , EntityWriter &writer )
+			static bool Write( const _MgmCl &obj , EntityWriter &writer )
 				{
 				// store the roots 
 				std::vector<_Ty> roots( obj.Roots.begin(), obj.Roots.end() );

@@ -9,6 +9,9 @@ ISD/ISD_DataValuePointers.h
 ISD/ISD_SceneNode.h
 ISD/ISD_SceneMesh.h
 ISD/ISD_SceneLayer.h
+ISD/ISD_SceneNode.cpp
+ISD/ISD_SceneMesh.cpp
+ISD/ISD_SceneLayer.cpp
 
 # User-specific files
 *.rsuser
@@ -357,3 +360,4 @@ MigrationBackup/
 .ionide/
 
 /SystemTests/test_write.dat
+

@@ -5,9 +5,6 @@
 
 #include "ISD_Types.h"
 
-#include <map>
-#include <mutex>
-
 namespace ISD
 	{
 	struct ValidationError 

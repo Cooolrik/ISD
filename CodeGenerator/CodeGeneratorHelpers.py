@@ -57,6 +57,14 @@ base_types = [base_type_Bool,
               base_type_Uuid,
               base_type_String]
 
+# find a base type based on name, and base type and base type variant info
+def get_base_type_variant( name ):
+    for typ in base_types:
+        for var in typ.variants:
+            if name == var.implementing_type:
+                return typ, var
+    return None,None
+
 def run_module( name ):
     print('Running: ' + name )
     importlib.import_module('Generators.' + name ).run()

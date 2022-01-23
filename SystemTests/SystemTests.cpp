@@ -4,15 +4,17 @@
 #include "../ISD/ISD.h"
 #include "../ISD/ISD_MemoryReadStream.h"
 #include "../ISD/ISD_MemoryWriteStream.h"
-#include "../ISD/ISD_TestNode.h"
 #include "../ISD/ISD_Log.h"
 #include "../ISD/ISD_EntityWriter.h"
 #include "../ISD/ISD_EntityReader.h"
 #include "../ISD/ISD_EntityValidator.h"
 
-#include <Rpc.h>
 #include "../ISD/ISD_Dictionary.h"
 #include "../ISD/ISD_DirectedGraph.h"
+
+#include "../ISD/ISD_SceneLayer.h"
+
+#include <Rpc.h>
 extern void safe_thread_map_test();
 
 #define RUN_TEST( name )\
@@ -124,42 +126,52 @@ void read_geometry()
 	er.Read( "Vertices", 8, DestVertices );
 	}
 
-std::set<std::pair<int, int>> multi_set;
-
-using SceneLayer = ISD::ver1::SceneLayer;
-
-template<class Graph>
-void GenerateRandomTreeRecursive( Graph &graph , uint total_levels , uint current_level = 0, typename Graph::node_type parent_node = random_value<Graph::node_type>() )
-	{
-	typedef Graph::node_type _Ty;
-
-	// generate a random number of subnodes
-	size_t sub_nodes = capped_rand( 1, 7 );
-
-	// add to tree
-	for( size_t i = 0; i < sub_nodes; ++i )
-		{
-		_Ty child_node = random_value<Graph::node_type>();
-
-		graph.GetEdges().insert( std::pair<_Ty, _Ty>( parent_node, child_node ) );
-
-		if( current_level < total_levels )
-			{
-			GenerateRandomTreeRecursive( graph, total_levels, current_level + 1, child_node );
-			}
-		}
-	}
+//
+//template<class Graph>
+//void GenerateRandomTreeRecursive( Graph &graph , uint total_levels , uint current_level = 0, typename Graph::node_type parent_node = random_value<Graph::node_type>() )
+//	{
+//	typedef Graph::node_type _Ty;
+//
+//	// generate a random number of subnodes
+//	size_t sub_nodes = capped_rand( 1, 7 );
+//
+//	// add to tree
+//	for( size_t i = 0; i < sub_nodes; ++i )
+//		{
+//		_Ty child_node = random_value<Graph::node_type>();
+//
+//		graph.GetEdges().insert( std::pair<_Ty, _Ty>( parent_node, child_node ) );
+//
+//		if( current_level < total_levels )
+//			{
+//			GenerateRandomTreeRecursive( graph, total_levels, current_level + 1, child_node );
+//			}
+//		}
+//	}
 
 int main()
 	{
+	ISD::SceneLayer layer;
+	
+	uuid id = {};
 
-	SceneLayer layer;
+	ISD::SceneNode node;
+
+	node.Name() = "Nej";
+
+	layer.Nodes().Entities().emplace( id, new ISD::SceneNode(node) );
 
 	MemoryWriteStream ws;
 	EntityWriter writer(ws);
-	
+
 	SceneLayer::MF::Write( layer, writer );
 
+	ISD::SceneLayer layer2;
+
+	MemoryReadStream rs( ws.GetData(), ws.GetSize() );
+	EntityReader reader(rs);
+
+	SceneLayer::MF::Read( layer2, reader );
 
 	//EntityValidator validator;
 
@@ -173,10 +185,10 @@ int main()
 	//
 	//DirectedGraph<int> dg_read;
 	//
-	//MemoryReadStream rs( ws.GetData(), ws.GetSize() );
-	//EntityReader reader(rs);
 	//
-	//DirectedGraph<int>::MF::Read( dg_read, reader );
+	//
+	//
+	//DirectedGraph<int>:
 
 	return 0;
 	}

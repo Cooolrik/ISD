@@ -5,8 +5,6 @@
 
 #include "ISD_Types.h"
 
-#include <map>
-
 namespace ISD
 	{
 	enum DictionaryFlags : uint
@@ -30,12 +28,29 @@ namespace ISD
 			class MF;
 			friend MF;
 
+			Dictionary() = default;
+			Dictionary( const Dictionary &other ) { this->DeepCopy( other ); }
+			Dictionary &operator=( const Dictionary &other ) { this->DeepCopy( other ); return *this; }
+			Dictionary( Dictionary &&other ) = default;
+			Dictionary &operator=( Dictionary &&other ) = default;
+			~Dictionary() = default;
+
 		private:
-			map_type Entities = {};
+			map_type v_Entities = {};
+
+			void DeepCopy( const Dictionary &other )
+				{
+				this->v_Entities.clear();
+				for( const auto & ent : other.v_Entities )
+					{
+					// make a new copy of the value, if original is not nullptr
+					this->v_Entities.emplace( ent.first , std::unique_ptr<_Ty>( (ent.second) ? new _Ty(*ent.second) : nullptr ) );
+					}
+				}
 
 		public:
-			map_type &GetEntities() { return this->Entities; }
-			const map_type &GetEntities() const { return this->Entities; }
+			map_type &Entities() { return this->v_Entities; }
+			const map_type &Entities() const { return this->v_Entities; }
 		};
 
 	class EntityWriter;
@@ -48,12 +63,12 @@ namespace ISD
 		using _MgmCl = Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>;
 
 		public:
-			static bool Write( _MgmCl &obj , EntityWriter &writer )
+			static bool Write( const _MgmCl &obj , EntityWriter &writer )
 				{
 				// collect the keys into a vector, and store in stream as an array
-				std::vector<_Kty> keys(obj.Entities.size());
+				std::vector<_Kty> keys(obj.v_Entities.size());
 				size_t index = 0;
-				for( auto it = obj.Entities.begin(); it != obj.Entities.end(); ++it, ++index )
+				for( auto it = obj.v_Entities.begin(); it != obj.v_Entities.end(); ++it, ++index )
 					{
 					keys[index] = it->first;
 					}
@@ -62,14 +77,14 @@ namespace ISD
 				keys.clear();
 
 				// create a sections array for the entities
-				EntityWriter *section_writer = writer.BeginWriteSectionsArray( ISDKeyMacro("Entities"), obj.Entities.size() );
+				EntityWriter *section_writer = writer.BeginWriteSectionsArray( ISDKeyMacro("Entities"), obj.v_Entities.size() );
 				if( !section_writer )
 					return false;
 
 				// write out all the entities as an array
 				// for each non-empty entity, call the write method of the entity
 				index = 0;
-				for( auto it = obj.Entities.begin(); it != obj.Entities.end(); ++it, ++index )
+				for( auto it = obj.v_Entities.begin(); it != obj.v_Entities.end(); ++it, ++index )
 					{
 					if( !writer.BeginWriteSectionInArray( section_writer, index ) )
 						return false;
@@ -83,7 +98,7 @@ namespace ISD
 					}
 
 				// sanity check, make sure all sections were written
-				ISDSanityCheckDebugMacro( index == obj.Entities.size() );
+				ISDSanityCheckDebugMacro( index == obj.v_Entities.size() );
 
 				// end the Entities sections array
 				if( !writer.EndWriteSectionsArray( section_writer ) )
@@ -116,7 +131,7 @@ namespace ISD
 					}
 
 				// read in all the entities, push into map as key-value pairs
-				obj.Entities.clear();
+				obj.v_Entities.clear();
 				for( size_t index = 0; index < map_size ; ++index )
 					{
 					bool has_data = false;
@@ -124,9 +139,9 @@ namespace ISD
 						return false;
 
 					if( has_data )
-						std::tie(it,success) = obj.Entities.emplace( keys[index], std::make_unique<_Ty>() );
+						std::tie(it,success) = obj.v_Entities.emplace( keys[index], std::make_unique<_Ty>() );
 					else 
-						std::tie(it,success) = obj.Entities.emplace( keys[index], nullptr );
+						std::tie(it,success) = obj.v_Entities.emplace( keys[index], nullptr );
 
 					if( !success )
 						{

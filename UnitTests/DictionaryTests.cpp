@@ -14,70 +14,164 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_Dictionary.h"
 #include "..\ISD\ISD_EntityValidator.h"
 
+#include "..\TestHelpers\structure_generation.h"
+
 namespace UnitTests
 	{
-	class TestEntity
-		{
-		std::string Name;
-
-		public:
-			class MF;
-			friend MF;
-
-			void SetName( std::string &name ) { this->Name = name; }
-			std::string GetName() { return this->Name; }
-		};
-
-	class TestEntity::MF
-		{
-		using _MgmCl = TestEntity;
-
-		public:
-			static bool Write( _MgmCl &obj , EntityWriter &writer )
-				{
-				if( !writer.Write( ISDKeyMacro( "Name" ), obj.Name ) )
-					return false;
-				return true;
-				}
-
-			static bool Read( _MgmCl &obj , EntityReader &reader )
-				{
-				if( !reader.Read( ISDKeyMacro( "Name" ), obj.Name ) )
-					return false;
-				return true;
-				}
-
-			static bool Validate( _MgmCl &obj )
-				{
-				return true;
-				}
-		};
 
 	TEST_CLASS( DictionaryTests )
 		{
+		template<class _Kty> void DictionaryBasicTests_Validation()
+			{
+			// check with no validation
+			if( true )
+				{
+				typedef Dictionary<_Kty, TestEntity> Dict;
+				Dict dict;
+
+				EntityValidator validator;
+				const _Kty zero = type_information<_Kty>::zero;
+
+				// add a zero key  with a null value entry
+				dict.Entries()[zero] = std::unique_ptr<TestEntity>();
+				Assert::IsTrue( dict.Entries().size() == 1 );
+
+				// check validation, this should fail
+				Assert::IsTrue( Dict::MF::Validate( dict, validator ) );
+				Assert::IsTrue( validator.GetErrorCount() == 0 );
+				}
+
+			// check zero key validation
+			if( true )
+				{
+				typedef Dictionary<_Kty, TestEntity, (uint)DictionaryFlags::NoZeroKeys> Dict;
+				Dict dict;
+
+				EntityValidator validator;
+				const _Kty zero = type_information<_Kty>::zero;
+
+				// add a zero key entry (invalid)
+				dict.Entries()[zero] = std::make_unique<TestEntity>();
+				Assert::IsTrue( dict.Entries().size() == 1 );
+
+				// check validation, this should fail
+				Assert::IsTrue( Dict::MF::Validate( dict, validator ) );
+				Assert::IsTrue( validator.GetErrorCount() == 1 );
+				}
+
+			// check null value validation
+			if( true )
+				{
+				typedef Dictionary<_Kty, TestEntity, (uint)DictionaryFlags::NoNullEntities> Dict;
+				Dict dict;
+
+				EntityValidator validator;
+				const _Kty inf_val = type_information<_Kty>::inf;
+
+				// add a null ptr value entry (invalid)
+				dict.Entries()[inf_val] = std::unique_ptr<TestEntity>();
+				Assert::IsTrue( dict.Entries().size() == 1 );
+
+				// check validation, this should fail
+				Assert::IsTrue( Dict::MF::Validate( dict, validator ) );
+				Assert::IsTrue( validator.GetErrorCount() == 1 );
+				}
+
+			// check all validations
+			if( true )
+				{
+				typedef Dictionary < _Kty, TestEntity, DictionaryFlags::NoNullEntities | DictionaryFlags::NoZeroKeys > Dict;
+				Dict dict;
+
+				EntityValidator validator;
+
+				// add a number of values, but skip zero values
+				size_t cnt = capped_rand( 100, 300 );
+				for( size_t i = 0; i < cnt; ++i )
+					{
+					const _Kty rand_val = random_value<_Kty>();
+					if( rand_val != type_information<_Kty>::zero )
+						{
+						dict.Entries()[rand_val] = std::make_unique<TestEntity>();
+						}
+					}
+
+				// check validation, this should fail
+				Assert::IsTrue( Dict::MF::Validate( dict, validator ) );
+				Assert::IsTrue( validator.GetErrorCount() == 0 );
+				}
+
+			// test copying and moving contents of one dictionary to another 
+			if( true )
+				{
+				typedef Dictionary<_Kty, TestEntity> Dict;
+				Dict dict;
+
+				// add a number of random values, record the pointers
+				size_t cnt = capped_rand( 3, 10 );
+				std::set<TestEntity *> ptrs;
+				for( size_t i = 0; i < cnt; ++i )
+					{
+					const _Kty rand_val = random_value<_Kty>();
+					dict.Entries()[rand_val] = std::make_unique<TestEntity>();
+					dict.Entries()[rand_val]->SetName( random_value<string>() );
+					ptrs.insert( dict.Entries()[rand_val].get() );
+					}
+				size_t dict_size = dict.Size();
+
+				// make a deep copy
+				Dict dict_copy( dict );
+				Assert::IsTrue( dict.Size() == dict_size );
+				Assert::IsTrue( dict_copy.Size() == dict_size );
+				Assert::IsTrue( dict_copy == dict );
+
+				// make sure the pointers are different (so the copy was an actual copy, and not a move)
+				for( const auto &p : dict_copy.Entries() )
+					{
+					Assert::IsTrue( ptrs.find( p.second.get() ) == ptrs.end() );
+					}
+
+				// move dictionary to another
+				Dict dict_move = std::move( dict );
+				Assert::IsTrue( dict.Size() == 0 );
+				Assert::IsTrue( dict_move.Size() == dict_size );
+
+				// make sure the pointers are still the same (so the move was an actual move, and not a copy)
+				for( const auto &p : dict_move.Entries() )
+					{
+					Assert::IsTrue( ptrs.find( p.second.get() ) != ptrs.end() );
+					}
+				}
+
+			}
+
+		TEST_METHOD( DictionaryBasicTests )
+			{
+			DictionaryBasicTests_Validation<i8>();
+			DictionaryBasicTests_Validation<i16>();
+			DictionaryBasicTests_Validation<i32>();
+			DictionaryBasicTests_Validation<i64>();
+			
+			DictionaryBasicTests_Validation<u8>();
+			DictionaryBasicTests_Validation<u16>();
+			DictionaryBasicTests_Validation<u32>();
+			DictionaryBasicTests_Validation<u64>();
+			
+			DictionaryBasicTests_Validation<float>();
+			DictionaryBasicTests_Validation<double>();
+			
+			DictionaryBasicTests_Validation<uuid>();
+			DictionaryBasicTests_Validation<string>();
+			}
+
 		template<class T> void DictionaryReadWriteTests_TestKeyType( const MemoryWriteStream &ws, EntityWriter &ew )
 			{
 			typedef Dictionary<T, TestEntity> Dict;
 
 			Dict random_dict;
 
-			size_t dict_size = capped_rand( 0, 100 );
-
 			// create random dictionary with random entries (half of them null)
-			for( size_t i = 0; i < dict_size; ++i )
-				{
-				T key = random_value<T>();
-
-				if( random_value<bool>() )
-					{
-					random_dict.GetEntities()[key] = std::make_unique<TestEntity>();
-					random_dict.GetEntities()[key]->SetName( random_value<std::string>() );
-					}
-				else
-					{
-					random_dict.GetEntities().emplace( key, nullptr );
-					}
-				}
+			GenerateRandomDictionary<Dict>( random_dict );
 
 			EntityValidator validator;
 
@@ -99,12 +193,13 @@ namespace UnitTests
 			
 			// validate
 			Assert::IsTrue( Dict::MF::Validate( readback_dict , validator ) );
+			Assert::IsTrue( validator.GetErrorCount() == 0 );
 
 			// compare the values in the dictionaries
-			Assert::IsTrue( random_dict.GetEntities().size() == readback_dict.GetEntities().size() );
-			Dict::iterator it1 = random_dict.GetEntities().begin();
-			Dict::iterator it2 = readback_dict.GetEntities().begin();
-			while( it1 != random_dict.GetEntities().end() )
+			Assert::IsTrue( random_dict.Entries().size() == readback_dict.Entries().size() );
+			Dict::iterator it1 = random_dict.Entries().begin();
+			Dict::iterator it2 = readback_dict.Entries().begin();
+			while( it1 != random_dict.Entries().end() )
 				{
 				bool has_1 = it1->second != nullptr;
 				bool has_2 = it2->second != nullptr;

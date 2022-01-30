@@ -44,6 +44,7 @@ def print_type_information_header( type , value , value_count ):
 	lines.append(f'\t	static constexpr size_t value_count = {value_count}; // the number of values in {type} ( {value_count} )')
 	lines.append(f'\t	static constexpr const char * value_name = "{value}"; // name of the value in {type} ( "{value}" ) ')
 	lines.append(f'\t	static constexpr const char * type_name = "{type}"; // name of the type ( "{type}" ) ')
+	lines.append(f'\t	static const {type} zero; // zero value of {type}')
 	lines.append(f'\t	static const {type} inf; // limit inferior (minimum possible value) of {type}')
 	if type != 'string':
 		lines.append(f'\t	static const {type} sup; // limit superior (maximum possible value) of {type}')
@@ -77,23 +78,30 @@ def ISD_DataTypes_h():
 	lines.append('')
 
 	# const min/max values of the standard types
-	lines.append('\t// scalar types, minimum possible ("inf", limit inferior) and maximum possible values ("sup", limit superior)')
+	lines.append('\t// scalar types, zero value, minimum possible value ("inf", limit inferior) and maximum possible value ("sup", limit superior)')
+	lines.append('\tconstexpr bool bool_zero = false;')
 	lines.append('\tconstexpr bool bool_inf = false;')
 	lines.append('\tconstexpr bool bool_sup = true;')
 	for bit_size in int_bit_range:
+		lines.append(f"\tconstexpr i{bit_size} i{bit_size}_zero = 0;")
 		lines.append(f"\tconstexpr i{bit_size} i{bit_size}_inf = INT{bit_size}_MIN;")
 		lines.append(f"\tconstexpr i{bit_size} i{bit_size}_sup = INT{bit_size}_MAX;")
 	for bit_size in int_bit_range:
+		lines.append(f"\tconstexpr u{bit_size} u{bit_size}_zero = 0;")
 		lines.append(f"\tconstexpr u{bit_size} u{bit_size}_inf = 0;")
 		lines.append(f"\tconstexpr u{bit_size} u{bit_size}_sup = UINT{bit_size}_MAX;")
 	lines.append('')
+	lines.append('\tconstexpr float float_zero = 0.0f;')
 	lines.append('\tconstexpr float float_inf = -FLT_MAX;')
 	lines.append('\tconstexpr float float_sup = FLT_MAX;')
+	lines.append('\tconstexpr float double_zero = 0.0;')
 	lines.append('\tconstexpr double double_inf = -FLT_MAX;')
 	lines.append('\tconstexpr double double_sup = FLT_MAX;')
 	lines.append('')
+	lines.append('\tconst string string_zero;')
 	lines.append('\tconst string string_inf;')
 	lines.append('')
+	lines.append('\tconstexpr uuid uuid_zero = {0,0,0,{0,0,0,0,0,0,0,0}};')
 	lines.append('\tconstexpr uuid uuid_inf = {0,0,0,{0,0,0,0,0,0,0,0}};')
 	lines.append('\tconstexpr uuid uuid_sup = {0xffffffff,0xffff,0xffff,{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};')
 	lines.append('')
@@ -198,14 +206,17 @@ def print_UUID_source():
 def print_type_information_source( type , value , value_count ):
 	lines = []
 	
-	inf = sup = ''
+	zero = inf = sup = ''
 	for i in range(value_count):
+		zero += f'{value}_zero'
 		inf += f'{value}_inf'
 		sup += f'{value}_sup'
 		if i < value_count-1:
+			zero += ','
 			inf += ','
 			sup += ','
 
+	lines.append(f'\tconst {type} type_information<{type}>::zero = {type}({zero}); // zero value of {type}')
 	lines.append(f'\tconst {type} type_information<{type}>::inf = {type}({inf}); // limit inferior (minimum bound) of {type}')
 	if type != 'string':
 		lines.append(f'\tconst {type} type_information<{type}>::sup = {type}({sup}); // limit superior (maximum bound) of {type}')

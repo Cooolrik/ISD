@@ -157,8 +157,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\TestHelpers\random_vals.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="DictionaryTests.cpp" />
     <ClCompile Include="DirectedGraphTests.cpp" />
+    <ClCompile Include="EntityTests.cpp" />
     <ClCompile Include="RandomFileDataReadTest.cpp" />
     <ClCompile Include="ReadWriteTests.cpp" />
     <ClCompile Include="EntityReadWriteTests.cpp" />
@@ -172,6 +179,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\TestHelpers\random_vals.h" />
+    <ClInclude Include="..\TestHelpers\structure_generation.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

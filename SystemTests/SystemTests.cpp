@@ -159,7 +159,7 @@ int main()
 
 	node.Name() = "Nej";
 
-	layer.Nodes().Entities().emplace( id, new ISD::SceneNode(node) );
+	layer.Nodes().Entries().emplace( id, new ISD::SceneNode(node) );
 
 	MemoryWriteStream ws;
 	EntityWriter writer(ws);
@@ -173,9 +173,11 @@ int main()
 
 	SceneLayer::MF::Read( layer2, reader );
 
-	//EntityValidator validator;
+	EntityValidator validator;
 
-	//Graph::MF::Validate( dg, validator );
+	SceneLayer::MF::Validate( layer2, validator );
+
+	bool cmp = SceneLayer::MF::Equals( &layer, &layer2 );
 
 	//
 	//MemoryWriteStream ws;

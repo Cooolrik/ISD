@@ -11,11 +11,11 @@
 
 namespace ISD
 	{
-	struct DirectedGraphFlags 
+	enum DirectedGraphFlags : uint
 		{
-		static const uint Acyclic = 0x1; // if set, validation make sure the directed graph is acyclic (DAG)
-		static const uint Rooted = 0x2; // if set, validation will make sure all graph vertices can be reachable from the root(s)
-		static const uint SingleRoot = 0x4; // if set, validation will make sure there is a single graph root vertex
+		Acyclic = 0x1, // if set, validation make sure the directed graph is acyclic (DAG)
+		Rooted = 0x2, // if set, validation will make sure all graph vertices can be reachable from the root(s)
+		SingleRoot = 0x4, // if set, validation will make sure there is a single graph root vertex
 		};
 
 	template<class _Ty, uint _Flags = 0, class _Alloc = std::allocator<std::pair<const _Ty, const _Ty>>>
@@ -46,58 +46,58 @@ namespace ISD
 			~DirectedGraph() = default;
 
 		private:
-			std::set<_Ty> Roots = {};
-			set_type Edges = {};
+			std::set<_Ty> v_Roots;
+			set_type v_Edges;
 
 		public:
 			// inserts an edge, unless it already exists
-			void InsertEdge( const node_type &key, const node_type &value ) noexcept;
+			void InsertEdge( const node_type &key, const node_type &value );
 
 			// find a particular key-value pair (directed edge)
-			bool HasEdge( const node_type &key, const node_type &value ) const noexcept;
+			bool HasEdge( const node_type &key, const node_type &value ) const;
 
 			// get the range of iterators to enumerate all successors of the key, or end() if no successor exists in the graph
-			std::pair<iterator, iterator> GetSuccessors( const node_type &key ) noexcept;
-			std::pair<const_iterator,const_iterator> GetSuccessors( const node_type &key ) const noexcept;
+			std::pair<iterator, iterator> GetSuccessors( const node_type &key );
+			std::pair<const_iterator,const_iterator> GetSuccessors( const node_type &key ) const;
 
-			// direct access to edges structure
-			set_type &GetEdges() noexcept { return this->Edges; }
-			const set_type &GetEdges() const noexcept { return this->Edges; }
+			// direct access to Edges structure
+			set_type &Edges() noexcept { return this->v_Edges; }
+			const set_type &Edges() const noexcept { return this->v_Edges; }
 
-			// direct access to roots set
-			std::set<_Ty> &GetRoots() noexcept { return this->Roots; }
-			const std::set<_Ty> &GetRoots() const noexcept { return this->Roots; }
+			// direct access to Roots set
+			std::set<_Ty> &Roots() noexcept { return this->v_Roots; }
+			const std::set<_Ty> &Roots() const noexcept { return this->v_Roots; }
 		};
 
 	template<class _Ty, uint _Flags, class _Alloc>
-	inline void DirectedGraph<_Ty, _Flags, _Alloc>::InsertEdge( const node_type &key, const node_type &value ) noexcept
+	inline void DirectedGraph<_Ty, _Flags, _Alloc>::InsertEdge( const node_type &key, const node_type &value ) 
 		{
-		this->Edges.emplace( key, value );
+		this->v_Edges.emplace( key, value );
 		}
 
 	template<class _Ty, uint _Flags, class _Alloc>
-	inline bool DirectedGraph<_Ty,_Flags,_Alloc>::HasEdge( const node_type &key, const node_type &value ) const noexcept
+	inline bool DirectedGraph<_Ty,_Flags,_Alloc>::HasEdge( const node_type &key, const node_type &value ) const 
 		{
-		return this->Edges.find( pair_type( key, value ) ) != this->Edges.end();
+		return this->v_Edges.find( pair_type( key, value ) ) != this->v_Edges.end();
 		}
 
 	template<class _Ty, uint _Flags, class _Alloc>
 	inline std::pair<typename DirectedGraph<_Ty,_Flags,_Alloc>::iterator,typename DirectedGraph<_Ty,_Flags,_Alloc>::iterator> 
-		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) noexcept
+		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) 
 		{
 		return std::pair<iterator, iterator> (
-			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
-			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
 			); 
 		}
 
 	template<class _Ty, uint _Flags, class _Alloc>
 	inline std::pair<typename DirectedGraph<_Ty,_Flags,_Alloc>::const_iterator,typename DirectedGraph<_Ty,_Flags,_Alloc>::const_iterator> 
-		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) const noexcept
+		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) const 
 		{
 		return std::pair<const_iterator, const_iterator> (
-			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
-			this->Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
 			); 
 		}
 
@@ -117,17 +117,77 @@ namespace ISD
 			}
 
 		public:
+			static void Clear( _MgmCl &obj )
+				{
+				obj.v_Roots.clear();
+				obj.v_Edges.clear();
+				}
+
+			static void DeepCopy( _MgmCl &dest, const _MgmCl *source )
+				{
+				if( !source )
+					{
+					MF::Clear( dest );
+					return;
+					}
+
+				// replace contents
+				dest.v_Roots = std::set<_Ty>(source->v_Roots.begin(), source->v_Roots.end());
+				dest.v_Edges = set_type(source->v_Edges.begin(), source->v_Edges.end());
+				}
+			
+			static bool Equals( const _MgmCl *lval, const _MgmCl *rval )
+				{
+				// early out if the pointers are equal (includes nullptr)
+				if( lval == rval )
+					return true;
+
+				// early out if one of the pointers is nullptr (both can't be null because of above test)
+				if( !lval || !rval )
+					return false;
+
+				// early out if the sizes are not the same 
+				if( lval->v_Roots.size() != rval->v_Roots.size() )
+					return false;
+				if( lval->v_Edges.size() != rval->v_Edges.size() )
+					return false;
+
+				// compare roots
+				auto lval_roots_it = lval->v_Roots.begin();
+				auto rval_roots_it = rval->v_Roots.begin();
+				while( lval_roots_it != lval->v_Roots.end() )
+					{
+					if( (*lval_roots_it) != (*rval_roots_it) )
+						return false;
+					++lval_roots_it;
+					++rval_roots_it;
+					}
+
+				// compare all the edges
+				auto lval_edges_it = lval->v_Edges.begin();
+				auto rval_edges_it = rval->v_Edges.begin();
+				while( lval_edges_it != lval->v_Edges.end() )
+					{
+					if( (*lval_edges_it) != (*rval_edges_it) )
+						return false;
+					++lval_edges_it;
+					++rval_edges_it;
+					}
+
+				return true;
+				}
+
 			static bool Write( const _MgmCl &obj , EntityWriter &writer )
 				{
 				// store the roots 
-				std::vector<_Ty> roots( obj.Roots.begin(), obj.Roots.end() );
+				std::vector<_Ty> roots( obj.v_Roots.begin(), obj.v_Roots.end() );
 				if( !writer.Write( ISDKeyMacro("Roots"), roots ) )
 					return false;
 
 				// collect the keys-value pairs into a vector and store as an array
-				std::vector<_Ty> graph_pairs(obj.Edges.size()*2);
+				std::vector<_Ty> graph_pairs(obj.v_Edges.size()*2);
 				size_t index = 0;
-				for( auto it = obj.Edges.begin(); it != obj.Edges.end(); ++it, ++index )
+				for( auto it = obj.v_Edges.begin(); it != obj.v_Edges.end(); ++it, ++index )
 					{
 					graph_pairs[index*2+0] = it->first;
 					graph_pairs[index*2+1] = it->second;
@@ -136,7 +196,7 @@ namespace ISD
 					return false;
 
 				// sanity check, make sure all sections were written
-				ISDSanityCheckDebugMacro( index == obj.Edges.size() );
+				ISDSanityCheckDebugMacro( index == obj.v_Edges.size() );
 
 				return true;
 				}
@@ -151,7 +211,7 @@ namespace ISD
 				std::vector<_Ty> roots;
 				if( !reader.Read( ISDKeyMacro("Roots"), roots ) )
 					return false;
-				obj.Roots = std::set<_Ty>(roots.begin(), roots.end());
+				obj.v_Roots = std::set<_Ty>(roots.begin(), roots.end());
 				
 				// read in the graph pairs
 				std::vector<_Ty> graph_pairs;
@@ -159,7 +219,7 @@ namespace ISD
 					return false;
 				
 				// insert into map
-				obj.Edges.clear();
+				obj.v_Edges.clear();
 				map_size = graph_pairs.size() / 2;
 				for( size_t index = 0; index < map_size; ++index )
 					{
@@ -301,7 +361,7 @@ namespace ISD
 				{
 				// make a set of all nodes with incoming edges
 				std::set<_Ty> downstream_nodes;
-				for( const auto &p : obj.Edges )
+				for( const auto &p : obj.v_Edges )
 					{
 					if( !set_contains( downstream_nodes , p.second ) )
 						downstream_nodes.insert( p.second );
@@ -309,7 +369,7 @@ namespace ISD
 
 				// the rest of the nodes are root nodes (no incoming edges)
 				std::set<_Ty> root_nodes;
-				for( const auto &p : obj.Edges )
+				for( const auto &p : obj.v_Edges )
 					{
 					if( !set_contains( downstream_nodes , p.first ) )
 						root_nodes.insert( p.first );
@@ -324,19 +384,19 @@ namespace ISD
 						}
 					}
 
-				// if this is a rooted graph, make sure that the Roots set is correct
+				// if this is a rooted graph, make sure that the v_Roots set is correct
 				if( type_rooted )
 					{
 					if( type_single_root )
 						{
-						if( obj.Roots.size() != 1 )
+						if( obj.v_Roots.size() != 1 )
 							{
-							ISDValidationError( ValidationError::InvalidCount ) << "The graph is single rooted, but the Roots set has " << obj.Roots.size() << " nodes. The Roots set must have exactly one node." << ISDValidationErrorEnd;
+							ISDValidationError( ValidationError::InvalidCount ) << "The graph is single rooted, but the Roots set has " << obj.v_Roots.size() << " nodes. The Roots set must have exactly one node." << ISDValidationErrorEnd;
 							}
 						}
 
-					// make sure that all nodes in the Roots list do not have incoming edges
-					for( auto n : obj.Roots )
+					// make sure that all nodes in the v_Roots list do not have incoming edges
+					for( auto n : obj.v_Roots )
 						{
 						if( set_contains( downstream_nodes , n ) )
 							{
@@ -346,10 +406,10 @@ namespace ISD
 							}
 						}
 
-					// make sure that all nodes that are root nodes (no incoming edges) are in the Roots list
+					// make sure that all nodes that are root nodes (no incoming edges) are in the v_Roots list
 					for( auto n : root_nodes )
 						{
-						if( !set_contains( obj.Roots , n ) )
+						if( !set_contains( obj.v_Roots , n ) )
 							{
 							ISDValidationError( ValidationError::MissingObject )
 								<< "Node " << n << " has no incoming edges, so is by definition a root, but is not listed in the Roots set."
@@ -358,13 +418,13 @@ namespace ISD
 						}
 
 					// make sure no node is unreachable from the roots
-					ValidateRooted( obj.Roots, downstream_nodes, obj.Edges, validator );
+					ValidateRooted( obj.v_Roots, downstream_nodes, obj.v_Edges, validator );
 					}
 
 				// check for cycles if the graph is acyclic
 				if( type_acyclic )
 					{
-					ValidateNoCycles( obj.Edges, validator );
+					ValidateNoCycles( obj.v_Edges, validator );
 					}
 
 				return true;

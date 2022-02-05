@@ -114,7 +114,7 @@ namespace UnitTests
 					{
 					const _Kty rand_val = random_value<_Kty>();
 					dict.Entries()[rand_val] = std::make_unique<TestEntity>();
-					dict.Entries()[rand_val]->SetName( random_value<string>() );
+					dict.Entries()[rand_val]->Name() = random_value<string>();
 					ptrs.insert( dict.Entries()[rand_val].get() );
 					}
 				size_t dict_size = dict.Size();
@@ -207,7 +207,7 @@ namespace UnitTests
 				Assert::IsTrue( has_1 == has_2 );
 				if( has_1 )
 					{
-					Assert::IsTrue( it1->second->GetName() == it2->second->GetName() );
+					Assert::IsTrue( it1->second->Name() == it2->second->Name() );
 					}
 			
 				++it1;

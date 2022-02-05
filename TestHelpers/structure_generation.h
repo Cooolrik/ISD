@@ -1,5 +1,7 @@
 
-#include "TestEntity.h"
+#include "..\ISD\ISD_TestEntity.h"
+
+using ISD::TestEntity;
 
 // creates a random tree using recursive calls. 
 // The parameter is the type of DirectedGraph to use for the tree
@@ -49,7 +51,7 @@ size_t GenerateRandomDictionary( Dict &random_dict , size_t minc = 0, size_t max
 		if( Dict::type_no_null_entities || random_value<bool>() )
 			{
 			random_dict.Entries()[key] = std::make_unique<TestEntity>();
-			random_dict.Entries()[key]->SetName( random_value<std::string>() );
+			random_dict.Entries()[key]->Name() = random_value<std::string>();
 			}
 		else
 			{

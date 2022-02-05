@@ -57,6 +57,14 @@ SceneLayer = Entity(
                   Variable("scene_meshes" , "Meshes", optional = True ) ]
     )
       
-Entities = [SceneNode, SceneMesh, SceneLayer]
+# entity made specifically for unit or system tests of other entities (so, fixed entries)
+TestEntity = Entity(
+    name = "TestEntity", 
+    dependencies = [],
+    variables = [ Variable("string", "Name"),
+                  Variable("string", "OptionalText", optional = True ) ]
+    )
+
+Entities = [SceneNode, SceneMesh, SceneLayer, TestEntity]
 
 

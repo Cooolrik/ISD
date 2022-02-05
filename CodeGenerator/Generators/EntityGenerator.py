@@ -204,13 +204,22 @@ def ImplementEqualsCall(entity,var):
 	if base_type is not None:
 		# we have a base type, do the compare directly
 		if var.Optional:
-			lines.append(f'        if( lvar->v_{var.Name}.has_value() != rvar->v_{var.Name}.has_value() )')
-			lines.append(f'            return false;')
-			lines.append(f'        if( lvar->v_{var.Name}.has_value() )')
+			lines.append(f'        if( lvar->v_{var.Name}.has_value() ) ')
 			lines.append('            {')
+			lines.append('            // lvar has a value. if rval has no value, not equal')
+			lines.append(f'            if( !rvar->v_{var.Name}.has_value() ) ')
+			lines.append('                return false;')
+			lines.append('            // both have values, compare')
 			lines.append(f'            if( lvar->v_{var.Name}.value() != rvar->v_{var.Name}.value() )')
 			lines.append('                return false;')
 			lines.append('            }')
+			lines.append('        else')
+			lines.append('            {')
+			lines.append('            // lvar has a value. if rval has a value, not equal')
+			lines.append(f'            if( rvar->v_{var.Name}.has_value() ) ')
+			lines.append('                return false;')
+			lines.append('            }')
+
 		else:
 			lines.append(f'        if( lvar->v_{var.Name} != rvar->v_{var.Name} )')
 			lines.append(f'            return false;')

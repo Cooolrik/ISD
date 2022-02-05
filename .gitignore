@@ -361,3 +361,5 @@ MigrationBackup/
 
 /SystemTests/test_write.dat
 
+/ISD/ISD_TestEntity.h
+/ISD/ISD_TestEntity.cpp

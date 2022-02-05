@@ -185,6 +185,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ISD\ISD_TestEntity.h" />
     <ClInclude Include="..\TestHelpers\random_vals.h" />
     <ClInclude Include="..\TestHelpers\structure_generation.h" />
     <ClInclude Include="pch.h" />

@@ -61,5 +61,8 @@
     <ClInclude Include="..\TestHelpers\random_vals.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\ISD\ISD_TestEntity.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

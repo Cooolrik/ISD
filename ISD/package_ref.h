@@ -33,6 +33,9 @@ namespace ISD
 			// conversions to boolean (behaves like a pointer, true if non-null) 
 			operator bool() const { return this->hash_m != hash_zero; }
 			operator hash() const { return this->hash_m; }
+
+			// returns the "null" package_ref value 
+			static const package_ref &null() { static package_ref null_id; return null_id; }
 		};
 
 	inline std::ostream &operator<<( std::ostream &os, const package_ref &ref )

@@ -344,6 +344,141 @@ namespace UnitTests
 				Assert::IsTrue( opt == opt2 );
 				}
 
+			TEST_METHOD( Test_optional_vector )
+				{
+				optional_vector<uuid> vec;
+				ISDExpectSanityCheckDebugFailMacro( vec.vector(); );
+				Assert::IsTrue( vec == optional_vector<uuid>() );
+
+				vec.set();
+				for( size_t i = 0; i < 10; ++i )
+					{
+					vec.values().emplace_back( random_value<uuid>() );
+					}
+				Assert::IsTrue( vec.values().size() == 10 );
+
+				optional_vector<uuid> vec2 = std::move(vec);
+				ISDExpectSanityCheckDebugFailMacro( vec.values(); );
+				Assert::IsTrue( vec2.values().size() == 10 );
+				Assert::IsTrue( vec != vec2 );
+
+				vec = vec2;
+				Assert::IsTrue( vec.values().size() == 10 );
+				Assert::IsTrue( vec.values().size() == vec2.values().size() );
+				Assert::IsTrue( vec.values() == vec2.values() );
+
+				vec.vector().clear();
+				Assert::IsTrue( vec.values().size() == 0 );
+				Assert::IsTrue( vec.values() != vec2.values() );
+
+				vec2.vector().clear();
+				Assert::IsTrue( vec.values().size() == 0 );
+				Assert::IsTrue( vec2.values().size() == 0 );
+				Assert::IsTrue( vec.values() == vec2.values() );
+				}
+
+			TEST_METHOD( Test_package_ref )
+				{
+				package_ref ref;
+				Assert::IsTrue( !ref );
+				hash val = ref;
+				Assert::IsTrue( val == hash_zero );
+				Assert::IsTrue( val == package_ref::null() );
+				Assert::IsTrue( ref == package_ref() );
+
+				package_ref ref2 = random_value<hash>();
+				Assert::IsTrue( ref != ref2 );
+				Assert::IsTrue( !(ref == ref2) );
+				Assert::IsTrue( ref < ref2 ); // ref is zero, ref2 must be more 
+				val = ref2;
+				Assert::IsTrue( val != hash_zero );
+				Assert::IsTrue( hash_zero < val );
+
+				ref = std::move( ref2 );
+				Assert::IsTrue( ref != ref2 );
+				Assert::IsTrue( !(ref == ref2) );
+				Assert::IsTrue( ref2 < ref ); // ref2 is zero, ref must be more 
+
+				ref2 = ref;
+				Assert::IsTrue( ref == ref2 );
+				Assert::IsTrue( !(ref != ref2) );
+				Assert::IsTrue( !(ref2 < ref) ); 
+				}
+
+			class uint_string_map_test_class
+				{
+				thread_safe_map<uint, std::string> *object = nullptr;
+				uint index = 0;
+				static const uint num_iters = 10;
+				bool done = false;
+
+				public:
+					static void uint_string_map_test_thread( void * ptr )
+						{
+						std::vector<uint> list(num_iters);
+						uint_string_map_test_class *pthis = (uint_string_map_test_class *)ptr;
+
+						// insert values into list
+						for( uint i = 0; i < num_iters; ++i )
+							{
+							list[i] = rand() << 16 | pthis->index;
+							char num[20];
+							sprintf_s( num, "%d", list[i] );
+							std::string str = num;
+							pthis->object->insert( std::pair<uint,std::string>(list[i],str));
+							}
+
+						// make sure that the values exist, (do random lookup)
+						for( uint i = 0; i < num_iters; ++i )
+							{
+							uint look_for = rand() % num_iters;
+							char num[20];
+							sprintf_s( num, "%d", list[look_for] );
+							std::string str = num;
+							auto val = pthis->object->find( list[look_for] );
+							Assert::IsTrue( val.second ); // make sure we found it
+							Assert::IsTrue( str == val.first );
+							}
+
+						// erase all values
+						for( uint i = 0; i < num_iters; ++i )
+							{
+							pthis->object->erase( list[i] );
+							}
+
+						pthis->done = true;
+						}
+
+					HANDLE run( uint _index , thread_safe_map<uint, std::string> *_object )
+						{
+						this->done = false;
+						this->index = _index;
+						this->object = _object;
+						return (HANDLE)_beginthread( &uint_string_map_test_thread, 0, (void *)this );
+						}
+
+					bool is_done() const
+						{
+						return this->done;
+						}
+				};
+
+			TEST_METHOD( Test_thread_safe_map )
+				{
+				thread_safe_map<uint, std::string> uint_string_map;
+				std::vector<uint_string_map_test_class> test_objects( 4 );
+				std::vector<HANDLE> thread_handles( test_objects.size() );
+				for( size_t i = 0; i < test_objects.size(); ++i )
+					{
+					thread_handles[i] = test_objects[i].run( (uint)i, &uint_string_map );
+					}
+				DWORD val = WaitForMultipleObjects( (uint)thread_handles.size(), thread_handles.data(), TRUE, INFINITE );
+				Assert::IsTrue( val == 0 );
+				for( size_t i = 0; i < test_objects.size(); ++i )
+					{
+					Assert::IsTrue( test_objects[i].is_done() );
+					}
+				}
 		};
 	}
 

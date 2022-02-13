@@ -32,6 +32,12 @@ inline UUID uuid_rand()
 	return id;
 	}
 
+inline hash hash_rand() 
+	{ 
+	const hash id = {u64_rand(),u64_rand(),u64_rand(),u64_rand()};
+	return id;
+	}
+
 //// random string
 inline std::string str_rand( size_t min_len = 0 , size_t max_len = 1000 )
 	{
@@ -47,6 +53,8 @@ inline std::string str_rand( size_t min_len = 0 , size_t max_len = 1000 )
 
 inline size_t capped_rand( size_t minv, size_t maxv )
 	{
+	if( maxv == minv )
+		return minv;
 	return (u64_rand() % (maxv - minv)) + minv;
 	}
 

@@ -74,11 +74,11 @@ namespace ISD
 			void Write( const u16 &src );
 			void Write( const u32 &src );
 			void Write( const u64 &src );
-			void Write( const uuid &src );
 			void Write( const float &src );
 			void Write( const double &src );
-			//void Write( const std::string &src );
-			
+			void Write( const uuid &src );
+			void Write( const hash &src );
+
 			// write an array of items to the memory stream. makes sure to convert endianness
 			void Write( const i8 *src , u64 count );
 			void Write( const i16 *src , u64 count );
@@ -88,13 +88,11 @@ namespace ISD
 			void Write( const u16 *src , u64 count );
 			void Write( const u32 *src , u64 count );
 			void Write( const u64 *src , u64 count );
-			void Write( const uuid *src , u64 count );
 			void Write( const float *src , u64 count );
 			void Write( const double *src , u64 count );
-			//void Write( const std::string *src , u64 count );
-			
-			//// read a std::vector of items from stream. reads in the count, and returns false if not the full vector could be read.
-			//template<class T> void Write( const std::vector<T> *src );
+			void Write( const uuid *src , u64 count );
+			void Write( const hash *src , u64 count );
+
 		};
 
 	inline void MemoryWriteStream::ReserveForSize( u64 reserveSize )
@@ -209,7 +207,7 @@ namespace ISD
 		this->FlipByteOrder = value;
 		}
 
-	//// write one item of data
+	//// write one item of data, (but using the multi-values method)
 	inline void MemoryWriteStream::Write( const i8 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const i16 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const i32 &src ) { this->Write( &src, 1 ); }
@@ -218,9 +216,10 @@ namespace ISD
 	inline void MemoryWriteStream::Write( const u16 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const u32 &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const u64 &src ) { this->Write( &src, 1 ); }
-	inline void MemoryWriteStream::Write( const uuid &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const float &src ) { this->Write( &src, 1 ); }
 	inline void MemoryWriteStream::Write( const double &src ) { this->Write( &src, 1 ); }
+	inline void MemoryWriteStream::Write( const uuid &src ) { this->Write( &src, 1 ); }
+	inline void MemoryWriteStream::Write( const hash &src ) { this->Write( &src, 1 ); }
 
 	// 8 bit data
 	inline void MemoryWriteStream::Write( const i8 *src, u64 count ) { return this->WriteValues<u8>( (const u8*)src, count ); }
@@ -240,9 +239,11 @@ namespace ISD
 	inline void MemoryWriteStream::Write( const u64 *src, u64 count ) { return this->WriteValues<u64>( src, count ); }
 	inline void MemoryWriteStream::Write( const double *src, u64 count ) { return this->WriteValues<u64>( (const u64*)src, count ); }
 
-	// UUIDs
+	// uuids
 	inline void MemoryWriteStream::Write( const uuid *src, u64 count ) 
 		{ 
+		static_assert(sizeof(uuid)==16, "Invalid size of uuid struct, needs to be exactly 16 bytes.");
+
 		for( u64 i = 0; i < count; ++i )
 			{
 			u8 rawbytes[16];
@@ -255,8 +256,19 @@ namespace ISD
 			memcpy( &rawbytes[8] , src[i].Data4, 8 );
 
 			// write raw bytes
-			this->Write( rawbytes, 16 );
+			this->WriteValues<u8>( rawbytes, sizeof(rawbytes) );
 			}
+		}
+
+	// hashes
+	inline void MemoryWriteStream::Write( const hash *src, u64 count ) 
+		{ 
+		static_assert(sizeof(hash)==32, "Invalid size of hash struct, needs to be exactly 32 bytes.");
+
+		// Write raw bytes, assumes the values are contiguous 
+		// No need for byte-swapping, the hashes are always stored as raw bytes, and ordered 
+		// big-endian (the order which the hex values are printed when printing a hash)
+		this->WriteValues<u8>( (const u8*)src, sizeof(hash)*count );
 		}
 	
 	};

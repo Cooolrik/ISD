@@ -5,7 +5,6 @@
 #pragma once
 
 #include "ISD_Types.h"
-#include "ISD_Entity.h"
 
 #include <map>
 #include <mutex>

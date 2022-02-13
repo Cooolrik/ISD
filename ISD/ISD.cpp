@@ -11,7 +11,7 @@
 #include "ISD.h"
 #include "ISD_MemoryReadStream.h"
 #include "ISD_SHA256.h"
-#include "ISD_Blob.h"
+
 
 using namespace ISD;
 using std::pair;
@@ -59,8 +59,8 @@ static DWORD WINAPI LoadThreadProcedure( _In_ LPVOID lpParameter )
 
 	// create the file name from the uuid
 	u8 top_byte = (uuid.Data1 >> 24) & 0xff;
-	std::wstring dir_name = value_to_hex_wstring( top_byte );
-	std::wstring file_name = value_to_hex_wstring( uuid ) + L".dat";
+	std::wstring dir_name = widen(value_to_hex_string( top_byte ));
+	std::wstring file_name = widen(value_to_hex_string( uuid )) + L".dat";
 	std::wstring file_path = path + L"\\" + file_name;
 
 	// open the file

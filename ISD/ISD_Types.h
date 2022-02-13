@@ -28,6 +28,14 @@
 
 #define ISDKeyMacro( name ) name , (u8)(strlen(name))
 
+#include "entity_ref.h"
+#include "idx_vector.h"
+#include "optional_idx_vector.h"
+#include "optional_value.h"
+#include "optional_vector.h"
+#include "package_ref.h"
+#include "thread_safe_map.h"
+
 namespace ISD
 	{
 	typedef unsigned int uint;
@@ -100,6 +108,7 @@ namespace ISD
 		VT_Mat4 = 0x10, // a 4x4 matrix, can be 64 or 128 bytes in size (float or double per component)
 		VT_Quat = 0x11, // a quaternion, can be 16 or 32 bytes in size (float or double per component)
 		VT_Uuid = 0x12, // a UUID, universally unique identifier, 16 bytes in size
+		VT_Hash = 0x13, // a hash value, 32 bytes in size
 
 		// -----------------------------------------------------------------------------------------------------------------------
 		// --- All types 0x40 and up use the larger encoding chunk, and can be up to 2^64 bytes in size
@@ -123,6 +132,7 @@ namespace ISD
 		VT_Array_Mat4 = 0x50,  // array of VT_Mat4 
 		VT_Array_Quat = 0x51,  // array of VT_Quat 
 		VT_Array_Uuid = 0x52,  // array of VT_Uuid
+		VT_Array_Hash = 0x53,  // array of VT_Hash
 
 		// --- Specific types: 0xd0 - 0xff
 		VT_Subsection = 0xd0, // a named subsection, containins named values and nested subsections. 
@@ -146,58 +156,18 @@ namespace ISD
 	template <> inline void bigendian_from_value<u32>( u8 *dst , u32 value ) { bigendian_from_value<u16>( &dst[0] , u16((value >> 16) & 0xffff) ); bigendian_from_value<u16>( &dst[2] , u16(value & 0xffff) ); }
 	template <> inline void bigendian_from_value<u64>( u8 *dst , u64 value ) { bigendian_from_value<u32>( &dst[0] , u32((value >> 32) & 0xffffffff) ); bigendian_from_value<u32>( &dst[4] , u32(value & 0xffffffff) ); }
 
-	// creates a wstring from an array of bytes, in order
-	std::wstring bytes_to_hex_wstring( const void *bytes, size_t count );
-	template <class T> std::wstring value_to_hex_wstring( T value ) { static_assert(false, "value_to_hex_wstring template can only be used with defined values, not a generic type T"); }
-	template <> std::wstring value_to_hex_wstring<u8>( u8 value );
-	template <> std::wstring value_to_hex_wstring<u16>( u16 value );
-	template <> std::wstring value_to_hex_wstring<u32>( u32 value );
-	template <> std::wstring value_to_hex_wstring<u64>( u64 value );
-	template <> std::wstring value_to_hex_wstring<uuid>( uuid value );
+	// creates a string from an array of bytes, in order
+	std::string bytes_to_hex_string( const void *bytes, size_t count );
+	template <class T> std::string value_to_hex_string( T value ) { static_assert(false, "value_to_hex_string template can only be used with defined values, not a generic type T"); }
+	template <> std::string value_to_hex_string<u8>( u8 value );
+	template <> std::string value_to_hex_string<u16>( u16 value );
+	template <> std::string value_to_hex_string<u32>( u32 value );
+	template <> std::string value_to_hex_string<u64>( u64 value );
+	template <> std::string value_to_hex_string<uuid>( uuid value );
+	template <> std::string value_to_hex_string<hash>( hash value );
 
 	// converts file path in wstring to an absolute or full file path 
 	std::wstring full_path( const std::wstring &path );
-
-	// thread safe map, does not allow access to 
-	// items, only insert, erase and find with value returned as copy 
-	// all public methods are thread safe 
-	// TODO: The inner workings of this class should be replaced with a lock-free substitute
-	template<class _Kty, class _Ty> class thread_safe_map
-		{
-		private:
-			using _Mybase = std::map<_Kty, _Ty>;
-			using key_type = _Kty;
-			using mapped_type = _Ty;
-			using iterator = typename _Mybase::iterator;
-			using value_type = std::pair<const _Kty, _Ty>;
-
-			std::map<_Kty, _Ty> Data;
-			std::mutex AccessMutex;
-
-		public:
-			std::pair<_Ty,bool> find( const _Kty &key )
-				{
-				std::lock_guard<std::mutex> guard(this->AccessMutex);
-				iterator it = this->Data.find( key );
-				if( it != this->Data.end() )
-					{
-					return std::make_pair(it->second,true);
-					}
-				return std::make_pair(_Ty(),false);
-				}
-
-			bool insert( const value_type &value )
-				{
-				std::lock_guard<std::mutex> guard(this->AccessMutex);
-				return this->Data.insert( value ).second;
-				}
-
-			size_t erase( const _Kty &key )
-				{
-				std::lock_guard<std::mutex> guard(this->AccessMutex);
-				return this->Data.erase( key );
-				}
-		};
 
 	// swap byte order on one or multiple words
 	inline void swap_bytes( u8 *pA, u8 *pB )
@@ -253,134 +223,4 @@ namespace ISD
 			++dest;
 			}
 		}
-
-	// idx_vector: std::vector of values, with an std::vector of int as index into the values
-	template <class _Ty, class _Alloc = std::allocator<_Ty>, class _IdxAlloc = std::allocator<i32>>
-	class idx_vector 
-		{
-		public:
-			using value_type = _Ty;
-			using allocator_type = _Alloc;
-			using pointer = typename std::vector<_Ty,_Alloc>::pointer;
-			using const_pointer = typename std::vector<_Ty,_Alloc>::const_pointer;
-			using reference = typename std::vector<_Ty,_Alloc>::reference;
-			using const_reference = typename std::vector<_Ty,_Alloc>::const_reference;
-			using size_type = typename std::vector<_Ty,_Alloc>::size_type;
-
-		private:
-			std::vector<_Ty,_Alloc> values_m;
-			std::vector<i32,_IdxAlloc> index_m;
-
-		public:
-			idx_vector() = default;
-			idx_vector( const idx_vector &_other ) : values_m( _other.values_m ) , index_m(_other.index_m) {}
-			idx_vector &operator = ( const idx_vector &_other ) { this->values_m = _other.values_m; this->index_m = _other.index_m; return *this; }
-
-			void clear() { this->values_m.clear(); this->index_m.clear(); }
-
-			std::vector<_Ty,_Alloc> &values() { return this->values_m; }
-			const std::vector<_Ty,_Alloc> &values() const { return this->values_m; }
-
-			std::vector<i32,_IdxAlloc> &index() { return this->index_m; }
-			const std::vector<i32,_IdxAlloc> &index() const { return this->index_m; }
-		};
-
-	// optional_vector: optional std::vector 
-	template <class _Ty, class _Alloc = std::allocator<_Ty>>
-	class optional_vector 
-		{
-		public:
-			using value_type = _Ty;
-			using allocator_type = _Alloc;
-			using pointer = typename std::vector<_Ty,_Alloc>::pointer;
-			using const_pointer = typename std::vector<_Ty,_Alloc>::const_pointer;
-			using reference = typename std::vector<_Ty,_Alloc>::reference;
-			using const_reference = typename std::vector<_Ty,_Alloc>::const_reference;
-			using size_type = typename std::vector<_Ty,_Alloc>::size_type;
-
-		private:
-			std::vector<_Ty,_Alloc> vector_m;
-			bool has_value_m = false;
-
-		public:
-			optional_vector() = default;
-			optional_vector( const optional_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
-			optional_vector &operator = ( const optional_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
-
-			void reset() { this->has_value_m = false; this->vector_m.clear(); }
-			void set() { this->has_value_m = true; this->vector_m.clear(); }
-			void set( const std::vector<_Ty,_Alloc> &_values ) { this->has_value_m = true; this->vector_m = _values; }
-			bool has_value() const { return this->has_value_m; }
-
-			std::vector<_Ty,_Alloc> &vector() { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
-			const std::vector<_Ty,_Alloc> &vector() const { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
-
-			std::vector<_Ty,_Alloc> &values() { return vector(); }
-			const std::vector<_Ty,_Alloc> &values() const { return vector(); }
-
-			operator std::vector<_Ty, _Alloc> &() { return vector(); }
-			operator const std::vector<_Ty,_Alloc> &() const { return vector(); }
-		};
-
-	// optional_idx_vector: optional idx_vector 
-	template <class _Ty, class _Alloc = std::allocator<_Ty>, class _IdxAlloc = std::allocator<i32>>
-	class optional_idx_vector 
-		{
-		public:
-			using value_type = _Ty;
-			using allocator_type = _Alloc;
-			using pointer = typename std::vector<_Ty,_Alloc>::pointer;
-			using const_pointer = typename std::vector<_Ty,_Alloc>::const_pointer;
-			using reference = typename std::vector<_Ty,_Alloc>::reference;
-			using const_reference = typename std::vector<_Ty,_Alloc>::const_reference;
-			using size_type = typename std::vector<_Ty,_Alloc>::size_type;
-
-		private:
-			idx_vector<_Ty,_Alloc> vector_m;
-			bool has_value_m = false;
-
-		public:
-			optional_idx_vector() = default;
-			optional_idx_vector( const optional_idx_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
-			optional_idx_vector &operator = ( const optional_idx_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
-
-			void reset() { this->has_value_m = false; this->vector_m.clear(); }
-			void set() { this->has_value_m = true; this->vector_m.clear(); }
-			void set( const idx_vector<_Ty,_Alloc,_IdxAlloc> &_vector ) { this->has_value_m = true; this->vector_m = _vector; }
-			void set( const std::vector<_Ty,_Alloc> &_values , const std::vector<i32,_IdxAlloc> &_index ) { this->has_value_m = true; this->vector_m.values() = _values; this->vector_m.index() = _index; }
-			bool has_value() const { return this->has_value_m; }
-
-			idx_vector<_Ty,_Alloc> &vector() { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
-			const idx_vector<_Ty,_Alloc> &vector() const { ISDSanityCheckDebugMacro( this->has_value_m ); return this->vector_m; }
-
-			std::vector<_Ty,_Alloc> &values() { return this->vector().values(); }
-			const std::vector<_Ty,_Alloc> &values() const { return this->vector().values(); }
-
-			std::vector<i32,_IdxAlloc> &index() { return this->vector().index(); }
-			const std::vector<i32,_IdxAlloc> &index() const { return this->vector().index(); }
-		};
-
-	template<class T> class optional_value
-		{
-		protected:
-			T value_m = {};
-			bool has_value_m = false;
-
-		public:
-			optional_value() = default;
-			optional_value( const T &_value ) : value_m( _value ), has_value_m( true ) {}
-			optional_value( const optional_value &other ) : value_m( other.value_m ) , has_value_m( other.has_value_m ) {}
-			optional_value &operator = ( const optional_value &_other ) { this->has_value_m = _other.has_value_m; this->value_m = _other.value_m; return *this; }
-
-			void reset() { this->has_value_m = false; this->value_m = {}; }
-			void set( const T &_value = {} ) { this->has_value_m = true; this->value_m = _value; }
-			bool has_value() const { return this->has_value_m; }
-			
-			T& value() { ISDSanityCheckDebugMacro( this->has_value_m ); return this->value_m; }
-			const T& value() const { ISDSanityCheckDebugMacro( this->has_value_m );	return this->value_m; }
-
-			operator T& () { return value(); }
-			operator const T& () const { return value(); }
-		};
-
 	};

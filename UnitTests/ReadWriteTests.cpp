@@ -35,7 +35,8 @@ namespace UnitTests
 				const u64 u64val = u64_rand();
 				const float f32val = float_rand();
 				const double f64val = double_rand();
-				const UUID id = {u32_rand(), u16_rand(), u16_rand(), { u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand(), u8_rand() }};
+				const uuid id = uuid_rand();
+				const hash hs = hash_rand();
 
 				// set up a random order of the values to write and read
 				const uint num_values = 1000;
@@ -58,7 +59,7 @@ namespace UnitTests
 
 				for( int i = 0; i < num_values; ++i )
 					{
-					int item_type = rand() % 7;
+					int item_type = rand() % 8;
 					order[i] = item_type;
 
 					switch( item_type )
@@ -83,6 +84,9 @@ namespace UnitTests
 							break;
 						case 6:
 							ws->Write( id ); expected_size += 16;
+							break;
+						case 7:
+							ws->Write( hs ); expected_size += 32;
 							break;
 						}
 					}
@@ -127,6 +131,9 @@ namespace UnitTests
 							break;
 						case 6:
 							AsserteReadValueIs( rs, id );
+							break;
+						case 7:
+							AsserteReadValueIs( rs, hs );
 							break;
 						}
 					}

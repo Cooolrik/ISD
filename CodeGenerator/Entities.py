@@ -39,7 +39,7 @@ SceneNode = Entity(
 
 SceneMesh = Entity(
     name = "SceneMesh", 
-    variables = [ Variable("uuid" , "MeshPacketId") ]
+    variables = [ Variable("package_ref" , "Geometry") ]
     )
        
 SceneLayer = Entity(
@@ -48,7 +48,7 @@ SceneLayer = Entity(
                      Dependency("Dictionary", include_in_header = True),
                      Dependency("SceneNode", include_in_header = True),
                      Dependency("SceneMesh", include_in_header = True) ],
-    templates = [ Template("scene_graph", template = "DirectedGraph", types = ["uuid"], flags = ["Acyclic","Rooted"]),
+    templates = [ Template("scene_graph", template = "DirectedGraph", types = ["entity_ref"], flags = ["Acyclic","Rooted"]),
                   Template("scene_nodes", template = "Dictionary", types = ["uuid","SceneNode"] ),
                   Template("scene_meshes", template = "Dictionary", types = ["uuid","SceneMesh"] ) ],
     variables = [ Variable("string", "Name", optional = True ),

@@ -15,54 +15,60 @@
       <Extensions>
       </Extensions>
     </Filter>
+    <Filter Include="Source Files\helpers">
+      <UniqueIdentifier>{92a56802-82b4-4d70-b730-62daad829830}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\tests">
+      <UniqueIdentifier>{52af3c91-5202-4f1c-8a08-8adf929a7d4b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TypeTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ReadWriteTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EntityReadWriteTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SectionHierarchyReadWriteTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RandomFileDataReadTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DictionaryTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectedGraphTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EntityTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>PCH</Filter>
     </ClCompile>
     <ClCompile Include="..\TestHelpers\random_vals.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\helpers</Filter>
     </ClCompile>
     <ClCompile Include="..\ISD\ISD_TestEntity.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\helpers</Filter>
+    </ClCompile>
+    <ClCompile Include="DictionaryTests.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectedGraphTests.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityReadWriteTests.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityTests.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomFileDataReadTest.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadWriteTests.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="SectionHierarchyReadWriteTests.cpp">
+      <Filter>Source Files\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="TypeTests.cpp">
+      <Filter>Source Files\tests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>PCH</Filter>
     </ClInclude>
-    <ClInclude Include="..\TestHelpers\structure_generation.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\TestHelpers\random_vals.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\helpers</Filter>
     </ClInclude>
     <ClInclude Include="..\ISD\ISD_TestEntity.h">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\helpers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\TestHelpers\structure_generation.h">
+      <Filter>Source Files\helpers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

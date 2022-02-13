@@ -205,7 +205,11 @@ namespace UnitTests
 				TestEntityWriter_TestValueType<dmat4>( ws, ew, key_names );
 
 				TestEntityWriter_TestValueType<uuid>( ws, ew, key_names );
+				TestEntityWriter_TestValueType<hash>( ws, ew, key_names );
 				TestEntityWriter_TestValueType<string>( ws, ew, key_names );
+
+				TestEntityWriter_TestValueType<entity_ref>( ws, ew, key_names );
+				TestEntityWriter_TestValueType<package_ref>( ws, ew, key_names );
 				}
 			}
 

@@ -13,6 +13,9 @@
 #include "../ISD/ISD_DirectedGraph.h"
 
 #include "../ISD/ISD_SceneLayer.h"
+#include "../ISD/ISD_SHA256.h"
+
+#include "../TestHelpers/random_vals.h"
 
 #include <Rpc.h>
 extern void safe_thread_map_test();
@@ -151,33 +154,72 @@ void read_geometry()
 
 int main()
 	{
-	ISD::SceneLayer layer;
-	
-	uuid id = {};
+	//Dictionary<entity_ref, SceneMesh> dict;
+	//
+	//auto id = entity_ref();
+	//auto mesh = std::make_unique<SceneMesh>();
+	//
+	//dict.Entries().emplace( id , std::move(mesh) );
+	//dict.Entries().emplace( entity_ref() , std::make_unique<SceneMesh>() );
+	//
+	//uuid meshid = dict.Entries()[id]->MeshPacketId();
+	//
+	//dict.Entries().erase( id );
+	//
+	//std::cout << meshid << std::endl;
 
-	ISD::SceneNode node;
+	//ISD::SceneLayer layer;
+	//
+	//ISD::hash h = ISD::hash_sup; 
+	//
+	//bool b;
+	//
+	//b = (ISD::hash_sup == ISD::hash_inf);
+	//b = ISD::uuid_sup == ISD::uuid_inf;
+	//
+	//std::vector<u8> randomvec;
+	//random_vector( randomvec, 1000000000, 1000000000 );
+	//
+	//for( uint i = 0; i < 10; ++i )
+	//	{
+	//	SHA256 sha1;
+	//	u8 digest1[33];
+	//	sha1.Update( randomvec.data(), randomvec.size() );
+	//	sha1.GetDigest( digest1 );
+	//	digest1[32] = 0;
+	//	printf( "%s\n", digest1 );
+	//
+	//	SHA256 sha2;
+	//	u8 digest2[33];
+	//	sha2.Update( randomvec.data(), randomvec.size() );
+	//	sha2.GetDigest( digest2 );
+	//	digest2[32] = 0;
+	//	printf( "%s\n", digest2 );
+	//	}
 
-	node.Name() = "Nej";
-
-	layer.Nodes().Entries().emplace( id, new ISD::SceneNode(node) );
-
-	MemoryWriteStream ws;
-	EntityWriter writer(ws);
-
-	SceneLayer::MF::Write( layer, writer );
-
-	ISD::SceneLayer layer2;
-
-	MemoryReadStream rs( ws.GetData(), ws.GetSize() );
-	EntityReader reader(rs);
-
-	SceneLayer::MF::Read( layer2, reader );
-
-	EntityValidator validator;
-
-	SceneLayer::MF::Validate( layer2, validator );
-
-	bool cmp = SceneLayer::MF::Equals( &layer, &layer2 );
+	//ISD::SceneNode node;
+	//
+	//node.Name() = "Nej";
+	//
+	//layer.Nodes().Entries().emplace( id, new ISD::SceneNode(node) );
+	//
+	//MemoryWriteStream ws;
+	//EntityWriter writer(ws);
+	//
+	//SceneLayer::MF::Write( layer, writer );
+	//
+	//ISD::SceneLayer layer2;
+	//
+	//MemoryReadStream rs( ws.GetData(), ws.GetSize() );
+	//EntityReader reader(rs);
+	//
+	//SceneLayer::MF::Read( layer2, reader );
+	//
+	//EntityValidator validator;
+	//
+	//SceneLayer::MF::Validate( layer2, validator );
+	//
+	//bool cmp = SceneLayer::MF::Equals( &layer, &layer2 );
 
 	//
 	//MemoryWriteStream ws;

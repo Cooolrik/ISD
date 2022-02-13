@@ -6,6 +6,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <Rpc.h>
 
 namespace ISD
 	{
@@ -33,11 +34,11 @@ namespace ISD
 	// writes array of bytes to string of hex values. the hex values will be
 	// in the same order as the bytes, so if you need to convert a litte-endian
 	// word into hex, be sure to flip the byte order before.
-	std::wstring bytes_to_hex_wstring( const void *bytes, size_t count )
+	std::string bytes_to_hex_string( const void *bytes, size_t count )
 		{
-		static const wchar_t hexchars[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+		static const char hexchars[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
 
-		std::wstring ret;
+		std::string ret;
 		const u8 *p = (const u8 *)bytes;
 		for( size_t i = 0; i < count; ++i )
 			{
@@ -48,46 +49,52 @@ namespace ISD
 		return ret;
 		}
 
-
-	template <> std::wstring value_to_hex_wstring<u8>( u8 value )
+	template <> std::string value_to_hex_string<u8>( u8 value )
 		{
-		return bytes_to_hex_wstring( &value, sizeof(value) );
+		return bytes_to_hex_string( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<u16>( u16 value )
+	template <> std::string value_to_hex_string<u16>( u16 value )
 		{
 		bigendian_from_value( (u8*)&value, value ); // in-place make sure big endian
-		return bytes_to_hex_wstring( &value, sizeof(value) );
+		return bytes_to_hex_string( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<u32>( u32 value )
+	template <> std::string value_to_hex_string<u32>( u32 value )
 		{
 		bigendian_from_value( (u8*)&value, value ); // in-place make sure big endian
-		return bytes_to_hex_wstring( &value, sizeof(value) );
+		return bytes_to_hex_string( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<u64>( u64 value )
+	template <> std::string value_to_hex_string<u64>( u64 value )
 		{
 		bigendian_from_value( (u8*)&value, value ); // in-place make sure big endian
-		return bytes_to_hex_wstring( &value, sizeof(value) );
+		return bytes_to_hex_string( &value, sizeof(value) );
 		}
 
-	template <> std::wstring value_to_hex_wstring<uuid>( uuid value )
+	template <> std::string value_to_hex_string<uuid>( uuid value )
 		{
-		std::wstring ret;
+		std::string ret;
 
-		ret += value_to_hex_wstring<u32>( value.Data1 );
-		ret += L"-";
-		ret += value_to_hex_wstring<u16>( value.Data2 );
-		ret += L"-";
-		ret += value_to_hex_wstring<u16>( value.Data3 );
-		ret += L"-";
-		ret += bytes_to_hex_wstring( value.Data4 , 2 );
-		ret += L"-";
-		ret += bytes_to_hex_wstring( &value.Data4[2] , 6 );
+		ret += value_to_hex_string<u32>( value.Data1 );
+		ret += "-";
+		ret += value_to_hex_string<u16>( value.Data2 );
+		ret += "-";
+		ret += value_to_hex_string<u16>( value.Data3 );
+		ret += "-";
+		ret += bytes_to_hex_string( value.Data4 , 2 );
+		ret += "-";
+		ret += bytes_to_hex_string( &value.Data4[2] , 6 );
 
 		return ret;
 		}
+
+	template <> std::string value_to_hex_string<hash>( hash value )
+		{
+		static_assert(sizeof( hash ) == 32, "Error: hash is assumed to be of size 32.");
+		return bytes_to_hex_string( &value, 32 );
+		}
+
 
 	std::wstring full_path( const std::wstring &path )
 		{
@@ -102,6 +109,20 @@ namespace ISD
 		delete[] buffer;
 
 		return ret;
+		}
+
+	entity_ref entity_ref::make_ref()
+		{
+		entity_ref ref;
+
+		RPC_STATUS stat = ::UuidCreate( &ref.id_m );
+		if( stat != RPC_S_OK 
+			|| ref.id_m == uuid_zero )
+			{
+			throw std::exception( "Failed to generate a uuid through ::UuidCreate()" );
+			}
+
+		return ref;
 		}
 
 	};

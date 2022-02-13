@@ -4,28 +4,25 @@
 #pragma once
 
 #include "ISD_Types.h"
-#include "ISD_Entity.h"
 
 namespace ISD
 	{
 	class MemoryReadStream;
 	class MemoryWriteStream;
 
-	class EntityValue
+	class Packet
 		{
 		public:
-			ValueType GetValueType() const;
 		};
 
-
-	class EntitySerializer
+	class PacketSerializer
 		{
 		public:
 			// deserializes an Entity from a memory stream. The returned Entity is 
 			// handed over, and must be deleted by the caller.
-			std::pair<Entity *,Status> FromMemoryStream( MemoryReadStream &input_stream );
+			std::pair<Packet *,Status> FromMemoryStream( MemoryReadStream &input_stream );
 
 			// serializes an Entity to a memory stream.
-			Status ToMemoryStream( const Entity *entity , MemoryWriteStream &output_stream );
+			Status ToMemoryStream( const Packet *packet , MemoryWriteStream &output_stream );
 		};
 	};

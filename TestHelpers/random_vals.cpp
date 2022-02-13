@@ -79,6 +79,12 @@ template <> dmat4 random_value<dmat4>() { return dmat4(
 	double_rand(), double_rand(), double_rand(), double_rand()
 ) ; }
 
-template <> UUID random_value<UUID>() { return uuid_rand() ; }
+template <> UUID random_value<UUID>() { return uuid_rand(); }
+
+template <> hash random_value<hash>() { return hash_rand(); }
+
+template <> entity_ref random_value<entity_ref>() { return entity_ref::make_ref(); } // use the built-in uuid generation, since we can't set a random value
+
+template <> package_ref random_value<package_ref>() { return package_ref(hash_rand()); } 
 
 template <> std::string random_value<std::string>() { return str_rand(); }

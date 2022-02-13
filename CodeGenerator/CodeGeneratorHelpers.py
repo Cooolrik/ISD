@@ -1,7 +1,7 @@
 # ISD Copyright (c) 2021 Ulrik Lindahl
 # Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
 
-
+import copy
 import os
 from stat import S_IRUSR, S_IRGRP, S_IROTH, S_IWUSR
 import importlib
@@ -12,10 +12,11 @@ class BaseType:
         self.variants = variants
 
 class BaseTypeVariant:
-    def __init__(self,implementing_type,item_type,num_items_per_object):
+    def __init__(self,implementing_type,item_type,num_items_per_object,override=False):
         self.implementing_type = implementing_type
         self.item_type = item_type
         self.num_items_per_object = num_items_per_object
+        self.overrides_type = override
 
 base_type_Bool = BaseType('Bool',[BaseTypeVariant('bool','bool',1)])
 base_type_Int =  BaseType('Int',[BaseTypeVariant('i8','i8',1),BaseTypeVariant('i16','i16',1),BaseTypeVariant('i32','i32',1),BaseTypeVariant('i64','i64',1)])
@@ -34,7 +35,8 @@ base_type_Mat2 =  BaseType('Mat2',[BaseTypeVariant('fmat2','float',4),BaseTypeVa
 base_type_Mat3 =  BaseType('Mat3',[BaseTypeVariant('fmat3','float',9),BaseTypeVariant('dmat3','double',9)])    
 base_type_Mat4 =  BaseType('Mat4',[BaseTypeVariant('fmat4','float',16),BaseTypeVariant('dmat4','double',16)])
 base_type_Quat =  BaseType('Quat',[BaseTypeVariant('fquat','float',4),BaseTypeVariant('dquat','double',4)])
-base_type_Uuid =  BaseType('Uuid',[BaseTypeVariant('uuid','uuid',1)])
+base_type_Uuid =  BaseType('Uuid',[BaseTypeVariant('uuid','uuid',1),BaseTypeVariant('entity_ref','uuid',1,True)])
+base_type_Hash =  BaseType('Hash',[BaseTypeVariant('hash','hash',1),BaseTypeVariant('package_ref','hash',1,True)])
 base_type_String = BaseType('String',[BaseTypeVariant('string','string',1)])
 
 base_types = [base_type_Bool,
@@ -55,9 +57,10 @@ base_types = [base_type_Bool,
               base_type_Mat4,
               base_type_Quat,
               base_type_Uuid,
+              base_type_Hash,
               base_type_String]
 
-# find a base type based on name, and base type and base type variant info
+# find a base type based on name, and return base_type and base_type_variant info
 def get_base_type_variant( name ):
     for typ in base_types:
         for var in typ.variants:

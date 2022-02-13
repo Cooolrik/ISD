@@ -61,11 +61,12 @@ namespace ISD
 			template <> u16 Read<u16>();
 			template <> u32 Read<u32>();
 			template <> u64 Read<u64>();
-			template <> uuid Read<uuid>();
 			template <> float Read<float>();
 			template <> double Read<double>();
+			template <> uuid Read<uuid>();
+			template <> hash Read<hash>();
 
-			// read multiple items from the memory stream. makes sure to convert endianness
+			// read a number of items from the memory stream. makes sure to convert endianness
 			u64 Read( i8 *dest , u64 count );
 			u64 Read( i16 *dest , u64 count );
 			u64 Read( i32 *dest , u64 count );
@@ -74,9 +75,10 @@ namespace ISD
 			u64 Read( u16 *dest , u64 count );
 			u64 Read( u32 *dest , u64 count );
 			u64 Read( u64 *dest , u64 count );
-			u64 Read( uuid *dest , u64 count );
 			u64 Read( float *dest , u64 count );
 			u64 Read( double *dest , u64 count );
+			u64 Read( uuid *dest , u64 count );
+			u64 Read( hash *dest , u64 count );
 		};
 
 	inline u8 MemoryReadStream::Peek() const
@@ -164,10 +166,10 @@ namespace ISD
 	template <> inline u16 MemoryReadStream::Read<u16>() { u16 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline u32 MemoryReadStream::Read<u32>() { u32 dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline u64 MemoryReadStream::Read<u64>() { u64 dest = 0; this->Read( &dest, 1 ); return dest; }
-	template <> inline uuid MemoryReadStream::Read<uuid>() { uuid dest = {}; this->Read( &dest, 1 ); return dest; }
 	template <> inline float MemoryReadStream::Read<float>() { float dest = 0; this->Read( &dest, 1 ); return dest; }
 	template <> inline double MemoryReadStream::Read<double>() { double dest = 0; this->Read( &dest, 1 ); return dest; }
-	//template <> inline std::string MemoryReadStream::Read<std::string>() { std::string dest; this->Read( &dest, 1 ); return dest; }
+	template <> inline uuid MemoryReadStream::Read<uuid>() { uuid dest = {}; this->Read( &dest, 1 ); return dest; }
+	template <> inline hash MemoryReadStream::Read<hash>() { hash dest = {}; this->Read( &dest, 1 ); return dest; }
 
 	// 8 bit data
 	inline u64 MemoryReadStream::Read( i8 *dest, u64 count ) { return this->ReadValues<u8>( (u8*)dest, count ); }
@@ -187,14 +189,16 @@ namespace ISD
 	inline u64 MemoryReadStream::Read( u64 *dest, u64 count ) { return this->ReadValues<u64>( dest, count ); }
 	inline u64 MemoryReadStream::Read( double *dest, u64 count ) { return this->ReadValues<u64>( (u64*)dest, count ); }
 
-	// UUIDs
+	// uuids
 	inline u64 MemoryReadStream::Read( uuid *dest, u64 count ) 
 		{ 
+		static_assert(sizeof(uuid)==16, "Invalid size of uuid struct, needs to be exactly 16 bytes.");
+
 		for( u64 i = 0; i < count; ++i )
 			{
 			// we always store uuids big endian (the order which the hex values are printed when printing a UUID), regardless of machine, so read in the 16 bytes and assign
 			u8 rawbytes[16];
-			if( this->Read( rawbytes, 16 ) != 16 )
+			if( this->ReadValues<u8>( rawbytes, 16 ) != 16 )
 				return i; // could not read further, return number of succesful reads
 
 			// assign to the values
@@ -205,6 +209,18 @@ namespace ISD
 			}
 
 		return count;
+		}
+
+	// hashes
+	inline u64 MemoryReadStream::Read( hash *dest, u64 count ) 
+		{ 
+		static_assert(sizeof(hash)==32, "Invalid size of hash struct, needs to be exactly 32 bytes.");
+
+		// Read raw bytes, assumes the values are contiguous 
+		// No need for byte-swapping, the hashes are always stored as raw bytes, and ordered 
+		// big-endian (the order which the hex values are printed when printing a hash)
+		// return number of successfully read full items
+		return this->ReadValues<u8>( (u8 *)dest, sizeof( hash ) * count ) / sizeof(hash); 
 		}
 
 	};

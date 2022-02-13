@@ -161,6 +161,7 @@ namespace UnitTests
 			DictionaryBasicTests_Validation<double>();
 			
 			DictionaryBasicTests_Validation<uuid>();
+			DictionaryBasicTests_Validation<hash>();
 			DictionaryBasicTests_Validation<string>();
 			}
 
@@ -249,6 +250,7 @@ namespace UnitTests
 				DictionaryReadWriteTests_TestKeyType<double>( ws, ew );
 								
 				DictionaryReadWriteTests_TestKeyType<uuid>( ws, ew );
+				DictionaryReadWriteTests_TestKeyType<hash>( ws, ew );
 				DictionaryReadWriteTests_TestKeyType<string>( ws, ew );
 				}
 			}

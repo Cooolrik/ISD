@@ -12,11 +12,11 @@
     <Filter Include="Source Files\Generated">
       <UniqueIdentifier>{aa84c8fc-4ea7-41e1-b34a-de80efd36b47}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Types">
+      <UniqueIdentifier>{35e28af9-6125-45e3-b916-16f2540c8781}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ISD_Blob.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ISD_Types.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -32,10 +32,7 @@
     <ClInclude Include="ISD_SHA256.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_EntitySerializer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_Entity.h">
+    <ClInclude Include="ISD_PacketSerializer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ISD_Log.h">
@@ -71,6 +68,27 @@
     <ClInclude Include="ISD_SceneNode.h">
       <Filter>Source Files\Generated</Filter>
     </ClInclude>
+    <ClInclude Include="optional_value.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="optional_vector.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="idx_vector.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="optional_idx_vector.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="thread_safe_map.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="entity_ref.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="package_ref.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp">
@@ -82,7 +100,7 @@
     <ClCompile Include="ISD_SHA256.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ISD_EntitySerializer.cpp">
+    <ClCompile Include="ISD_PacketSerializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ISD_EntityWriter.cpp">

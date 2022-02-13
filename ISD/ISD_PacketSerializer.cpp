@@ -1,7 +1,7 @@
 // ISD Copyright (c) 2021 Ulrik Lindahl
 // Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
 
-#include "ISD_EntitySerializer.h"
+#include "ISD_PacketSerializer.h"
 #include "ISD_MemoryReadStream.h"
 #include "ISD_MemoryWriteStream.h"
 
@@ -41,9 +41,9 @@ struct BlobHeader
 //	return ostream.GetPosition() == (p + 16); // true if we have written 16 bytes
 //	}
 
-std::pair<Entity *, Status> ISD::EntitySerializer::FromMemoryStream( MemoryReadStream &input_stream )
+std::pair<Packet *, Status> ISD::PacketSerializer::FromMemoryStream( MemoryReadStream &input_stream )
 	{
-	Entity *entity = {};
+	Packet *entity = {};
 	u64 expected_pos = {};
 
 	// read in the first 8 bytes of the header
@@ -58,7 +58,7 @@ std::pair<Entity *, Status> ISD::EntitySerializer::FromMemoryStream( MemoryReadS
 	// read in the file header, make sure it is an ISD file
 	if( memcmp(header.Magic , "ISD" , 3) != 0 )
 		{
-		return std::pair<Entity *, Status>( nullptr, Status::EInvalid );
+		return std::pair<Packet *, Status>( nullptr, Status::EInvalid );
 		}
 
 	// for now, the version does not matter, as we are only on first iteration, and future versions need to be backwards compatible 
@@ -76,19 +76,19 @@ std::pair<Entity *, Status> ISD::EntitySerializer::FromMemoryStream( MemoryReadS
 	header.DataSize = input_stream.Read<u64>();
 	if( (input_stream.GetPosition() + header.DataSize) > input_stream.GetSize() )
 		{
-		return std::pair<Entity *, Status>( nullptr, Status::EInvalid );
+		return std::pair<Packet *, Status>( nullptr, Status::EInvalid );
 		}
 	
-	// read in the Id of the Entity and the Entity type, which matches the class of the entity
+	// read in the Id of the Packet and the Packet type, which matches the class of the entity
 	UUID EntityId = input_stream.Read<UUID>();
 	UUID EntityTypeId = input_stream.Read<UUID>();
 
 
 
-	return std::pair<Entity *, Status>(entity,Status::Ok);
+	return std::pair<Packet *, Status>(entity,Status::Ok);
 	}
 
-Status ISD::EntitySerializer::ToMemoryStream( const Entity *entity, MemoryWriteStream &output_stream )
+Status ISD::PacketSerializer::ToMemoryStream( const Packet *entity, MemoryWriteStream &output_stream )
 	{
 	return Status::Ok;
 	}

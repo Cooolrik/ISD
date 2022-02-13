@@ -80,14 +80,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="entity_ref.h" />
+    <ClInclude Include="idx_vector.h" />
     <ClInclude Include="ISD.h" />
-    <ClInclude Include="ISD_Blob.h" />
     <ClInclude Include="ISD_DataTypes.h" />
     <ClInclude Include="ISD_DataValuePointers.h" />
     <ClInclude Include="ISD_DirectedGraph.h" />
-    <ClInclude Include="ISD_Entity.h" />
     <ClInclude Include="ISD_EntityReader.h" />
-    <ClInclude Include="ISD_EntitySerializer.h" />
+    <ClInclude Include="ISD_PacketSerializer.h" />
     <ClInclude Include="ISD_EntityValidator.h" />
     <ClInclude Include="ISD_EntityWriter.h" />
     <ClInclude Include="ISD_Log.h" />
@@ -99,12 +99,17 @@
     <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_Types.h" />
     <ClInclude Include="ISD_Dictionary.h" />
+    <ClInclude Include="optional_idx_vector.h" />
+    <ClInclude Include="optional_value.h" />
+    <ClInclude Include="optional_vector.h" />
+    <ClInclude Include="package_ref.h" />
+    <ClInclude Include="thread_safe_map.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
     <ClCompile Include="ISD_DataTypes.cpp" />
     <ClCompile Include="ISD_EntityReader.cpp" />
-    <ClCompile Include="ISD_EntitySerializer.cpp" />
+    <ClCompile Include="ISD_PacketSerializer.cpp" />
     <ClCompile Include="ISD_EntityWriter.cpp" />
     <ClCompile Include="ISD_SceneLayer.cpp" />
     <ClCompile Include="ISD_SceneMesh.cpp" />

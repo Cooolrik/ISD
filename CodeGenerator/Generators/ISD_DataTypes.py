@@ -10,8 +10,9 @@ nonconst_const_range = ['','const ']
 
 def print_UUID_header():
 	lines = []
-	lines.append('// define GUID stuff from windows')
+	lines.append('// include GUID stuff from windows')
 	lines.append('#ifdef _WIN32')
+	lines.append('#define __INLINE_ISEQUAL_GUID')
 	lines.append('#include <guiddef.h>')
 	lines.append('#endif//_WIN32')
 	lines.append('')
@@ -19,21 +20,52 @@ def print_UUID_header():
 	lines.append('#ifndef UUID_DEFINED')
 	lines.append('#define UUID_DEFINED')
 	lines.append('typedef GUID UUID;')
-	lines.append('')
 	lines.append('#ifdef _WIN32')
 	lines.append('#ifndef uuid_t')
 	lines.append('#define uuid_t UUID')
 	lines.append('#endif//uuid_t')
 	lines.append('#endif//_WIN32')
-	lines.append('')
 	lines.append('inline bool operator<( const UUID &Left, const UUID &Right ) ')
-	lines.append('	{')
-	lines.append('	return memcmp( &Left, &Right, sizeof( UUID ) ) < 0;')
-	lines.append('	};')
-	lines.append('')
-	lines.append('std::ostream &operator<<( std::ostream &os, const UUID &guid );')
-	lines.append('')
+	lines.append('\t{')
+	lines.append('\treturn memcmp( &Left, &Right, sizeof( UUID ) ) < 0;')
+	lines.append('\t};')
+	lines.append('std::ostream &operator<<( std::ostream &os, const UUID &_uuid );')
 	lines.append('#endif//UUID_DEFINED')
+	return lines
+
+def print_hash_header():
+	lines = []
+	lines.append('// define hash for sha256 message digests')
+	lines.append('#ifndef HASH_DEFINED')
+	lines.append('#define HASH_DEFINED')
+	lines.append('struct hash')
+	lines.append('\t{')
+	lines.append('\tunion')
+	lines.append('\t\t{')
+	lines.append('\t\tstd::uint64_t _digest_q[4];')
+	lines.append('\t\tstd::uint8_t digest[32];')
+	lines.append('\t\t};')
+	lines.append('\t};')
+	lines.append('inline bool operator<( const hash &Left, const hash &Right ) ')
+	lines.append('\t{')
+	lines.append('\treturn memcmp( &Left, &Right, sizeof( hash ) ) < 0;')
+	lines.append('\t};')
+	lines.append('inline bool operator==( const hash &Left, const hash &Right ) ')
+	lines.append('\t{')
+	lines.append('\treturn (Left._digest_q[0] == Right._digest_q[0])')
+	lines.append('\t    && (Left._digest_q[1] == Right._digest_q[1])')
+	lines.append('\t    && (Left._digest_q[2] == Right._digest_q[2])')
+	lines.append('\t    && (Left._digest_q[3] == Right._digest_q[3]);')
+	lines.append('\t};')
+	lines.append('inline bool operator!=( const hash &Left, const hash &Right ) ')
+	lines.append('\t{')
+	lines.append('\treturn (Left._digest_q[0] != Right._digest_q[0])')
+	lines.append('\t    || (Left._digest_q[1] != Right._digest_q[1])')
+	lines.append('\t    || (Left._digest_q[2] != Right._digest_q[2])')
+	lines.append('\t    || (Left._digest_q[3] != Right._digest_q[3]);')
+	lines.append('\t};')
+	lines.append('std::ostream &operator<<( std::ostream &os, const hash &_hash );')
+	lines.append('#endif//HASH_DEFINED')
 	return lines
 
 def print_type_information_header( type , value , value_count ):
@@ -59,7 +91,13 @@ def ISD_DataTypes_h():
 	lines.append('')
 	lines.append('#pragma once')
 	lines.append('')
+	lines.append('#ifndef ISD_SKIP_UUID_AND_HASH')
+	lines.append('')
 	lines.extend(print_UUID_header())
+	lines.append('')
+	lines.extend(print_hash_header())
+	lines.append('')
+	lines.append('#endif//ISD_SKIP_UUID_AND_HASH')
 	lines.append('')
 	lines.append('#include <glm/fwd.hpp>')
 	lines.append('')
@@ -75,6 +113,7 @@ def ISD_DataTypes_h():
 	lines.append('')
 	lines.append(f"\ttypedef std::string string;")
 	lines.append(f"\ttypedef UUID uuid;")
+	lines.append(f"\ttypedef ::hash hash;")
 	lines.append('')
 
 	# const min/max values of the standard types
@@ -95,15 +134,19 @@ def ISD_DataTypes_h():
 	lines.append('\tconstexpr float float_inf = -FLT_MAX;')
 	lines.append('\tconstexpr float float_sup = FLT_MAX;')
 	lines.append('\tconstexpr float double_zero = 0.0;')
-	lines.append('\tconstexpr double double_inf = -FLT_MAX;')
-	lines.append('\tconstexpr double double_sup = FLT_MAX;')
+	lines.append('\tconstexpr double double_inf = -DBL_MAX;')
+	lines.append('\tconstexpr double double_sup = DBL_MAX;')
 	lines.append('')
 	lines.append('\tconst string string_zero;')
 	lines.append('\tconst string string_inf;')
 	lines.append('')
 	lines.append('\tconstexpr uuid uuid_zero = {0,0,0,{0,0,0,0,0,0,0,0}};')
 	lines.append('\tconstexpr uuid uuid_inf = {0,0,0,{0,0,0,0,0,0,0,0}};')
-	lines.append('\tconstexpr uuid uuid_sup = {0xffffffff,0xffff,0xffff,{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};')
+	lines.append('\tconstexpr uuid uuid_sup = {~0Ui32,~0Ui16,~0Ui16,{0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}};')
+	lines.append('')
+	lines.append('\tconstexpr hash hash_zero = {0,0,0,0};')
+	lines.append('\tconstexpr hash hash_inf = {0,0,0,0};')
+	lines.append('\tconstexpr hash hash_sup = {~0Ui64,~0Ui64,~0Ui64,~0Ui64};')
 	lines.append('')
 
 	# typedef vector types
@@ -185,6 +228,9 @@ def ISD_DataTypes_h():
 
 	# uuid info
 	lines.extend(print_type_information_header('uuid','uuid',1))
+
+	# hash info
+	lines.extend(print_type_information_header('hash','hash',1))
 
 	# string info
 	lines.extend(print_type_information_header('string','string',1))
@@ -268,13 +314,12 @@ def ISD_DataTypes_cpp():
 	lines.extend(print_type_information_source('fquat','float',4))
 	lines.extend(print_type_information_source('dquat','double',4))
 
-	# uuid info
-	lines.extend(print_type_information_source('uuid','uuid',1))
-
-	# std::string info
-	lines.extend(print_type_information_source('string','string',1))
-		
+	# other types that are atomic
+	same_type_range = ['uuid','hash','string']
+	for type in same_type_range:
+		lines.extend(print_type_information_source(type,type,1))
 	lines.append('    };')
+
 	hlp.write_lines_to_file("../ISD/ISD_DataTypes.cpp",lines)
 
 def ISD_DataValuePointers_h():
@@ -316,6 +361,8 @@ def ISD_DataValuePointers_h():
 			for const_type in nonconst_const_range:
 				lines.append(f"\tinline {const_type}u{bit_size} *value_ptr( {const_type}u{bit_size}vec{vec_dim} &value ) {{ return glm::value_ptr(value); }}")
 	lines.append('')
+
+	# vectors
 	for vec_dim in vector_dimension_range:
 		for const_type in nonconst_const_range:
 			lines.append(f"\tinline {const_type}float *value_ptr( {const_type}fvec{vec_dim} &value ) {{ return glm::value_ptr(value); }}")
@@ -323,6 +370,8 @@ def ISD_DataValuePointers_h():
 		for const_type in nonconst_const_range:
 			lines.append(f"\tinline {const_type}double *value_ptr( {const_type}dvec{vec_dim} &value ) {{ return glm::value_ptr(value); }}")
 	lines.append('')
+
+	# matrices
 	for vec_dim in vector_dimension_range:
 		for const_type in nonconst_const_range:
 			lines.append(f"\tinline {const_type}float *value_ptr( {const_type}fmat{vec_dim} &value ) {{ return glm::value_ptr(value); }}")
@@ -330,16 +379,19 @@ def ISD_DataValuePointers_h():
 		for const_type in nonconst_const_range:
 			lines.append(f"\tinline {const_type}double *value_ptr( {const_type}dmat{vec_dim} &value ) {{ return glm::value_ptr(value); }}")
 	lines.append('')
+
+	# quaternions
 	for const_type in nonconst_const_range:
 		lines.append(f"\tinline {const_type}float *value_ptr( {const_type}fquat &value ) {{ return glm::value_ptr(value); }}")
 	for const_type in nonconst_const_range:
 		lines.append(f"\tinline {const_type}double *value_ptr( {const_type}dquat &value ) {{ return glm::value_ptr(value); }}")
 	lines.append('')
-	for const_type in nonconst_const_range:
-		lines.append(f"\tinline {const_type}uuid *value_ptr( {const_type}uuid &value ) {{ return &value; }}")
-	lines.append('')
-	for const_type in nonconst_const_range:
-		lines.append(f"\tinline {const_type}string *value_ptr( {const_type}string &value ) {{ return &value; }}")
+
+	# other types that have no inner item pointer
+	same_type_range = ['uuid','hash','string']
+	for type in same_type_range:
+		for const_type in nonconst_const_range:
+			lines.append(f"\tinline {const_type}{type} *value_ptr( {const_type}{type} &value ) {{ return &value; }}")
 
 	# end of namespace
 	lines.append('    };')

@@ -266,6 +266,7 @@ namespace UnitTests
 				ReadWriteTypeTest<i64>( ws, ew );
 				ReadWriteTypeTest<string>( ws, ew );
 				ReadWriteTypeTest<uuid>( ws, ew );
+				ReadWriteTypeTest<hash>( ws, ew );
 				}
 			}
 		};

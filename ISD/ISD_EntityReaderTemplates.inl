@@ -82,7 +82,7 @@ namespace ISD
 	// can have different bit depths, the second parameter I is the actual type of the data stored. The data can have more than one values of type I, the count is stored in IC.
 	template<ValueType VT, class T> reader_status read_single_item( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, T *dest_data )
 		{
-		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_Uuid), "Invalid type for generic template of read_single_item");
+		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_Hash), "Invalid type for generic template of read_single_item");
 
 		const u64 value_size = sizeof( type_information<T>::value_type );
 		const u64 value_count = type_information<T>::value_count;
@@ -354,7 +354,7 @@ namespace ISD
 
 	template<ValueType VT, class T> reader_status read_array( MemoryReadStream &sstream, const char *key, const u8 key_size_in_bytes, const bool empty_value_is_allowed, std::vector<T> *dest_items, std::vector<i32> *dest_index )
 		{
-		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_Uuid), "Invalid type for generic read_array template");
+		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_Hash), "Invalid type for generic read_array template");
 		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at max 8 bytes in size, equal to u64");
 		const size_t value_size = sizeof( type_information<T>::value_type );
 

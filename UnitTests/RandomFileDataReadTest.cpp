@@ -28,7 +28,7 @@ namespace UnitTests
 				MemoryReadStream rs( random_file_data.data() , random_file_data.size() , (pass_index & 0x1) != 0 );
 				EntityReader er( rs );
 
-				// try reading some values. calls should fail, but not crash
+				// try reading some values. calls are allowed to fail with error, but not crash
 				for( size_t i = 0; i < 1000; ++i )
 					{
 					i32 v;

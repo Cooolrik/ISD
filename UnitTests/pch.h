@@ -15,4 +15,13 @@
 
 #include "..\TestHelpers\random_vals.h"
 
+#ifdef _DEBUG
+#define ISDExpectSanityCheckDebugFailMacro( statement ) Assert::ExpectException<std::exception>( [&]() { statement } );
+#define ISDExpectSanityCheckCoreDebugFailMacro( statement ) Assert::ExpectException<std::exception>( [&]() { statement } );
+#else
+#define ISDExpectSanityCheckDebugFailMacro( statement ) 
+#define ISDExpectSanityCheckCoreDebugFailMacro( statement ) 
+#endif
+
+
 #endif //PCH_H

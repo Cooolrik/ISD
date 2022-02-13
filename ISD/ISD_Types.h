@@ -19,8 +19,8 @@
 #define ISDValidationErrorEnd std::endl
 
 #ifdef _DEBUG
-#define ISDSanityCheckDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Sanity debug check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception(); }
-#define ISDSanityCheckCoreDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Core debug sanity check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception(); }
+#define ISDSanityCheckDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Sanity debug check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception("Sanity debug check failed: (" #statement ")"); }
+#define ISDSanityCheckCoreDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Core debug sanity check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception("Core debug sanity check failed: (" #statement ")"); }
 #else
 #define ISDSanityCheckDebugMacro( statement ) 
 #define ISDSanityCheckCoreDebugMacro( statement ) 

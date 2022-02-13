@@ -27,10 +27,13 @@ namespace ISD
 
 		public:
 			optional_idx_vector() = default;
-			optional_idx_vector( const optional_idx_vector &_other ) : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
-			optional_idx_vector &operator = ( const optional_idx_vector &_other ) { this->has_value_m = _other.has_value_m; this->vector_m = _other.vector_m; return *this; }
-			optional_idx_vector( optional_idx_vector &&_other ) : vector_m( std::move(_other.vector_m) ), has_value_m(_other.has_value_m) { _other.has_value_m = false; }
-			optional_idx_vector &operator = ( optional_idx_vector &&_other ) { this->has_value_m = _other.has_value_m; this->vector_m = std::move(_other.vector_m); _other.has_value_m = false; return *this; }
+			optional_idx_vector( const optional_idx_vector &_other ) noexcept : vector_m( _other.vector_m ), has_value_m(_other.has_value_m) {}
+			optional_idx_vector &operator = ( const optional_idx_vector &_other ) { this->vector_m = _other.vector_m; this->has_value_m = _other.has_value_m; return *this; }
+			optional_idx_vector( optional_idx_vector &&_other ) noexcept : vector_m( std::move(_other.vector_m) ), has_value_m(_other.has_value_m) { _other.has_value_m = false; }
+			optional_idx_vector &operator = ( optional_idx_vector &&_other ) { this->vector_m = std::move(_other.vector_m); this->has_value_m = _other.has_value_m; _other.has_value_m = false; return *this; }
+
+			bool operator==( const optional_idx_vector &_other ) const;
+			bool operator!=( const optional_idx_vector &_other ) const;
 
 			void reset() { this->has_value_m = false; this->vector_m.clear(); }
 			void set() { this->has_value_m = true; this->vector_m.clear(); }
@@ -47,5 +50,39 @@ namespace ISD
 			std::vector<i32,_IdxAlloc> &index() { return this->vector().index(); }
 			const std::vector<i32,_IdxAlloc> &index() const { return this->vector().index(); }
 		};
+
+	template <class _Ty, class _Alloc, class _IdxAlloc>
+	bool optional_idx_vector<_Ty,_Alloc,_IdxAlloc>::operator==( const optional_idx_vector &_other ) const
+		{
+		if( this->has_value_m )
+			{
+			if( _other.has_value_m )
+				return this->vector_m == _other.vector_m;
+			return false;
+			}
+		else
+			{
+			if( _other.has_value_m )
+				return false;
+			return true;
+			}
+		}
+
+	template <class _Ty, class _Alloc, class _IdxAlloc>
+	bool optional_idx_vector<_Ty,_Alloc,_IdxAlloc>::operator!=( const optional_idx_vector &_other ) const
+		{
+		if( this->has_value_m )
+			{
+			if( _other.has_value_m )
+				return this->vector_m != _other.vector_m;
+			return true;
+			}
+		else
+			{
+			if( _other.has_value_m )
+				return true;
+			return false;
+			}
+		}
 
 	};

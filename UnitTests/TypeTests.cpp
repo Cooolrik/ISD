@@ -222,6 +222,8 @@ namespace UnitTests
 				Assert::IsTrue( vec2.values().size() == 10 );
 				Assert::IsTrue( vec.index() != vec2.index() );
 				Assert::IsTrue( vec.values() != vec2.values() );
+				Assert::IsTrue( vec != vec2 );
+				Assert::IsTrue( !(vec == vec2) );
 
 				vec = vec2;
 				Assert::IsTrue( vec.index().size() == 20 );
@@ -230,6 +232,8 @@ namespace UnitTests
 				Assert::IsTrue( vec.values().size() == vec2.values().size() );
 				Assert::IsTrue( vec.index() == vec2.index() );
 				Assert::IsTrue( vec.values() == vec2.values() );
+				Assert::IsTrue( vec == vec2 );
+				Assert::IsTrue( !(vec != vec2) );
 
 				vec.clear();
 				Assert::IsTrue( vec.index().size() == 0 );
@@ -238,6 +242,55 @@ namespace UnitTests
 				Assert::IsTrue( vec.values() != vec2.values() );
 
 				vec2.clear();
+				Assert::IsTrue( vec.index().size() == 0 );
+				Assert::IsTrue( vec.values().size() == 0 );
+				Assert::IsTrue( vec2.index().size() == 0 );
+				Assert::IsTrue( vec2.values().size() == 0 );
+				Assert::IsTrue( vec.index() == vec2.index() );
+				Assert::IsTrue( vec.values() == vec2.values() );
+				Assert::IsTrue( vec == vec2 );
+				Assert::IsTrue( !(vec != vec2) );
+				}
+
+			TEST_METHOD( Test_optional_idx_vector )
+				{
+				optional_idx_vector<uuid> vec;
+				ISDExpectSanityCheckDebugFailMacro( vec.index(); );
+				ISDExpectSanityCheckDebugFailMacro( vec.values(); );
+				Assert::IsTrue( vec == optional_idx_vector<uuid>() );
+
+				vec.set();
+				for( size_t i = 0; i < 10; ++i )
+					{
+					vec.index().emplace_back( (uint)i*2+0 );
+					vec.index().emplace_back( (uint)i*2+1 );
+					vec.values().emplace_back( random_value<uuid>() );
+					}
+				Assert::IsTrue( vec.index().size() == 20 );
+				Assert::IsTrue( vec.values().size() == 10 );
+
+				optional_idx_vector<uuid> vec2 = std::move(vec);
+				ISDExpectSanityCheckDebugFailMacro( vec.index(); );
+				ISDExpectSanityCheckDebugFailMacro( vec.values(); );
+				Assert::IsTrue( vec2.index().size() == 20 );
+				Assert::IsTrue( vec2.values().size() == 10 );
+				Assert::IsTrue( vec != vec2 );
+				
+				vec = vec2;
+				Assert::IsTrue( vec.index().size() == 20 );
+				Assert::IsTrue( vec.values().size() == 10 );
+				Assert::IsTrue( vec.index().size() == vec2.index().size() );
+				Assert::IsTrue( vec.values().size() == vec2.values().size() );
+				Assert::IsTrue( vec.index() == vec2.index() );
+				Assert::IsTrue( vec.values() == vec2.values() );
+				
+				vec.vector().clear();
+				Assert::IsTrue( vec.index().size() == 0 );
+				Assert::IsTrue( vec.values().size() == 0 );
+				Assert::IsTrue( vec.index() != vec2.index() );
+				Assert::IsTrue( vec.values() != vec2.values() );
+				
+				vec2.vector().clear();
 				Assert::IsTrue( vec.index().size() == 0 );
 				Assert::IsTrue( vec.values().size() == 0 );
 				Assert::IsTrue( vec2.index().size() == 0 );

@@ -27,10 +27,13 @@ namespace ISD
 
 		public:
 			idx_vector() = default;
-			idx_vector( const idx_vector &_other ) : values_m( _other.values_m ) , index_m(_other.index_m) {}
+			idx_vector( const idx_vector &_other ) noexcept : values_m( _other.values_m ) , index_m(_other.index_m) {}
 			idx_vector &operator = ( const idx_vector &_other ) { this->values_m = _other.values_m; this->index_m = _other.index_m; return *this; }
-			idx_vector( idx_vector &&_other ) : values_m( std::move(_other.values_m) ) , index_m( std::move(_other.index_m) ) {}
+			idx_vector( idx_vector &&_other ) noexcept : values_m( std::move(_other.values_m) ) , index_m( std::move(_other.index_m) ) {}
 			idx_vector &operator = ( idx_vector &&_other ) { this->values_m = std::move(_other.values_m); this->index_m = std::move(_other.index_m); return *this; }
+
+			bool operator==( const idx_vector &_other ) const;
+			bool operator!=( const idx_vector &_other ) const;
 
 			void clear() { this->values_m.clear(); this->index_m.clear(); }
 
@@ -40,5 +43,19 @@ namespace ISD
 			std::vector<i32,_IdxAlloc> &index() { return this->index_m; }
 			const std::vector<i32,_IdxAlloc> &index() const { return this->index_m; }
 		};
+
+	template <class _Ty, class _Alloc, class _IdxAlloc>
+	bool idx_vector<_Ty,_Alloc,_IdxAlloc>::operator==( const idx_vector &_other ) const 
+		{ 
+		return (this->values_m == _other.values_m) 
+			&& (this->index_m == _other.index_m); 
+		}
+
+	template <class _Ty, class _Alloc, class _IdxAlloc>
+	bool idx_vector<_Ty,_Alloc,_IdxAlloc>::operator!=( const idx_vector &_other ) const 
+		{ 
+		return (this->values_m != _other.values_m) 
+			|| (this->index_m != _other.index_m); 
+		}
 
 	};

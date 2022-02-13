@@ -32,6 +32,9 @@ namespace ISD
 			optional_vector( optional_vector &&_other ) : vector_m( std::move(_other.vector_m) ), has_value_m(_other.has_value_m) { _other.has_value_m = false; }
 			optional_vector &operator = ( optional_vector &&_other ) { this->has_value_m = _other.has_value_m; this->vector_m = std::move( _other.vector_m ); _other.has_value_m = false; return *this; }
 
+			bool operator==( const optional_vector &_other ) const;
+			bool operator!=( const optional_vector &_other ) const;
+
 			void reset() { this->has_value_m = false; this->vector_m.clear(); }
 			void set() { this->has_value_m = true; this->vector_m.clear(); }
 			void set( const std::vector<_Ty,_Alloc> &_values ) { this->has_value_m = true; this->vector_m = _values; }
@@ -46,4 +49,39 @@ namespace ISD
 			operator std::vector<_Ty, _Alloc> &() { return vector(); }
 			operator const std::vector<_Ty,_Alloc> &() const { return vector(); }
 		};
+
+	template <class _Ty, class _Alloc>
+	bool optional_vector<_Ty,_Alloc>::operator==( const optional_vector &_other ) const
+		{
+		if( this->has_value_m )
+			{
+			if( _other.has_value_m )
+				return this->vector_m == _other.vector_m;
+			return false;
+			}
+		else
+			{
+			if( _other.has_value_m )
+				return false;
+			return true;
+			}
+		}
+
+	template <class _Ty, class _Alloc>
+	bool optional_vector<_Ty,_Alloc>::operator!=( const optional_vector &_other ) const
+		{
+		if( this->has_value_m )
+			{
+			if( _other.has_value_m )
+				return this->vector_m != _other.vector_m;
+			return true;
+			}
+		else
+			{
+			if( _other.has_value_m )
+				return true;
+			return false;
+			}
+		}
+
 	};

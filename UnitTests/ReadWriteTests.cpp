@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_MemoryWriteStream.h"
 
 
-namespace UnitTests
+namespace MemoryStreamTests
 	{
 	TEST_CLASS( ReadWriteTests )
 		{

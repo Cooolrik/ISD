@@ -16,9 +16,8 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #include "..\TestHelpers\structure_generation.h"
 
-namespace UnitTests
+namespace BasicEntitiesTests
 	{
-
 	TEST_CLASS( DictionaryTests )
 		{
 		template<class _Kty> void DictionaryBasicTests_Validation()

@@ -12,7 +12,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_EntityWriter.h"
 #include "..\ISD\ISD_EntityReader.h"
 
-namespace UnitTests
+namespace TestEntityTests
 	{
 	template<class T> void TestEntityWriter_TestValueType( const MemoryWriteStream &ws, EntityWriter &ew, const std::vector<std::string> &key_names)
 		{

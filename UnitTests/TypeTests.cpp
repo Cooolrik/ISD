@@ -9,7 +9,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #include "..\ISD\ISD_SHA256.h"
 
-namespace UnitTests
+namespace TypeTests
 	{
 	TEST_CLASS(TypeTests)
 		{
@@ -304,17 +304,17 @@ namespace UnitTests
 				optional_value<int> opt( 0x1337 );
 				Assert::IsTrue( opt.has_value() );
 				Assert::IsTrue( opt == 0x1337 );
-				Assert::IsTrue( !(opt != 0x1337) );
+				Assert::IsFalse( opt != 0x1337 );
 
 				optional_value<int> opt2 = std::move( opt );
-				Assert::IsTrue( !opt.has_value() );
+				Assert::IsFalse( opt.has_value() );
 				Assert::IsTrue( opt != 0x1337 );
-				Assert::IsTrue( !(opt == 0x1337) );
+				Assert::IsFalse( opt == 0x1337 );
 				Assert::IsTrue( opt != 0 );
 				Assert::IsTrue( opt2.has_value() );
 				Assert::IsTrue( opt2 == 0x1337 );
 				Assert::IsTrue( opt != opt2 );
-				Assert::IsTrue( !(opt == opt2) );
+				Assert::IsFalse( opt == opt2 );
 
 				opt.set( opt2 );
 				Assert::IsTrue( opt.has_value() );
@@ -323,7 +323,7 @@ namespace UnitTests
 
 				opt2.reset();
 				Assert::IsTrue( opt.has_value() );
-				Assert::IsTrue( !opt2.has_value() );
+				Assert::IsFalse( opt2.has_value() );
 				Assert::IsTrue( opt != opt2 );
 
 				opt2.set();
@@ -332,8 +332,8 @@ namespace UnitTests
 				Assert::IsTrue( opt == opt2 );
 				opt.set( 0x13337 );
 				Assert::IsTrue( opt != opt2 );
-				Assert::IsTrue( !(opt == opt2) );
-				Assert::IsTrue( !(opt == opt2.value()) );
+				Assert::IsFalse( opt == opt2 );
+				Assert::IsFalse( opt == opt2.value() );
 				Assert::IsTrue( opt != opt2.value() );
 				Assert::IsTrue( opt.value() != opt2.value() );
 				Assert::IsTrue( opt.has_value() );

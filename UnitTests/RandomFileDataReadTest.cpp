@@ -12,7 +12,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_EntityWriter.h"
 #include "..\ISD\ISD_EntityReader.h"
 
-namespace UnitTests
+namespace MemoryStreamTests
 	{
 	TEST_CLASS( RandomFileDataReadTest )
 		{

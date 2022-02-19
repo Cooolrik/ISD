@@ -16,9 +16,8 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 #include "..\TestHelpers\structure_generation.h"
 
-namespace UnitTests
+namespace TestEntityTests
 	{
-
 	TEST_CLASS( EntityTests )
 		{
 		TEST_METHOD( EntityManagementBasicTests )

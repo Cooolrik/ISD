@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_EntityWriter.h"
 #include "..\ISD\ISD_EntityReader.h"
 
-namespace UnitTests
+namespace EntityManagementTests
 	{
 	class section_array;
 
@@ -44,7 +44,7 @@ namespace UnitTests
 
 		object_transform = random_value<mat4>();
 
-		sub = std::make_unique<UnitTests::section_object>();
+		sub = std::make_unique<EntityManagementTests::section_object>();
 		sub->SetupRandom( levels_left - 1 );
 
 		random_vector<std::unique_ptr<section_object>>( this->vec, 0, 10 );
@@ -206,7 +206,7 @@ namespace UnitTests
 		Assert::IsTrue( success );
 		if( section_reader )
 			{
-			this->sub = std::make_unique<UnitTests::section_object>();
+			this->sub = std::make_unique<EntityManagementTests::section_object>();
 			Assert::IsTrue( sub->Read( rs, *section_reader ) );
 			Assert::IsTrue( er.EndReadSection( section_reader ) );
 			}
@@ -229,7 +229,7 @@ namespace UnitTests
 				Assert::IsTrue( er.BeginReadSectionInArray( section_array_reader, i, &section_has_data ) );
 				if( section_has_data )
 					{
-					vec[i] = std::make_unique<UnitTests::section_object>();
+					vec[i] = std::make_unique<EntityManagementTests::section_object>();
 					Assert::IsTrue( vec[i]->Read( rs, *section_array_reader ) );
 					}
 				Assert::IsTrue( er.EndReadSectionInArray( section_array_reader, i ) );
@@ -250,7 +250,7 @@ namespace UnitTests
 				Assert::IsTrue( er.BeginReadSectionInArray( section_array_reader, i, &section_has_data ) );
 				if( section_has_data )
 					{
-					opt_arr.values()[i] = std::make_unique<UnitTests::section_object>();
+					opt_arr.values()[i] = std::make_unique<EntityManagementTests::section_object>();
 					Assert::IsTrue( opt_arr.values()[i]->Read( rs, *section_array_reader ) );
 					}
 				Assert::IsTrue( er.EndReadSectionInArray( section_array_reader, i ) );
@@ -314,12 +314,12 @@ namespace UnitTests
 		};
 	}
 
-	// implement the random value function for std::unique_ptr<UnitTests::section_object>
-	template<> std::unique_ptr<UnitTests::section_object> random_value< std::unique_ptr<UnitTests::section_object> >()
+	// implement the random value function for std::unique_ptr<EntityManagementTests::section_object>
+	template<> std::unique_ptr<EntityManagementTests::section_object> random_value< std::unique_ptr<EntityManagementTests::section_object> >()
 		{
 		if( random_value<bool>() )
 			{
-			return std::make_unique<UnitTests::section_object>();
+			return std::make_unique<EntityManagementTests::section_object>();
 			}
-		return std::unique_ptr<UnitTests::section_object>( nullptr );
+		return std::unique_ptr<EntityManagementTests::section_object>( nullptr );
 		}

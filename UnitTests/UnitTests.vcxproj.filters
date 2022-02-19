@@ -18,8 +18,23 @@
     <Filter Include="Source Files\helpers">
       <UniqueIdentifier>{92a56802-82b4-4d70-b730-62daad829830}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\tests">
+    <Filter Include="Source Files\TypesTests">
       <UniqueIdentifier>{52af3c91-5202-4f1c-8a08-8adf929a7d4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GeneratedEntitiesTests">
+      <UniqueIdentifier>{f1bd99c2-0190-4792-913c-7610c9715ffe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TestEntityTests">
+      <UniqueIdentifier>{9325b4db-14b5-4eaa-8be3-f7faedc67b2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MemoryStreamTests">
+      <UniqueIdentifier>{defb2543-0407-4c58-a6b2-fd066f038f68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EntityManagementTests">
+      <UniqueIdentifier>{d26ab084-5ec8-4183-a7b3-09311f8ffb15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\BasicEntitiesTests">
+      <UniqueIdentifier>{c762032d-bd2f-4998-845e-3917ac74788a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -32,29 +47,29 @@
     <ClCompile Include="..\ISD\ISD_TestEntity.cpp">
       <Filter>Source Files\helpers</Filter>
     </ClCompile>
-    <ClCompile Include="DictionaryTests.cpp">
-      <Filter>Source Files\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectedGraphTests.cpp">
-      <Filter>Source Files\tests</Filter>
+    <ClCompile Include="TypeTests.cpp">
+      <Filter>Source Files\TypesTests</Filter>
     </ClCompile>
     <ClCompile Include="EntityReadWriteTests.cpp">
-      <Filter>Source Files\tests</Filter>
+      <Filter>Source Files\TestEntityTests</Filter>
     </ClCompile>
     <ClCompile Include="EntityTests.cpp">
-      <Filter>Source Files\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="RandomFileDataReadTest.cpp">
-      <Filter>Source Files\tests</Filter>
+      <Filter>Source Files\TestEntityTests</Filter>
     </ClCompile>
     <ClCompile Include="ReadWriteTests.cpp">
-      <Filter>Source Files\tests</Filter>
+      <Filter>Source Files\MemoryStreamTests</Filter>
+    </ClCompile>
+    <ClCompile Include="RandomFileDataReadTest.cpp">
+      <Filter>Source Files\MemoryStreamTests</Filter>
     </ClCompile>
     <ClCompile Include="SectionHierarchyReadWriteTests.cpp">
-      <Filter>Source Files\tests</Filter>
+      <Filter>Source Files\EntityManagementTests</Filter>
     </ClCompile>
-    <ClCompile Include="TypeTests.cpp">
-      <Filter>Source Files\tests</Filter>
+    <ClCompile Include="DictionaryTests.cpp">
+      <Filter>Source Files\BasicEntitiesTests</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectedGraphTests.cpp">
+      <Filter>Source Files\BasicEntitiesTests</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

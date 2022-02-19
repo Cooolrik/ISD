@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ISD", "ISD\ISD.vcxproj", "{4D13E31B-E498-4995-AAFB-EA352C2729BF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{9DF1C719-67D0-4CC4-9693-04C18DC47B9C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests", "Tests\Tests.vcxproj", "{9DF1C719-67D0-4CC4-9693-04C18DC47B9C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{4D13E31B-E498-4995-AAFB-EA352C2729BF} = {4D13E31B-E498-4995-AAFB-EA352C2729BF}
 	EndProjectSection

@@ -68,25 +68,25 @@
     <ClInclude Include="ISD_SceneNode.h">
       <Filter>Source Files\Generated</Filter>
     </ClInclude>
-    <ClInclude Include="optional_value.h">
+    <ClInclude Include="ISD_optional_value.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
-    <ClInclude Include="optional_vector.h">
+    <ClInclude Include="ISD_optional_vector.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
-    <ClInclude Include="idx_vector.h">
+    <ClInclude Include="ISD_idx_vector.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
-    <ClInclude Include="optional_idx_vector.h">
+    <ClInclude Include="ISD_optional_idx_vector.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
-    <ClInclude Include="thread_safe_map.h">
+    <ClInclude Include="ISD_thread_safe_map.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
-    <ClInclude Include="entity_ref.h">
+    <ClInclude Include="ISD_entity_ref.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
-    <ClInclude Include="package_ref.h">
+    <ClInclude Include="ISD_package_ref.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
   </ItemGroup>

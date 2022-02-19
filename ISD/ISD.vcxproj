@@ -80,8 +80,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="entity_ref.h" />
-    <ClInclude Include="idx_vector.h" />
+    <ClInclude Include="ISD_entity_ref.h" />
+    <ClInclude Include="ISD_idx_vector.h" />
     <ClInclude Include="ISD.h" />
     <ClInclude Include="ISD_DataTypes.h" />
     <ClInclude Include="ISD_DataValuePointers.h" />
@@ -99,11 +99,11 @@
     <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_Types.h" />
     <ClInclude Include="ISD_Dictionary.h" />
-    <ClInclude Include="optional_idx_vector.h" />
-    <ClInclude Include="optional_value.h" />
-    <ClInclude Include="optional_vector.h" />
-    <ClInclude Include="package_ref.h" />
-    <ClInclude Include="thread_safe_map.h" />
+    <ClInclude Include="ISD_optional_idx_vector.h" />
+    <ClInclude Include="ISD_optional_value.h" />
+    <ClInclude Include="ISD_optional_vector.h" />
+    <ClInclude Include="ISD_package_ref.h" />
+    <ClInclude Include="ISD_thread_safe_map.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />

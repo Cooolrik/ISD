@@ -28,13 +28,13 @@
 
 #define ISDKeyMacro( name ) name , (u8)(strlen(name))
 
-#include "entity_ref.h"
-#include "idx_vector.h"
-#include "optional_idx_vector.h"
-#include "optional_value.h"
-#include "optional_vector.h"
-#include "package_ref.h"
-#include "thread_safe_map.h"
+#include "ISD_entity_ref.h"
+#include "ISD_idx_vector.h"
+#include "ISD_optional_idx_vector.h"
+#include "ISD_optional_value.h"
+#include "ISD_optional_vector.h"
+#include "ISD_package_ref.h"
+#include "ISD_thread_safe_map.h"
 
 namespace ISD
 	{

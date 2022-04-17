@@ -20,6 +20,8 @@ namespace TestEntityTests
 	{
 	TEST_CLASS( EntityTests )
 		{
+		STANDARD_TEST_INIT()
+
 		TEST_METHOD( EntityManagementBasicTests )
 			{
 			TestEntity ent1;

@@ -59,7 +59,7 @@
     <ClCompile Include="ReadWriteTests.cpp">
       <Filter>Source Files\MemoryStreamTests</Filter>
     </ClCompile>
-    <ClCompile Include="RandomFileDataReadTest.cpp">
+    <ClCompile Include="EntityReaderRandomTests.cpp">
       <Filter>Source Files\MemoryStreamTests</Filter>
     </ClCompile>
     <ClCompile Include="SectionHierarchyReadWriteTests.cpp">

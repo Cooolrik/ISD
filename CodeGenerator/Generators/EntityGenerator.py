@@ -82,7 +82,7 @@ def CreateEntityHeader(entity):
 
 	# create accessor ref for variables, const and non-const versions
 	for var in entity.Variables:
-		lines.append(f'            // accessor for referencing variable {var.Name};')
+		lines.append(f'            // accessor for referencing variable {var.Name}')
 		if var.Optional:
 			lines.append(f'            const optional_value<{var.Type}> & {var.Name}() const {{ return this->v_{var.Name}; }}')
 			lines.append(f'            optional_value<{var.Type}> & {var.Name}() {{ return this->v_{var.Name}; }}')
@@ -206,7 +206,7 @@ def ImplementEqualsCall(entity,var):
 		if var.Optional:
 			lines.append(f'        if( lvar->v_{var.Name}.has_value() ) ')
 			lines.append('            {')
-			lines.append('            // lvar has a value. if rval has no value, not equal')
+			lines.append('            // lvar has a value. if rval *doesn\'t* have a value, not equal')
 			lines.append(f'            if( !rvar->v_{var.Name}.has_value() ) ')
 			lines.append('                return false;')
 			lines.append('            // both have values, compare')
@@ -215,7 +215,7 @@ def ImplementEqualsCall(entity,var):
 			lines.append('            }')
 			lines.append('        else')
 			lines.append('            {')
-			lines.append('            // lvar has a value. if rval has a value, not equal')
+			lines.append('            // lvar has no value. if rval *does* have a value, not equal')
 			lines.append(f'            if( rvar->v_{var.Name}.has_value() ) ')
 			lines.append('                return false;')
 			lines.append('            }')

@@ -115,10 +115,10 @@ namespace TestEntityTests
 
 	TEST_CLASS( EntityReadWriteTests )
 		{
+		STANDARD_TEST_INIT()
+
 		TEST_METHOD( TestEntityWriterAndReadback )
 			{
-			setup_random_seed();
-
 			for( uint pass_index=0; pass_index<(2*global_number_of_passes); ++pass_index )
 				{
 				MemoryWriteStream ws;

@@ -23,5 +23,10 @@
 #define ISDExpectSanityCheckCoreDebugFailMacro( statement ) 
 #endif
 
+#define STANDARD_TEST_INIT() \
+	TEST_METHOD_INITIALIZE( InitMethod )\
+		{\
+		setup_random_seed();\
+		}
 
 #endif //PCH_H

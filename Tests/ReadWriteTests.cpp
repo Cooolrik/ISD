@@ -15,6 +15,8 @@ namespace MemoryStreamTests
 	{
 	TEST_CLASS( ReadWriteTests )
 		{
+		STANDARD_TEST_INIT()
+
 		template<class T> void AsserteReadValueIs( MemoryReadStream *rs, T ref_value )
 			{
 			T val = rs->Read<T>();
@@ -23,8 +25,6 @@ namespace MemoryStreamTests
 
 		TEST_METHOD( MemoryWriteReadStream )
 			{
-			setup_random_seed();
-
 			// run twice, one with flipped, one with non-flipped byte order
 			for( uint pass_index = 0; pass_index < 2*global_number_of_passes; ++pass_index )
 				{

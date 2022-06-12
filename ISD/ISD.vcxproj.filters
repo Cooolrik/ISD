@@ -62,12 +62,6 @@
     <ClInclude Include="ISD_SceneLayer.h">
       <Filter>Source Files\Generated</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_SceneMesh.h">
-      <Filter>Source Files\Generated</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_SceneNode.h">
-      <Filter>Source Files\Generated</Filter>
-    </ClInclude>
     <ClInclude Include="ISD_optional_value.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
@@ -88,6 +82,24 @@
     </ClInclude>
     <ClInclude Include="ISD_package_ref.h">
       <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_Node.h">
+      <Filter>Source Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_NodeGeometry.h">
+      <Filter>Source Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_Scene.h">
+      <Filter>Source Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_AttributeLayer.h">
+      <Filter>Source Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_Mesh.h">
+      <Filter>Source Files\Generated</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_Varying.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -115,11 +127,23 @@
     <ClCompile Include="ISD_SceneLayer.cpp">
       <Filter>Source Files\Generated</Filter>
     </ClCompile>
-    <ClCompile Include="ISD_SceneMesh.cpp">
+    <ClCompile Include="ISD_Node.cpp">
       <Filter>Source Files\Generated</Filter>
     </ClCompile>
-    <ClCompile Include="ISD_SceneNode.cpp">
+    <ClCompile Include="ISD_NodeGeometry.cpp">
       <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_Scene.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_AttributeLayer.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_Mesh.cpp">
+      <Filter>Source Files\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_Varying.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +151,9 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="ISD_EntityReaderTemplates.inl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="ISD_TypesAllocation.inl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

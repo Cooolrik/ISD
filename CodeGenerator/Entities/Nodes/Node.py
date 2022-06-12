@@ -1,0 +1,16 @@
+# ISD Copyright (c) 2021 Ulrik Lindahl
+# Licensed under the MIT license
+# https://github.com/Cooolrik/ISD/blob/main/LICENSE
+
+from Entities import *
+
+Entities.append(
+    Entity(
+        name = "Node", 
+        dependencies = [ Dependency("DataValuePointers", include_in_header = True) ],
+        variables = [ Variable("string", "Name"),
+                      Variable("fvec3", "Translation"),
+                      Variable("fvec3", "Rotation"),
+                      Variable("fvec3", "Scale") ]
+        )
+    )

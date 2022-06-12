@@ -17,7 +17,11 @@
 
 #include "../TestHelpers/random_vals.h"
 
+//#include <fbxsdk.h>
+
 #include <Rpc.h>
+#include "../ISD/ISD_Varying.h"
+
 extern void safe_thread_map_test();
 
 #define RUN_TEST( name )\
@@ -154,6 +158,33 @@ void read_geometry()
 
 int main()
 	{
+	ISD::Varying var;
+
+	auto &data = ISD::Varying::MF::SetType<optional_idx_vector<fvec4>>( var );
+
+	data.set();
+	data.values().resize( 1000 );
+	data.values()[4].x = 12.f;
+
+	ISD::Varying::MF::SetType<fvec3>( var );
+	auto &data2 = var.Data<fvec3>();
+
+	data2.x = 78;
+
+	if( var.IsA<optional_idx_vector<fvec4>>() )
+		{
+		const auto &data3 = var.Data<optional_idx_vector<fvec4>>();
+		}
+
+
+	
+	//optional_value<std::string> test = std::string("hej");
+	//optional_value<std::string> test2;
+	//optional_value<std::string> test3;
+	//
+	//test2 = test;
+	//test = test3;
+
 	//Dictionary<entity_ref, SceneMesh> dict;
 	//
 	//auto id = entity_ref();

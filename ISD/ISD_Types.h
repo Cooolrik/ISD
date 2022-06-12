@@ -39,6 +39,7 @@
 namespace ISD
 	{
 	typedef unsigned int uint;
+	using std::vector;
 
 	// maximum size of a name of a value of subchunk in the entities
 	const size_t EntityMaxKeyLength = 40; 
@@ -223,4 +224,14 @@ namespace ISD
 			++dest;
 			}
 		}
+
+	// dynamically allocate a data type and container combination
+	void *new_type( data_type dataType, container_type containerType );
+
+	// delete a previously allocated data type and container combination
+	// caveat: there is no type checking done, so make sure to supply the correct 
+	// data_type and container_type to the function.
+	void delete_type( data_type dataType, container_type containerType , void *data );
+
+
 	};

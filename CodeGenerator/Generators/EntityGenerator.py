@@ -34,17 +34,7 @@ def CreateEntityHeader(entity):
 	# list typedefs of templates
 	if len(entity.Templates) > 0:
 		for typ in entity.Templates:
-			decl = f'            using {typ.Name} = {typ.Template}<'
-			has_value = False
-			for ty in typ.Types:
-				if has_value:
-					decl += ','
-				else:
-					has_value = True
-				decl += ty
-
-			decl += '>;'
-			lines.append(decl)
+			lines.append(typ.Declaration)
 		lines.append('')
 
 	lines.append('            class MF;')
@@ -68,14 +58,10 @@ def CreateEntityHeader(entity):
 	
 	# list variables in entity
 	for var in entity.Variables:
-		base_type,base_variant = hlp.get_base_type_variant(var.Type)
-		if var.Optional:
-			lines.append(f'            optional_value<{var.Type}> v_{var.Name};')
+		if var.IsSimpleBaseType:
+			lines.append(f'            {var.TypeString} v_{var.Name} = {{}};')
 		else:
-			if base_type is not None:
-				lines.append(f'            {var.Type} v_{var.Name} = {{}};')
-			else:
-				lines.append(f'            {var.Type} v_{var.Name};')
+			lines.append(f'            {var.TypeString} v_{var.Name};')
 
 	lines.append('')
 	lines.append('        public:')
@@ -83,12 +69,8 @@ def CreateEntityHeader(entity):
 	# create accessor ref for variables, const and non-const versions
 	for var in entity.Variables:
 		lines.append(f'            // accessor for referencing variable {var.Name}')
-		if var.Optional:
-			lines.append(f'            const optional_value<{var.Type}> & {var.Name}() const {{ return this->v_{var.Name}; }}')
-			lines.append(f'            optional_value<{var.Type}> & {var.Name}() {{ return this->v_{var.Name}; }}')
-		else:	
-			lines.append(f'            const {var.Type} & {var.Name}() const {{ return this->v_{var.Name}; }}')
-			lines.append(f'            {var.Type} & {var.Name}() {{ return this->v_{var.Name}; }}')
+		lines.append(f'            const {var.TypeString} & {var.Name}() const {{ return this->v_{var.Name}; }}')
+		lines.append(f'            {var.TypeString} & {var.Name}() {{ return this->v_{var.Name}; }}')
 		lines.append('')
 
 	lines.append('        };')
@@ -167,17 +149,11 @@ def ImplementDeepCopyCall(entity,var):
 
 	# clear all base values, Entities will clear themselves
 	# deep copy all values
-	base_type,base_variant = hlp.get_base_type_variant(var.Type)
-	if base_type is not None:
-		# we have a base type, add the write code directly
-		if var.Optional:
-			lines.append(f'        if( source->v_{var.Name}.has_value() )')
-			lines.append(f'            dest.v_{var.Name}.set( source->v_{var.Name}.value() );')
-			lines.append(f'        else')
-			lines.append(f'            dest.v_{var.Name}.reset();')
-		else:
-			lines.append(f'        dest.v_{var.Name} = source->v_{var.Name};')
+	if var.IsBaseType:
+		# we have a base type, add the copy code directly
+		lines.append(f'        dest.v_{var.Name} = source->v_{var.Name};')
 	else:
+		# this is an entity type
 		if var.Optional:
 			lines.append(f'        if( source->v_{var.Name}.has_value() )')
 			lines.append('            {')
@@ -200,29 +176,10 @@ def ImplementEqualsCall(entity,var):
 	lines.append(f'        // check variable "{var.Name}"')
 
 	# do we have a base type or entity?
-	base_type,base_variant = hlp.get_base_type_variant(var.Type)
-	if base_type is not None:
+	if var.IsBaseType:
 		# we have a base type, do the compare directly
-		if var.Optional:
-			lines.append(f'        if( lvar->v_{var.Name}.has_value() ) ')
-			lines.append('            {')
-			lines.append('            // lvar has a value. if rval *doesn\'t* have a value, not equal')
-			lines.append(f'            if( !rvar->v_{var.Name}.has_value() ) ')
-			lines.append('                return false;')
-			lines.append('            // both have values, compare')
-			lines.append(f'            if( lvar->v_{var.Name}.value() != rvar->v_{var.Name}.value() )')
-			lines.append('                return false;')
-			lines.append('            }')
-			lines.append('        else')
-			lines.append('            {')
-			lines.append('            // lvar has no value. if rval *does* have a value, not equal')
-			lines.append(f'            if( rvar->v_{var.Name}.has_value() ) ')
-			lines.append('                return false;')
-			lines.append('            }')
-
-		else:
-			lines.append(f'        if( lvar->v_{var.Name} != rvar->v_{var.Name} )')
-			lines.append(f'            return false;')
+		lines.append(f'        if( lvar->v_{var.Name} != rvar->v_{var.Name} )')
+		lines.append(f'            return false;')
 	else:
 		# not a base type, so an entity. check entity
 		if var.Optional:
@@ -243,14 +200,10 @@ def ImplementWriterCall(entity,var):
 	lines = []
 
 	# do we have a base type or entity?
-	base_type,base_variant = hlp.get_base_type_variant(var.Type)
-	if base_type is not None:
+	if var.IsBaseType:
 		# we have a base type, add the write code directly
 		lines.append(f'        // write variable "{var.Name}"')
-		if var.Optional:
-			lines.append(f'        success = writer.Write<optional_value<{var.Type}>>( ISDKeyMacro("{var.Name}") , obj.v_{var.Name} );')
-		else:
-			lines.append(f'        success = writer.Write<{var.Type}>( ISDKeyMacro("{var.Name}") , obj.v_{var.Name} );')
+		lines.append(f'        success = writer.Write<{var.TypeString}>( ISDKeyMacro("{var.Name}") , obj.v_{var.Name} );')
 		lines.append(f'        if( !success )')
 		lines.append(f'            return false;')
 		lines.append('')
@@ -284,14 +237,10 @@ def ImplementReaderCall(entity,var):
 		value_can_be_null = "false"
 
 	# do we have a base type or entity?
-	base_type,base_variant = hlp.get_base_type_variant(var.Type)
-	if base_type is not None:
+	if var.IsBaseType:
 		# we have a base type, add the read code directly
 		lines.append(f'        // read variable "{var.Name}"')
-		if var.Optional:
-			lines.append(f'        success = reader.Read<optional_value<{var.Type}>>( ISDKeyMacro("{var.Name}") , obj.v_{var.Name} );')
-		else:
-			lines.append(f'        success = reader.Read<{var.Type}>( ISDKeyMacro("{var.Name}") , obj.v_{var.Name} );')
+		lines.append(f'        success = reader.Read<{var.TypeString}>( ISDKeyMacro("{var.Name}") , obj.v_{var.Name} );')
 		lines.append(f'        if( !success )')
 		lines.append(f'            return false;')
 		lines.append('')
@@ -367,7 +316,7 @@ def CreateEntitySource(entity):
 	vars_have_entity = False
 	for var in entity.Variables:
 		base_type,base_variant = hlp.get_base_type_variant(var.Type)
-		if base_type is not None:
+		if base_type is None:
 			vars_have_entity = True
 			break
 	

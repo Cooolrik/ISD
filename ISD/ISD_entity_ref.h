@@ -9,7 +9,8 @@
 
 namespace ISD
 	{
-	// Reference to element within package. It can be created, held and copied, but cannot be set to a specific value other than null.
+	// Reference to an element within the same package. Acts like a memory handle. 
+	// It can be created, held and copied, but cannot be set to a specific value other than null.
 	class entity_ref
 		{
 		private:
@@ -28,7 +29,7 @@ namespace ISD
 			entity_ref &operator=( entity_ref&& other ) noexcept { this->id_m = other.id_m; other.id_m = uuid_zero; return *this; }
 			~entity_ref() = default;
 
-			// make a new reference with a uniquie uuid
+			// make a new reference with a unique uuid
 			static entity_ref make_ref();
 
 			// comparing & sorting

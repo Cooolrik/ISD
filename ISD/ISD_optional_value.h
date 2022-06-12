@@ -16,8 +16,8 @@ namespace ISD
 		public:
 			optional_value() = default;
 			optional_value( const T &_value ) : value_m( new T( _value ) ) {}
-			optional_value( const optional_value &other ) noexcept : value_m( std::copy( other.value_m ) ) {}
-			optional_value &operator = ( const optional_value &_other ) { this->value_m = std::copy( _other.value_m ); return *this; }
+			optional_value( const optional_value &other ) noexcept : value_m( other.value_m ? std::make_unique<T>( *other.value_m ) : nullptr ) {}
+			optional_value &operator = ( const optional_value &_other ) { this->value_m = _other.value_m ? std::make_unique<T>( *_other.value_m ) : nullptr; return *this; }
 			optional_value( optional_value &&other ) noexcept : value_m( std::move( other.value_m ) ) {}
 			optional_value &operator = ( optional_value &&_other ) { this->value_m = std::move( _other.value_m ); return *this; }
 

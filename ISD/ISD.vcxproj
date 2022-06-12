@@ -80,6 +80,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ISD_AttributeLayer.h" />
     <ClInclude Include="ISD_entity_ref.h" />
     <ClInclude Include="ISD_idx_vector.h" />
     <ClInclude Include="ISD.h" />
@@ -87,15 +88,17 @@
     <ClInclude Include="ISD_DataValuePointers.h" />
     <ClInclude Include="ISD_DirectedGraph.h" />
     <ClInclude Include="ISD_EntityReader.h" />
+    <ClInclude Include="ISD_Mesh.h" />
+    <ClInclude Include="ISD_Node.h" />
+    <ClInclude Include="ISD_NodeGeometry.h" />
     <ClInclude Include="ISD_PacketSerializer.h" />
     <ClInclude Include="ISD_EntityValidator.h" />
     <ClInclude Include="ISD_EntityWriter.h" />
     <ClInclude Include="ISD_Log.h" />
     <ClInclude Include="ISD_MemoryReadStream.h" />
     <ClInclude Include="ISD_MemoryWriteStream.h" />
+    <ClInclude Include="ISD_Scene.h" />
     <ClInclude Include="ISD_SceneLayer.h" />
-    <ClInclude Include="ISD_SceneMesh.h" />
-    <ClInclude Include="ISD_SceneNode.h" />
     <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_Types.h" />
     <ClInclude Include="ISD_Dictionary.h" />
@@ -104,25 +107,31 @@
     <ClInclude Include="ISD_optional_vector.h" />
     <ClInclude Include="ISD_package_ref.h" />
     <ClInclude Include="ISD_thread_safe_map.h" />
+    <ClInclude Include="ISD_Varying.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
+    <ClCompile Include="ISD_AttributeLayer.cpp" />
     <ClCompile Include="ISD_DataTypes.cpp" />
     <ClCompile Include="ISD_EntityReader.cpp" />
+    <ClCompile Include="ISD_Mesh.cpp" />
+    <ClCompile Include="ISD_Node.cpp" />
+    <ClCompile Include="ISD_NodeGeometry.cpp" />
     <ClCompile Include="ISD_PacketSerializer.cpp" />
     <ClCompile Include="ISD_EntityWriter.cpp" />
+    <ClCompile Include="ISD_Scene.cpp" />
     <ClCompile Include="ISD_SceneLayer.cpp" />
-    <ClCompile Include="ISD_SceneMesh.cpp" />
-    <ClCompile Include="ISD_SceneNode.cpp" />
     <ClCompile Include="ISD_SHA256.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="ISD_Types.cpp" />
+    <ClCompile Include="ISD_Varying.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ISD_EntityReaderTemplates.inl" />
     <None Include="ISD_EntityWriterTemplates.inl" />
+    <None Include="ISD_TypesAllocation.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

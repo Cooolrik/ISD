@@ -13,6 +13,13 @@ ISD/ISD_SceneNode.cpp
 ISD/ISD_SceneMesh.cpp
 ISD/ISD_SceneLayer.cpp
 
+/SystemTests/test_write.dat
+
+/ISD/ISD_TestEntity.h
+/ISD/ISD_TestEntity.cpp
+/Dependencies/FBX-2020.2.1
+
+
 # User-specific files
 *.rsuser
 *.suo
@@ -358,8 +365,18 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-
-/SystemTests/test_write.dat
-
-/ISD/ISD_TestEntity.h
-/ISD/ISD_TestEntity.cpp
+/ISD/ISD_Scene.h
+/ISD/ISD_Scene.cpp
+/ISD/ISD_NodeGeometry.h
+/ISD/ISD_NodeGeometry.cpp
+/ISD/ISD_Node.h
+/ISD/ISD_Node.cpp
+/ISD/ISD_Mesh.h
+/ISD/ISD_Mesh.cpp
+/ISD/ISD_GeometryLayer.h
+/ISD/ISD_GeometryLayer.cpp
+/ISD/ISD_AttributeLayer.h
+/ISD/ISD_AttributeLayer.cpp
+/ISD/ISD_Varying.h
+/ISD/ISD_Varying.cpp
+/ISD/ISD_TypesAllocation.inl

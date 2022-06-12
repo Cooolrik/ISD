@@ -18,6 +18,12 @@ class BaseTypeVariant:
         self.num_items_per_object = num_items_per_object
         self.overrides_type = override
 
+class ContainerType:
+    def __init__(self,container_id,implementing_type,is_template = True):
+        self.container_id = container_id
+        self.implementing_type = implementing_type
+        self.is_template = is_template
+
 base_type_Bool = BaseType('Bool',[BaseTypeVariant('bool','bool',1)])
 base_type_Int =  BaseType('Int',[BaseTypeVariant('i8','i8',1),BaseTypeVariant('i16','i16',1),BaseTypeVariant('i32','i32',1),BaseTypeVariant('i64','i64',1)])
 base_type_UInt =  BaseType('UInt',[BaseTypeVariant('u8','u8',1),BaseTypeVariant('u16','u16',1),BaseTypeVariant('u32','u32',1),BaseTypeVariant('u64','u64',1)])
@@ -60,6 +66,13 @@ base_types = [base_type_Bool,
               base_type_Hash,
               base_type_String]
 
+container_types = [ContainerType(0x00,'none',False),
+                   ContainerType(0x01,'optional_value'),
+                   ContainerType(0x10,'vector'),
+                   ContainerType(0x11,'optional_vector'),
+                   ContainerType(0x20,'idx_vector'),
+                   ContainerType(0x21,'optional_idx_vector')]
+
 # find a base type based on name, and return base_type and base_type_variant info
 def get_base_type_variant( name ):
     for typ in base_types:
@@ -67,6 +80,29 @@ def get_base_type_variant( name ):
             if name == var.implementing_type:
                 return typ, var
     return None,None
+
+# print all lines using all items in list, with all base types and all variants (including optional variants), as well as all vector versions of base types
+def generate_lines_for_all_basetype_combos( line_list ):
+    lines = []
+    for basetype in base_types:
+        for var in basetype.variants:
+            for cont in container_types:
+                for line in line_list:
+                    if( cont.is_template ):
+                        base_type_container_combo = f'{cont.implementing_type}<{var.implementing_type}>'
+                    else:
+                        base_type_container_combo = var.implementing_type
+                    lines.append( 
+                        line.format( 
+                            base_type_name = basetype.name , 
+                            implementing_type = var.implementing_type , 
+                            container_type = cont.implementing_type , 
+                            item_type = var.item_type , 
+                            num_items_per_object = var.num_items_per_object , 
+                            base_type_combo = base_type_container_combo 
+                            ) 
+                        )
+    return lines
 
 def run_module( name ):
     print('Running: ' + name )

@@ -11,6 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>CodeGenerator</Name>
     <RootNamespace>CodeGenerator</RootNamespace>
+    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,7 +26,28 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="CodeGenerator.py" />
-    <Compile Include="Entities.py">
+    <Compile Include="Entities\Geometry\AttributeLayer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\Geometry\Mesh.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\Scene\Scene.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\Nodes\NodeGeometry.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\Scene\SceneLayer.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\Testing\TestEntity.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Entities\Nodes\Node.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Generators\EntityGenerator.py">
@@ -33,12 +55,18 @@
     </Compile>
     <Compile Include="Generators\ISD_DataTypes.py" />
     <Compile Include="Generators\ISD_EntityReader.py" />
+    <Compile Include="Generators\ISD_Varying.py" />
     <Compile Include="Generators\ISD_EntityWriter.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Entities\Geometry\" />
+    <Folder Include="Entities\Testing\" />
+    <Folder Include="Entities\Scene\" />
+    <Folder Include="Entities\Nodes\" />
     <Folder Include="Generators\" />
+    <Folder Include="Entities\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

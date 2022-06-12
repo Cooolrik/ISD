@@ -8,6 +8,37 @@ float_type_range = ['float','double']
 vector_dimension_range = [2,3,4] 
 nonconst_const_range = ['','const ']
 
+# hash table for allocation lookup, must be larger than the number of items to add
+class AllocatorHashTable:
+	def hash_function( self , data_type , container_type ):
+		return ((data_type * self.hash_data_type_mult) + (container_type * self.hash_container_type_mult)) % self.hash_table_size
+
+	def insert_into_table( self , data_type_combo_string , data_type_id , container_type_id ):
+		# use hash function to generate a good starting point
+		hash_val = self.hash_function( data_type_id , container_type_id )
+		# find first empty slot
+		while( self.hash_table[hash_val] != None ):
+			hash_val = hash_val+1
+			if( hash_val >= self.hash_table_size ):
+				hash_val = 0
+		# fill it
+		self.hash_table[hash_val] = data_type_combo_string
+
+	def __init__(self):
+		self.hash_table_size = 577 
+		self.hash_data_type_mult = 109
+		self.hash_container_type_mult = 991
+		self.hash_table = [None] * self.hash_table_size
+
+		# fill up hash table 
+		for basetype_inx in range(len(hlp.base_types)):
+			basetype = hlp.base_types[basetype_inx]
+			for variant_inx in range(len(basetype.variants)):
+				variant_name = basetype.variants[variant_inx].implementing_type
+				variant_id = ( (basetype_inx+1) << 4) + (variant_inx + 1)
+				for cont in hlp.container_types:
+					self.insert_into_table( f'&_dt_{variant_name}_ct_{cont.implementing_type}typeAllocatorObject' , variant_id , cont.container_id )
+
 def print_UUID_header():
 	lines = []
 	lines.append('// include GUID stuff from windows')
@@ -188,6 +219,28 @@ def ISD_DataTypes_h():
 		lines.append(f"\ttypedef glm::vec{vec_dim} vec{vec_dim};")
 	for vec_dim in vector_dimension_range:
 		lines.append(f"\ttypedef glm::mat{vec_dim} mat{vec_dim};")
+	lines.append('')
+
+	# enum of all data types
+	lines.append('\t// all data types')
+	lines.append('\tenum class data_type')
+	lines.append('\t\t{')
+	for basetype_inx in range(len(hlp.base_types)):
+		basetype = hlp.base_types[basetype_inx]
+		for variant_inx in range(len(basetype.variants)):
+			variant_name = basetype.variants[variant_inx].implementing_type
+			variant_id = ( (basetype_inx+1) << 4) + (variant_inx + 1)
+			lines.append(f'\t\tdt_{variant_name} = {hex(variant_id)},')
+	lines.append('\t\t};')
+	lines.append('')
+
+	# enum of all container types
+	lines.append('\t// all container types')
+	lines.append('\tenum class container_type')
+	lines.append('\t\t{')
+	for cont in hlp.container_types:
+		lines.append(f'\t\tct_{cont.implementing_type} = {hex(cont.container_id)},')
+	lines.append('\t\t};')
 	lines.append('')
 
 	# type information on all types
@@ -397,7 +450,91 @@ def ISD_DataValuePointers_h():
 	lines.append('    };')
 	hlp.write_lines_to_file("../ISD/ISD_DataValuePointers.h",lines)
 
+def ISD_TypesAllocation_inl():
+	lines = []
+	lines.append('// ISD Copyright (c) 2021 Ulrik Lindahl')
+	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
+	lines.append('')
+	lines.append('#pragma once')
+	lines.append('')
+	lines.append('#include "ISD_Types.h"')
+	lines.append('')
+	lines.append('#include <glm/gtc/type_ptr.hpp>')
+	lines.append('')
+	lines.append('namespace ISD')
+	lines.append('    {')
+
+	lines.append('    // dynamic allocation functors for items')
+	lines.append('    class _typeAllocator')
+	lines.append('        {')
+	lines.append('        public:')
+	lines.append('            virtual std::pair<data_type,container_type> Type() const = 0;')
+	lines.append('            virtual void *New() const = 0;')
+	lines.append('            virtual void Delete( void *data ) const = 0;')
+	lines.append('        };')
+	lines.append('')
+	
+	lines.append('')
+	lines.extend( hlp.generate_lines_for_all_basetype_combos( [ 
+		'    // {base_type_combo}',
+		'    const class _dt_{implementing_type}_ct_{container_type}typeAllocatorClass : public _typeAllocator' ,
+		'        {{' ,
+		'        public:' ,
+		'            virtual std::pair<data_type,container_type> Type() const {{ return std::pair<data_type,container_type>(data_type::dt_{implementing_type} , container_type::ct_{container_type}); }}' ,
+		'            virtual void *New() const {{ return new {base_type_combo}(); }}' ,
+		'            virtual void Delete( void *data ) const {{ delete (({base_type_combo}*)(data)); }}' ,
+		'        }} _dt_{implementing_type}_ct_{container_type}typeAllocatorObject;' ,
+		''
+		] ))
+
+	# allocate and print hash table
+	hash_table = AllocatorHashTable()
+
+	# print it 
+	lines.append('    // Hash table with the type allocator objects')
+	lines.append(f'    static const _typeAllocator *_typeAllocatorHashTable[{hash_table.hash_table_size}] = ')
+	lines.append('        {')
+	for idx in range(hash_table.hash_table_size):
+		if hash_table.hash_table[idx] == None:
+			lines.append('        nullptr,')
+		else:
+			lines.append(f'        {hash_table.hash_table[idx]},')
+	lines.append('        };')
+	lines.append('')
+	lines.append('    static const _typeAllocator *_findTypeAllocator( data_type dataType, container_type containerType )')
+	lines.append('        {')
+	lines.append(f'        size_t hashValue = ((((size_t)dataType) * {hash_table.hash_data_type_mult}) + (((size_t)containerType) * {hash_table.hash_container_type_mult})) % {hash_table.hash_table_size};')
+	lines.append('        while( _typeAllocatorHashTable[hashValue] != nullptr )')
+	lines.append('            {')
+	lines.append('            std::pair<data_type,container_type> type = _typeAllocatorHashTable[hashValue]->Type();')
+	lines.append(f'            if( type.first == dataType && type.second == containerType )')
+	lines.append('                return _typeAllocatorHashTable[hashValue];')
+	lines.append('            ++hashValue;')
+	lines.append(f'            if(hashValue >= {hash_table.hash_table_size})')
+	lines.append('                hashValue = 0;')
+	lines.append('            }')
+	lines.append('        return nullptr;')
+	lines.append('        }')
+	lines.append('')
+	lines.append('    void *new_type( data_type dataType, container_type containerType )')
+	lines.append('        {')
+	lines.append('        const _typeAllocator *ta = _findTypeAllocator(dataType,containerType);')
+	lines.append('        return ta->New();')
+	lines.append('        }')
+	lines.append('')
+	lines.append('    void delete_type( data_type dataType, container_type containerType , void *data )')
+	lines.append('        {')
+	lines.append('        const _typeAllocator *ta = _findTypeAllocator(dataType,containerType);')
+	lines.append('        return ta->Delete( data );')
+	lines.append('        }')
+	lines.append('')
+
+	# end of namespace
+	lines.append('    };')
+	hlp.write_lines_to_file("../ISD/ISD_TypesAllocation.inl",lines)
+
 def run():
 	ISD_DataTypes_h()
 	ISD_DataTypes_cpp()
 	ISD_DataValuePointers_h()
+	ISD_TypesAllocation_inl()

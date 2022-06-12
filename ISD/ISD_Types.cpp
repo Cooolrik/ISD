@@ -8,6 +8,8 @@
 #include <Windows.h>
 #include <Rpc.h>
 
+#include "ISD_TypesAllocation.inl"
+
 namespace ISD
 	{
 	std::wstring widen( const std::string &str )

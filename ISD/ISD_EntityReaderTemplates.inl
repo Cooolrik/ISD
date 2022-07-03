@@ -84,8 +84,8 @@ namespace ISD
 		{
 		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_Hash), "Invalid type for generic template of read_single_item");
 
-		const u64 value_size = sizeof( type_information<T>::value_type );
-		const u64 value_count = type_information<T>::value_count;
+		const u64 value_size = sizeof( data_type_information<T>::value_type );
+		const u64 value_count = data_type_information<T>::value_count;
 
 		// record start position, for validation
 		const u64 start_pos = sstream.GetPosition();
@@ -356,7 +356,7 @@ namespace ISD
 		{
 		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_Hash), "Invalid type for generic read_array template");
 		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at max 8 bytes in size, equal to u64");
-		const size_t value_size = sizeof( type_information<T>::value_type );
+		const size_t value_size = sizeof( data_type_information<T>::value_type );
 
 		ISDSanityCheckCoreDebugMacro( dest_items );
 
@@ -396,7 +396,7 @@ namespace ISD
 			}
 
 		// resize the destination vector
-		const u64 type_count = item_count / type_information<T>::value_count;
+		const u64 type_count = item_count / data_type_information<T>::value_count;
 		dest_items->resize( type_count );
 
 		// read in the data

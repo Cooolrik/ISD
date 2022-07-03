@@ -40,7 +40,7 @@ size_t GenerateRandomDictionary( Dict &random_dict , size_t minc = 0, size_t max
 		// if zero is not allowed, keep generating until we have non-zero
 		if( Dict::type_no_zero_keys )
 			{
-			while( key == type_information<Dict::key_type>::zero )
+			while( key == data_type_information<Dict::key_type>::zero )
 				{
 				key = random_value<Dict::key_type>();
 				}

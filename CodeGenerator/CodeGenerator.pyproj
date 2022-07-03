@@ -54,7 +54,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Generators\ISD_DataTypes.py" />
+    <Compile Include="Generators\ISD_CombinedTypes.py" />
     <Compile Include="Generators\ISD_EntityReader.py" />
+    <Compile Include="Generators\ISD_DynamicTypes.py" />
     <Compile Include="Generators\ISD_Varying.py" />
     <Compile Include="Generators\ISD_EntityWriter.py">
       <SubType>Code</SubType>
@@ -67,6 +69,11 @@
     <Folder Include="Entities\Nodes\" />
     <Folder Include="Generators\" />
     <Folder Include="Entities\" />
+    <Folder Include="InlinedCode\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="InlinedCode\ISD_entity_ref.inl" />
+    <Content Include="InlinedCode\ISD_package_ref.inl" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

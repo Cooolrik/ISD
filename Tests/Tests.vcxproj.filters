@@ -71,6 +71,9 @@
     <ClCompile Include="DirectedGraphTests.cpp">
       <Filter>Source Files\BasicEntitiesTests</Filter>
     </ClCompile>
+    <ClCompile Include="DynamicTypesTests.cpp">
+      <Filter>Source Files\TypesTests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

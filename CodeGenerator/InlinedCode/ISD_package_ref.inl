@@ -1,14 +1,3 @@
-// ISD Copyright (c) 2021 Ulrik Lindahl
-// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
-
-#pragma once
-
-#include <ostream>
-
-#include "ISD_DataTypes.h"
-
-namespace ISD
-	{
 	// Reference to another package. 
 	class package_ref
 		{
@@ -43,14 +32,7 @@ namespace ISD
 		return os << hash( ref );
 		}
 
-	template<> struct type_information<package_ref>
-		{
-		using value_type = package_ref; // the value type of package_ref ( package_ref )
-		static constexpr size_t value_count = 1; // the number of values in package_ref ( 1 )
-		static constexpr const char * value_name = "package_ref"; // name of the value in package_ref ( "package_ref" ) 
-		static constexpr const char * type_name = "package_ref"; // name of the type ( "package_ref" ) 
-		static const package_ref zero; // zero value of package_ref
-		static const package_ref inf; // limit inferior (minimum possible value) of package_ref
-		static const package_ref sup; // limit superior (maximum possible value) of package_ref
-		};
-	};
+	const package_ref package_ref_zero = package_ref( hash_zero );
+	const package_ref package_ref_inf = package_ref( hash_inf );
+	const package_ref package_ref_sup = package_ref( hash_sup );
+

@@ -159,14 +159,12 @@ def ISD_Varying_cpp():
 		'    template <> static {base_type_combo} & Varying::MF::SetType<{base_type_combo}>( Varying &obj ) ' ,
 		'        {{' ,
 		'        SetType( obj , data_type::dt_{implementing_type} , container_type::ct_{container_type} );' ,
-		'        return obj.Data<{base_type_combo}>();'
+		'        return obj.Data<{base_type_combo}>();' ,
 		'        }}' ,
 		''
 		]
 	lines.append('')
 	lines.extend( hlp.generate_lines_for_all_basetype_combos( method_line_list ) )
-
-	
 
 	lines.append('	};')
 	hlp.write_lines_to_file("../ISD/ISD_Varying.cpp",lines)

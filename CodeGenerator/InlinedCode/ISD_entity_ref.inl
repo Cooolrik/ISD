@@ -1,14 +1,3 @@
-// ISD Copyright (c) 2021 Ulrik Lindahl
-// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE
-
-#pragma once
-
-#include <ostream>
-
-#include "ISD_DataTypes.h"
-
-namespace ISD
-	{
 	// Reference to an element within the same package. Acts like a memory handle. 
 	// It can be created, held and copied, but cannot be set to a specific value other than null.
 	class entity_ref
@@ -43,6 +32,10 @@ namespace ISD
 
 			// returns the "null" entity_ref value 
 			static const entity_ref &null() { static entity_ref null_id; return null_id; }
+			
+			// inf and sup values, for comparing
+			static entity_ref &_inf() { static entity_ref inf_id(uuid_inf); return inf_id; }
+			static entity_ref &_sup() { static entity_ref sup_id(uuid_sup); return sup_id; }
 		};
 
 	inline std::ostream &operator<<( std::ostream &os, const entity_ref &ref )
@@ -50,15 +43,7 @@ namespace ISD
 		return os << uuid( ref );
 		}
 
-	template<> struct type_information<entity_ref>
-		{
-		using value_type = entity_ref; // the value type of entity_ref ( entity_ref )
-		static constexpr size_t value_count = 1; // the number of values in entity_ref ( 1 )
-		static constexpr const char * value_name = "entity_ref"; // name of the value in entity_ref ( "entity_ref" ) 
-		static constexpr const char * type_name = "entity_ref"; // name of the type ( "entity_ref" ) 
-		static const entity_ref zero; // zero value of entity_ref
-		static const entity_ref inf; // limit inferior (minimum possible value) of entity_ref
-		static const entity_ref sup; // limit superior (maximum possible value) of entity_ref
-		};
+	const entity_ref entity_ref_zero = entity_ref::null();
+	const entity_ref entity_ref_inf = entity_ref::_inf();
+	const entity_ref entity_ref_sup = entity_ref::_sup();
 
-	};

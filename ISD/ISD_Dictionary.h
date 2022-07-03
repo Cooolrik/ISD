@@ -255,7 +255,7 @@ namespace ISD
 		// check if a zero key exists in the dictionary
 		if( _MgmCl::type_no_zero_keys )
 			{
-			if( obj.v_Entries.find( type_information<_Kty>::zero ) != obj.v_Entries.end() )
+			if( obj.v_Entries.find( data_type_information<_Kty>::zero ) != obj.v_Entries.end() )
 				{
 				ISDValidationError( ValidationError::NullNotAllowed ) << "This Directory has a zero-value key, which is not allowed. (DictionaryFlags::NoZeroKeys)" << ISDErrorLogEnd;
 				}

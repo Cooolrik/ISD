@@ -175,6 +175,7 @@
     </ClCompile>
     <ClCompile Include="DictionaryTests.cpp" />
     <ClCompile Include="DirectedGraphTests.cpp" />
+    <ClCompile Include="DynamicTypesTests.cpp" />
     <ClCompile Include="EntityTests.cpp" />
     <ClCompile Include="EntityReaderRandomTests.cpp" />
     <ClCompile Include="ReadWriteTests.cpp" />

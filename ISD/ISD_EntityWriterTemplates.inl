@@ -52,8 +52,8 @@ namespace ISD
 		static_assert((VT >= ValueType::VT_Bool) && (VT <= ValueType::VT_Hash), "Invalid type for general write_single_value template");
 
 		const u8 value_type = (u8)VT;
-		const size_t value_size = sizeof( type_information<T>::value_type );
-		const size_t value_count = type_information<T>::value_count;
+		const size_t value_size = sizeof( data_type_information<T>::value_type );
+		const size_t value_count = data_type_information<T>::value_count;
 		const size_t data_size_in_bytes = (data != nullptr) ? (value_size * value_count) : 0; // if data == nullptr, the block is empty
 		const size_t block_size = data_size_in_bytes + key_length;
 		ISDSanityCheckDebugMacro( key_length <= EntityMaxKeyLength ); // max key length
@@ -67,7 +67,7 @@ namespace ISD
 		dstream.Write( u8_block_size );
 		if( data_size_in_bytes > 0 )
 			{
-			const type_information<T>::value_type *pvalue = value_ptr( (*data) );
+			const data_type_information<T>::value_type *pvalue = value_ptr( (*data) );
 			dstream.Write( pvalue, value_count );
 			}
 		dstream.Write( (i8*)key, key_length );
@@ -197,10 +197,10 @@ namespace ISD
 	template<ValueType VT, class T> bool write_array( MemoryWriteStream &dstream, const char *key, const u8 key_size_in_bytes, const std::vector<T> *items, const std::vector<i32> *index )
 		{
 		static_assert((VT >= ValueType::VT_Array_Bool) && (VT <= ValueType::VT_Array_Hash), "Invalid type for write_array");
-		static_assert(sizeof( type_information<T>::value_type ) <= 0xff, "Invalid value size, cannot exceed 255 bytes");
+		static_assert(sizeof( data_type_information<T>::value_type ) <= 0xff, "Invalid value size, cannot exceed 255 bytes");
 		static_assert(sizeof( u64 ) >= sizeof( size_t ), "Unsupported size_t, current code requires it to be at most 8 bytes in size, equal to an u64"); // assuming sizeof(u64) >= sizeof(size_t)
-		const size_t value_size = sizeof( type_information<T>::value_type );
-		const size_t values_per_type = type_information<T>::value_count;
+		const size_t value_size = sizeof( data_type_information<T>::value_type );
+		const size_t values_per_type = data_type_information<T>::value_count;
 
 		// record start position, we need this in the end block
 		const u64 start_pos = dstream.GetPosition();
@@ -224,7 +224,7 @@ namespace ISD
 			// write the values
 			if( values_count > 0 )
 				{
-				const type_information<T>::value_type *p_values = value_ptr( *(items->data()) );
+				const data_type_information<T>::value_type *p_values = value_ptr( *(items->data()) );
 
 				const u64 values_expected_end_pos = dstream.GetPosition() + (values_count * value_size);
 				dstream.Write( p_values , values_count );

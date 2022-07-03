@@ -13,6 +13,8 @@
 #include <vector>
 #include <set>
 
+const size_t global_number_of_passes = 1;
+
 #include "..\TestHelpers\random_vals.h"
 
 #ifdef _DEBUG

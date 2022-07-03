@@ -10,7 +10,6 @@
 using namespace ISD;
 
 const i64 global_random_seed = 12876123876;
-const size_t global_number_of_passes = 1;
 
 inline void setup_random_seed()
 	{
@@ -58,7 +57,23 @@ inline size_t capped_rand( size_t minv, size_t maxv )
 	return (u64_rand() % (maxv - minv)) + minv;
 	}
 
+// -------------------------------------------
+
 template<class T> T random_value();
+
+template<class T> T random_value( T &dest )
+	{
+	dest = random_value<T>();
+	}
+
+template<class T> void random_nonzero_value( T &dest )
+	{
+	dest = random_value<T>();
+	while( dest == data_type_information<T>::zero )
+		dest = random_value<T>();
+	}
+
+// -------------------------------------------
 
 template<class T> optional_value<T> random_optional_value()
 	{
@@ -70,6 +85,20 @@ template<class T> optional_value<T> random_optional_value()
 	return val;
 	}
 
+template<class T> void random_optional_value( optional_value<T> &dest )
+	{
+	dest = random_optional_value<T>();
+	}
+
+template<class T> void random_nonzero_optional_value( optional_value<T> &dest )
+	{
+	dest.set( random_value<T>() );
+	while( dest.value() == data_type_information<T>::zero )
+		dest.set( random_value<T>() );
+	}
+
+// -------------------------------------------
+
 template <class T> void random_vector( std::vector<T> &dest , size_t minc = 10, size_t maxc = 1000 )
 	{
 	size_t len = capped_rand( minc, maxc );
@@ -80,18 +109,34 @@ template <class T> void random_vector( std::vector<T> &dest , size_t minc = 10, 
 		}
 	}
 
+template <class T> void random_nonzero_vector( std::vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
+	{
+	minc = (minc > 1) ? minc : 1;
+	maxc = (maxc > 1) ? maxc : 1;
+	random_vector( dest, minc, maxc );
+	}
+
+// -------------------------------------------
+
+template<class T> void random_nonzero_optional_vector( optional_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
+	{
+	dest.set();
+	random_nonzero_vector<T>( dest.vector(), minc, maxc );
+	}
+
 template<class T> void random_optional_vector( optional_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
 	{
 	if( random_value<bool>() )
 		{
-		dest.set();
-		random_vector<T>( dest.vector(), minc, maxc );
+		random_nonzero_optional_vector<T>( dest, minc, maxc );
 		}
 	else
 		{
 		dest.reset();
 		}
 	}
+
+// -------------------------------------------
 
 template <class T> void random_idx_vector( idx_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
 	{
@@ -114,15 +159,31 @@ template <class T> void random_idx_vector( idx_vector<T> &dest, size_t minc = 10
 		}
 	}
 
+template <class T> void random_nonzero_idx_vector( idx_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
+	{
+	minc = (minc > 1) ? minc : 1;
+	maxc = (maxc > 1) ? maxc : 1;
+	random_idx_vector( dest, minc, maxc );
+	}
+
+// -------------------------------------------
+
+template<class T> void random_nonzero_optional_idx_vector( optional_idx_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
+	{
+	dest.set();
+	random_nonzero_idx_vector<T>( dest.vector(), minc, maxc );
+	}
+
 template<class T> void random_optional_idx_vector( optional_idx_vector<T> &dest, size_t minc = 10, size_t maxc = 1000 )
 	{
 	if( random_value<bool>() )
 		{
-		dest.set();
-		random_idx_vector<T>( dest.vector(), minc, maxc );
+		random_nonzero_optional_idx_vector( dest, minc, maxc );
 		}
 	else
 		{
 		dest.reset();
 		}
 	}
+
+// -------------------------------------------

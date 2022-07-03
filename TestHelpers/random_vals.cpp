@@ -1,4 +1,6 @@
 #include "random_vals.h"
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 template <> bool random_value<bool>() { return (bool)(rand() & 0x1); } 
 
@@ -21,6 +23,9 @@ template <> fvec3 random_value<fvec3>() { return fvec3( float_rand(), float_rand
 template <> dvec3 random_value<dvec3>() { return dvec3( double_rand(), double_rand(), double_rand() ) ; }
 template <> fvec4 random_value<fvec4>() { return fvec4( float_rand(), float_rand(), float_rand(), float_rand() ) ; }
 template <> dvec4 random_value<dvec4>() { return dvec4( double_rand(), double_rand(), double_rand(), double_rand() ) ; }
+
+template <> fquat random_value<fquat>() { return fquat( float_rand(), float_rand(), float_rand(), float_rand() ) ; }
+template <> dquat random_value<dquat>() { return dquat( double_rand(), double_rand(), double_rand(), double_rand() ) ; }
 
 template <> i8vec2 random_value<i8vec2>() { return i8vec2( u8_rand(), u8_rand() ) ; }
 template <> i16vec2 random_value<i16vec2>() { return i16vec2( u16_rand(), u16_rand() ) ; }

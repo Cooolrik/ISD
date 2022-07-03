@@ -81,7 +81,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="ISD_AttributeLayer.h" />
-    <ClInclude Include="ISD_entity_ref.h" />
+    <ClInclude Include="ISD_CombinedTypes.h" />
+    <ClInclude Include="ISD_DynamicTypes.h" />
     <ClInclude Include="ISD_idx_vector.h" />
     <ClInclude Include="ISD.h" />
     <ClInclude Include="ISD_DataTypes.h" />
@@ -105,14 +106,14 @@
     <ClInclude Include="ISD_optional_idx_vector.h" />
     <ClInclude Include="ISD_optional_value.h" />
     <ClInclude Include="ISD_optional_vector.h" />
-    <ClInclude Include="ISD_package_ref.h" />
     <ClInclude Include="ISD_thread_safe_map.h" />
-    <ClInclude Include="ISD_Varying.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
     <ClCompile Include="ISD_AttributeLayer.cpp" />
+    <ClCompile Include="ISD_CombinedTypes.cpp" />
     <ClCompile Include="ISD_DataTypes.cpp" />
+    <ClCompile Include="ISD_DynamicTypes.cpp" />
     <ClCompile Include="ISD_EntityReader.cpp" />
     <ClCompile Include="ISD_Mesh.cpp" />
     <ClCompile Include="ISD_Node.cpp" />
@@ -126,12 +127,10 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="ISD_Types.cpp" />
-    <ClCompile Include="ISD_Varying.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ISD_EntityReaderTemplates.inl" />
     <None Include="ISD_EntityWriterTemplates.inl" />
-    <None Include="ISD_TypesAllocation.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

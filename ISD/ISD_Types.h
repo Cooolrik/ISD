@@ -28,12 +28,10 @@
 
 #define ISDKeyMacro( name ) name , (u8)(strlen(name))
 
-#include "ISD_entity_ref.h"
 #include "ISD_idx_vector.h"
 #include "ISD_optional_idx_vector.h"
 #include "ISD_optional_value.h"
 #include "ISD_optional_vector.h"
-#include "ISD_package_ref.h"
 #include "ISD_thread_safe_map.h"
 
 namespace ISD
@@ -142,6 +140,17 @@ namespace ISD
 		VT_Array_String = 0xe1, // array of strings
 		};
 
+	// all container type indices
+	enum class container_type_index
+		{
+		ct_none = 0x0,
+		ct_optional_value = 0x1,
+		ct_vector = 0x10,
+		ct_optional_vector = 0x11,
+		ct_idx_vector = 0x20,
+		ct_optional_idx_vector = 0x21,
+		};
+
 	// widens utf-8 char string to wstring
 	std::wstring widen( const std::string &str );
 
@@ -224,14 +233,6 @@ namespace ISD
 			++dest;
 			}
 		}
-
-	// dynamically allocate a data type and container combination
-	void *new_type( data_type dataType, container_type containerType );
-
-	// delete a previously allocated data type and container combination
-	// caveat: there is no type checking done, so make sure to supply the correct 
-	// data_type and container_type to the function.
-	void delete_type( data_type dataType, container_type containerType , void *data );
 
 
 	};

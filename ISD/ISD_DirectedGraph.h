@@ -86,8 +86,8 @@ namespace ISD
 		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) 
 		{
 		return std::pair<iterator, iterator> (
-			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
-			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,data_type_information<_Ty>::inf) ),
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,data_type_information<_Ty>::sup) )
 			); 
 		}
 
@@ -96,8 +96,8 @@ namespace ISD
 		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) const 
 		{
 		return std::pair<const_iterator, const_iterator> (
-			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::inf) ),
-			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,type_information<_Ty>::sup) )
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,data_type_information<_Ty>::inf) ),
+			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,data_type_information<_Ty>::sup) )
 			); 
 		}
 
@@ -270,8 +270,8 @@ namespace ISD
 							}
 
 						// list all nodes downstream from curr
-						auto itr = edges.lower_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::inf) );
-						auto itr_end = edges.upper_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::sup) );
+						auto itr = edges.lower_bound( std::pair<_Ty,_Ty>(curr,data_type_information<_Ty>::inf) );
+						auto itr_end = edges.upper_bound( std::pair<_Ty,_Ty>(curr,data_type_information<_Ty>::sup) );
 						while( itr != itr_end )
 							{
 							ISDSanityCheckCoreDebugMacro( itr->first == curr );
@@ -326,8 +326,8 @@ namespace ISD
 					reached.insert( curr );
 
 					// check downstream nodes
-					auto itr = edges.lower_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::inf) );
-					auto itr_end = edges.upper_bound( std::pair<_Ty,_Ty>(curr,type_information<_Ty>::sup) );
+					auto itr = edges.lower_bound( std::pair<_Ty,_Ty>(curr,data_type_information<_Ty>::inf) );
+					auto itr_end = edges.upper_bound( std::pair<_Ty,_Ty>(curr,data_type_information<_Ty>::sup) );
 					while( itr != itr_end )
 						{
 						ISDSanityCheckCoreDebugMacro( itr->first == curr );

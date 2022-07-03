@@ -29,7 +29,7 @@ namespace BasicEntitiesTests
 				Dict dict;
 
 				EntityValidator validator;
-				const _Kty zero = type_information<_Kty>::zero;
+				const _Kty zero = data_type_information<_Kty>::zero;
 
 				// add a zero key  with a null value entry
 				dict.Entries()[zero] = std::unique_ptr<TestEntity>();
@@ -47,7 +47,7 @@ namespace BasicEntitiesTests
 				Dict dict;
 
 				EntityValidator validator;
-				const _Kty zero = type_information<_Kty>::zero;
+				const _Kty zero = data_type_information<_Kty>::zero;
 
 				// add a zero key entry (invalid)
 				dict.Entries()[zero] = std::make_unique<TestEntity>();
@@ -65,7 +65,7 @@ namespace BasicEntitiesTests
 				Dict dict;
 
 				EntityValidator validator;
-				const _Kty inf_val = type_information<_Kty>::inf;
+				const _Kty inf_val = data_type_information<_Kty>::inf;
 
 				// add a null ptr value entry (invalid)
 				dict.Entries()[inf_val] = std::unique_ptr<TestEntity>();
@@ -89,7 +89,7 @@ namespace BasicEntitiesTests
 				for( size_t i = 0; i < cnt; ++i )
 					{
 					const _Kty rand_val = random_value<_Kty>();
-					if( rand_val != type_information<_Kty>::zero )
+					if( rand_val != data_type_information<_Kty>::zero )
 						{
 						dict.Entries()[rand_val] = std::make_unique<TestEntity>();
 						}
@@ -160,7 +160,9 @@ namespace BasicEntitiesTests
 			DictionaryBasicTests_Validation<double>();
 			
 			DictionaryBasicTests_Validation<uuid>();
+			DictionaryBasicTests_Validation<entity_ref>();
 			DictionaryBasicTests_Validation<hash>();
+			DictionaryBasicTests_Validation<package_ref>();
 			DictionaryBasicTests_Validation<string>();
 			}
 
@@ -249,7 +251,9 @@ namespace BasicEntitiesTests
 				DictionaryReadWriteTests_TestKeyType<double>( ws, ew );
 								
 				DictionaryReadWriteTests_TestKeyType<uuid>( ws, ew );
+				DictionaryReadWriteTests_TestKeyType<entity_ref>( ws, ew );
 				DictionaryReadWriteTests_TestKeyType<hash>( ws, ew );
+				DictionaryReadWriteTests_TestKeyType<package_ref>( ws, ew );
 				DictionaryReadWriteTests_TestKeyType<string>( ws, ew );
 				}
 			}

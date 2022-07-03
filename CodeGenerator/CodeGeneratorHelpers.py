@@ -104,6 +104,38 @@ def generate_lines_for_all_basetype_combos( line_list ):
                         )
     return lines
 
+# call function with all base types and all variants (including optional variants), as well as all vector versions of base types
+def function_for_all_basetype_combos( line_function ):
+    lines = []
+    for basetype in base_types:
+        for var in basetype.variants:
+            for cont in container_types:
+                if( cont.is_template ):
+                    base_type_container_combo = f'{cont.implementing_type}<{var.implementing_type}>'
+                else:
+                    base_type_container_combo = var.implementing_type
+                lines.extend( 
+                    line_function( 
+                        base_type_name = basetype.name , 
+                        implementing_type = var.implementing_type , 
+                        container_type = cont.implementing_type , 
+                        item_type = var.item_type , 
+                        num_items_per_object = var.num_items_per_object , 
+                        base_type_combo = base_type_container_combo 
+                        ) 
+                    )
+    return lines
+
+# reads a file and output lines
+def inline_file( path ):
+    inlined_file = open(path, 'r')
+    lines = inlined_file.readlines()
+    strip_lines = []
+    for str in lines:
+        strip_lines.append( str.rstrip() )
+    inlined_file.close()
+    return strip_lines
+
 def run_module( name ):
     print('Running: ' + name )
     importlib.import_module('Generators.' + name ).run()

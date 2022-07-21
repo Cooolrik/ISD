@@ -15,11 +15,17 @@
 #include "../ISD/ISD_SceneLayer.h"
 #include "../ISD/ISD_SHA256.h"
 
+#include "../ISD/ISD_Mesh.h"
+
 #include "../TestHelpers/random_vals.h"
 
 //#include <fbxsdk.h>
 
 #include <Rpc.h>
+//#include "../ISD/ISD_Varying.h"
+
+#include "../ISD/ISD_DynamicTypes.h"
+#include "../ISD/ISD_CombinedTypes.h"
 #include "../ISD/ISD_Varying.h"
 
 extern void safe_thread_map_test();
@@ -155,26 +161,124 @@ void read_geometry()
 //			}
 //		}
 //	}
+//
+//template<class _Ty> void DynamicValueTester()
+//	{
+//	constexpr data_type_index type_index = data_type_information<_Ty>::type_index;
+//	void *dataA = {};
+//	void *dataB = {};
+//	bool ret = {};
+//
+//	ISD::dynamic_types::type_combo tc = {type_index , container_type_index::ct_none};
+//	std::tie(dataA,ret) = ISD::dynamic_types::new_type( tc );
+//	std::tie(dataB,ret) = ISD::dynamic_types::new_type( tc );
+//
+//	ret = ISD::dynamic_types::clear( tc, dataA );
+//	ret = ISD::dynamic_types::clear( tc, dataB );
+//
+//	if( ISD::dynamic_types::is_a<_Ty>( tc ) )
+//		{
+//		_Ty &value = *((_Ty*)dataA);
+//		while( value == data_type_information<_Ty>::zero )
+//			value = random_value<_Ty>();
+//		}
+//
+//	ret = ISD::dynamic_types::equals( tc, dataA, dataB );
+//	ret = ISD::dynamic_types::copy( tc, dataB, dataA );
+//	ret = ISD::dynamic_types::equals( tc, dataA, dataB );
+//	ret = ISD::dynamic_types::clear( tc, dataA );
+//	ret = ISD::dynamic_types::copy( tc, dataB, dataA );
+//	ret = ISD::dynamic_types::equals( tc, dataA, dataB );
+//
+//	ret = ISD::dynamic_types::delete_type( tc , dataA );
+//	ret = ISD::dynamic_types::delete_type( tc , dataB );
+//	}
+//
+//
 
 int main()
 	{
-	ISD::Varying var;
+	//ISD::Varying var;
+	//
+	//ISD::Varying::MF::SetType<bool>( var );
+	//
+	//bool & value = var.Data<bool>();
+	//
+	//ISD::Varying::MF::SetType<std::vector<int>>( var );
+	//
+	//std::vector<int> & value2 = var.Data<std::vector<int>>();
 
-	auto &data = ISD::Varying::MF::SetType<optional_idx_vector<fvec4>>( var );
 
-	data.set();
-	data.values().resize( 1000 );
-	data.values()[4].x = 12.f;
+	//ISD::optional_vector<bool> value;
+	//value.set( {true, false, false} );
+	//clear_combined_type( value );
+	//
+	//void *ptr;
+	//bool ret;
+	//
+	//constexpr ISD::data_type_index mytype = combined_type_information<std::vector<bool>>::type_index;
+	//constexpr ISD::container_type_index mycont = combined_type_information<std::vector<bool>>::container_index;
+	//
+	//std::tie(ptr,ret) = ISD::dynamic_types::new_type( mytype , mycont );
+	//std::vector<bool> *vec = (std::vector<bool>*)ptr;
+	//std::vector<bool> vec2;
+	//
+	//vec->resize( 100 , true );
+	//ISD::dynamic_types::copy( ISD::data_type_index::dt_bool, ISD::container_type_index::ct_vector, &vec2, vec );
+	
+	ISD::Mesh mesh;
+	ISD::entity_ref ref = ISD::entity_ref::make_ref();
 
-	ISD::Varying::MF::SetType<fvec3>( var );
-	auto &data2 = var.Data<fvec3>();
+	size_t v = mesh.BitangentsData().Size();
 
-	data2.x = 78;
+	auto &uv = mesh.TextureCoordsData().Insert( ref );
+	auto &tan = mesh.TangentsData().Insert( ref );
+	auto &btan = mesh.BitangentsData().Insert( ref );
 
-	if( var.IsA<optional_idx_vector<fvec4>>() )
+	auto &cust = mesh.CustomData().Insert( ref );
+
+	auto &vec = cust.Initialize<std::vector<fvec4>>();
+	vec.resize( 100 );
+	auto vecd = vec.data();
+
+	v = mesh.BitangentsData().Size();
+
+
+	btan.index().resize( 1 );
+	btan.values().resize( 1 );
+	btan.index()[0] = 0;
+
+	if( tan == btan )
 		{
-		const auto &data3 = var.Data<optional_idx_vector<fvec4>>();
+		printf( "hej" );
 		}
+
+	EntityValidator validator;
+	
+	Mesh::MF::Validate( mesh, validator );
+
+	//DynamicValueTester<bool>();
+	//DynamicValueTester<float>();
+
+	return 0;
+
+	//ISD::Varying var;
+	//
+	//auto &data = ISD::Varying::MF::SetType<optional_idx_vector<fvec4>>( var );
+	//
+	//data.set();
+	//data.values().resize( 1000 );
+	//data.values()[4].x = 12.f;
+	//
+	//ISD::Varying::MF::SetType<fvec3>( var );
+	//auto &data2 = var.Data<fvec3>();
+	//
+	//data2.x = 78;
+	//
+	//if( var.IsA<optional_idx_vector<fvec4>>() )
+	//	{
+	//	const auto &data3 = var.Data<optional_idx_vector<fvec4>>();
+	//	}
 
 
 	

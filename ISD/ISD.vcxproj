@@ -89,6 +89,7 @@
     <ClInclude Include="ISD_DataValuePointers.h" />
     <ClInclude Include="ISD_DirectedGraph.h" />
     <ClInclude Include="ISD_EntityReader.h" />
+    <ClInclude Include="ISD_IndexedVector.h" />
     <ClInclude Include="ISD_Mesh.h" />
     <ClInclude Include="ISD_Node.h" />
     <ClInclude Include="ISD_NodeGeometry.h" />
@@ -107,6 +108,7 @@
     <ClInclude Include="ISD_optional_value.h" />
     <ClInclude Include="ISD_optional_vector.h" />
     <ClInclude Include="ISD_thread_safe_map.h" />
+    <ClInclude Include="ISD_Varying.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISD.cpp" />
@@ -127,6 +129,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\Dependencies\librock_sha256;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ClCompile Include="ISD_Types.cpp" />
+    <ClCompile Include="ISD_Varying.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ISD_EntityReaderTemplates.inl" />

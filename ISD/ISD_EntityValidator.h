@@ -15,6 +15,7 @@ namespace ISD
 		static const u64 MissingObject	= 0x04;	// a required object is missing
 		static const u64 InvalidObject	= 0x08;	// an object is invalid or used in an invalid way
 		static const u64 InvalidSetup	= 0x10;	// the set up of an object or system is invalid 
+		static const u64 InvalidValue	= 0x20;	// a value or index is out of bounds or not allowed
 		};
 
 	class EntityValidator

@@ -21,6 +21,9 @@
     <Filter Include="Source Files\Types\DataTypes">
       <UniqueIdentifier>{de95ed27-f481-4dfd-b73c-7d1a0832c76f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Generated\Geometry">
+      <UniqueIdentifier>{f83891e1-d358-433d-83db-12490489880b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ISD.h">
@@ -71,12 +74,6 @@
     <ClInclude Include="ISD_Scene.h">
       <Filter>Source Files\Generated</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_AttributeLayer.h">
-      <Filter>Source Files\Generated</Filter>
-    </ClInclude>
-    <ClInclude Include="ISD_Mesh.h">
-      <Filter>Source Files\Generated</Filter>
-    </ClInclude>
     <ClInclude Include="ISD_Types.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
@@ -95,14 +92,26 @@
     <ClInclude Include="ISD_DataTypes.h">
       <Filter>Source Files\Types\DataTypes</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_thread_safe_map.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ISD_DynamicTypes.h">
       <Filter>Source Files\Types</Filter>
     </ClInclude>
     <ClInclude Include="ISD_CombinedTypes.h">
       <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_thread_safe_map.h">
+      <Filter>Source Files\Types</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_Mesh.h">
+      <Filter>Source Files\Generated\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_IndexedVector.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_AttributeLayer.h">
+      <Filter>Source Files\Generated\Geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="ISD_Varying.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -133,12 +142,6 @@
     <ClCompile Include="ISD_Scene.cpp">
       <Filter>Source Files\Generated</Filter>
     </ClCompile>
-    <ClCompile Include="ISD_AttributeLayer.cpp">
-      <Filter>Source Files\Generated</Filter>
-    </ClCompile>
-    <ClCompile Include="ISD_Mesh.cpp">
-      <Filter>Source Files\Generated</Filter>
-    </ClCompile>
     <ClCompile Include="ISD_Types.cpp">
       <Filter>Source Files\Types</Filter>
     </ClCompile>
@@ -150,6 +153,15 @@
     </ClCompile>
     <ClCompile Include="ISD_CombinedTypes.cpp">
       <Filter>Source Files\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_Mesh.cpp">
+      <Filter>Source Files\Generated\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_AttributeLayer.cpp">
+      <Filter>Source Files\Generated\Geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="ISD_Varying.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

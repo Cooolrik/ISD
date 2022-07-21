@@ -18,6 +18,8 @@
 #define ISDValidationError( errorid ) validator.ReportError( errorid , __func__ , __FILE__ , __LINE__ ) 
 #define ISDValidationErrorEnd std::endl
 
+#define ISDRuntimeCheck( statement , errorid , errortext ) if( !(statement) ) { ISDErrorLog << "Runtime check failed: (" #statement ") error id:" << (int)errorid << ISDErrorLogEnd; throw std::exception("Sanity debug check failed: (" #statement "): Error text: " #errortext ); }
+
 #ifdef _DEBUG
 #define ISDSanityCheckDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Sanity debug check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception("Sanity debug check failed: (" #statement ")"); }
 #define ISDSanityCheckCoreDebugMacro( statement ) if( !(statement) ) { ISDErrorLog << "Core debug sanity check failed: (" #statement ")" << ISDErrorLogEnd; throw std::exception("Core debug sanity check failed: (" #statement ")"); }

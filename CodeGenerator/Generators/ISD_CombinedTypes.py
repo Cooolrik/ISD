@@ -8,6 +8,8 @@ def ISD_CombinedTypes_h():
 	lines.append('// ISD Copyright (c) 2021,2022 Ulrik Lindahl')
 	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
 	lines.append('')
+	lines.append('#pragma once')
+	lines.append('')
 	lines.append('#include "ISD_Types.h"')
 	lines.append('')
 	lines.append('// Lists information of combined types: a combination of data type and container, ')

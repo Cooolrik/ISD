@@ -54,6 +54,13 @@ namespace ISD
 			// direct access to the Entries map
 			map_type &Entries() noexcept { return this->v_Entries; }
 			const map_type &Entries() const noexcept { return this->v_Entries; }
+
+			// index access operator. node, dereferences the mapped value, so will throw if the value does not exist.
+			mapped_type &operator[]( const key_type &key ) { return *(this->v_Entries[key].get()); }
+			const mapped_type &operator[]( const key_type &key ) const { return *(this->v_Entries[key].get()); }
+
+			// insert a key and new empty value, returns reference to value
+			mapped_type &Insert( const key_type &key ) { this->v_Entries.emplace( key, std::make_unique<mapped_type>() ); return *(this->v_Entries[key].get()); }
 		};
 
 	class EntityWriter;

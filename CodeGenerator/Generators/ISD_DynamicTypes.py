@@ -3,63 +3,6 @@
 
 import CodeGeneratorHelpers as hlp
 
-
-def ISD_DynamicTypes_h():
-	lines = []
-	lines.append('// ISD Copyright (c) 2021,2022 Ulrik Lindahl')
-	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
-	lines.append('')
-	lines.append('#include "ISD_Types.h"')
-	lines.append('')
-	lines.append('namespace ISD')
-	lines.append('    {')
-	lines.append('    class MemoryReadStream;')
-	lines.append('    class MemoryWriteStream;')
-	lines.append('    class EntityWriter;')
-	lines.append('    class EntityReader;')
-	lines.append('    ')
-	lines.append('    namespace dynamic_types')
-	lines.append('        {')
-	lines.append('        // dynamically allocate a data of data type and container combination')
-	lines.append('        std::tuple<void*, bool> new_type( data_type_index dataType , container_type_index containerType );')
-	lines.append('    ')
-	lines.append('        // delete a previously allocated data object')
-	lines.append('        // caveat: no type checking is done, so make sure to supply the correct ')
-	lines.append('        // type combo to the function.')
-	lines.append('        bool delete_type( data_type_index dataType , container_type_index containerType , void *data );')
-	lines.append('    ')
-	lines.append('        // clear the contents for data object.')
-	lines.append('        // caveat: no type checking is done, so make sure to supply the correct ')
-	lines.append('        // type combo to the function.')
-	lines.append('        bool clear( data_type_index dataType , container_type_index containerType , void *data );')
-	lines.append('    ')
-	lines.append('        // write the data to an entity writer stream.')
-	lines.append('        // caveat: no type checking is done, so make sure to supply the correct ')
-	lines.append('        // type combo to the function.')
-	lines.append('        bool write( data_type_index dataType , container_type_index containerType , const char *key, const u8 key_length , EntityWriter &writer , const void *data );')
-	lines.append('    ')
-	lines.append('        // read the data to from an entity reader stream.')
-	lines.append('        // caveat: no type checking is done, so make sure to supply the correct ')
-	lines.append('        // type combo to the function.')
-	lines.append('        bool read( data_type_index dataType , container_type_index containerType , const char *key, const u8 key_length , EntityReader &reader , void *data );')
-	lines.append('    ')
-	lines.append('        // copy data from src to dest. both data object must be the same type and be allocated.')
-	lines.append('        // caveat: no type checking is done, so make sure to supply the correct ')
-	lines.append('        // type combo to the function.')
-	lines.append('        bool copy( data_type_index dataType , container_type_index containerType , void *dest , const void *src );')
-	lines.append('    ')
-	lines.append('        // check if two data objects have the same internal data')
-	lines.append('        // caveat: no type checking is done, so make sure to supply the correct ')
-	lines.append('        // type combo to the function.')
-	lines.append('        bool equals( data_type_index dataType , container_type_index containerType , const void *dataA , const void *dataB );')
-	lines.append('    ')
-
-	# end of namespaces
-	lines.append('        };')
-	lines.append('    };')
-	hlp.write_lines_to_file("../ISD/ISD_DynamicTypes.h",lines)
-
-
 # hash table for allocation lookup, must be larger than the number of items to add
 class AllocatorHashTable:
 	def hash_function( self , data_type , container_type ):
@@ -374,6 +317,5 @@ def DynamicTypesTests_cpp():
 	hlp.write_lines_to_file("../Tests/DynamicTypesTests.cpp",lines)	
 	
 def run():
-	ISD_DynamicTypes_h()
 	ISD_DynamicTypes_cpp()
 	DynamicTypesTests_cpp()

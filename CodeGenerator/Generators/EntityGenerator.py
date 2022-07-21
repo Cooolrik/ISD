@@ -296,6 +296,8 @@ def CreateEntitySource(entity):
 	lines.append('// ISD Copyright (c) 2021 Ulrik Lindahl')
 	lines.append('// Licensed under the MIT license https://github.com/Cooolrik/ISD/blob/main/LICENSE')
 	lines.append('')
+	lines.append('#include <glm/glm.hpp>')
+	lines.append('')	
 	lines.append(f'#include "ISD_Types.h"')
 	lines.append(f'#include "ISD_EntityWriter.h"')
 	lines.append(f'#include "ISD_EntityReader.h"')

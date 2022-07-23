@@ -103,7 +103,7 @@
     <ClInclude Include="ISD_SceneLayer.h" />
     <ClInclude Include="ISD_SHA256.h" />
     <ClInclude Include="ISD_Types.h" />
-    <ClInclude Include="ISD_Dictionary.h" />
+    <ClInclude Include="ISD_EntityTable.h" />
     <ClInclude Include="ISD_optional_idx_vector.h" />
     <ClInclude Include="ISD_optional_value.h" />
     <ClInclude Include="ISD_optional_vector.h" />

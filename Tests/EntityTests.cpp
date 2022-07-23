@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_MemoryWriteStream.h"
 #include "..\ISD\ISD_EntityWriter.h"
 #include "..\ISD\ISD_EntityReader.h"
-#include "..\ISD\ISD_Dictionary.h"
+#include "..\ISD\ISD_Registry.h"
 #include "..\ISD\ISD_EntityValidator.h"
 
 #include "..\TestHelpers\structure_generation.h"

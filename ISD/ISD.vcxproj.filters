@@ -53,7 +53,7 @@
     <ClInclude Include="ISD_EntityReader.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ISD_Dictionary.h">
+    <ClInclude Include="ISD_EntityTable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ISD_DirectedGraph.h">

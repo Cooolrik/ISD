@@ -18,15 +18,14 @@ namespace ISD
 		SingleRoot = 0x4, // if set, validation will make sure there is a single graph root vertex
 		};
 
-	template<class _Ty, uint _Flags = 0, class _Alloc = std::allocator<std::pair<const _Ty, const _Ty>>>
+	template<class _Ty, uint _Flags = 0, class _SetTy = std::set<std::pair<const _Ty, const _Ty>>>
 	class DirectedGraph
 		{
 		public:
 			using node_type = _Ty;
-			using allocator_type = _Alloc;
+			using allocator_type = typename _SetTy::allocator_type;
 
-			using pair_type = std::pair<const _Ty, const _Ty>;
-			using set_type = std::set<pair_type, std::less<pair_type>, _Alloc>;
+			using set_type = _SetTy;
 			using value_type = typename set_type::value_type;
 			using iterator = typename set_type::iterator;
 			using const_iterator = typename set_type::iterator;
@@ -69,21 +68,21 @@ namespace ISD
 			const std::set<_Ty> &Roots() const noexcept { return this->v_Roots; }
 		};
 
-	template<class _Ty, uint _Flags, class _Alloc>
-	inline void DirectedGraph<_Ty, _Flags, _Alloc>::InsertEdge( const node_type &key, const node_type &value ) 
+	template<class _Ty, uint _Flags, class _SetTy>
+	inline void DirectedGraph<_Ty, _Flags, _SetTy>::InsertEdge( const node_type &key, const node_type &value ) 
 		{
 		this->v_Edges.emplace( key, value );
 		}
 
-	template<class _Ty, uint _Flags, class _Alloc>
-	inline bool DirectedGraph<_Ty,_Flags,_Alloc>::HasEdge( const node_type &key, const node_type &value ) const 
+	template<class _Ty, uint _Flags, class _SetTy>
+	inline bool DirectedGraph<_Ty,_Flags,_SetTy>::HasEdge( const node_type &key, const node_type &value ) const 
 		{
 		return this->v_Edges.find( pair_type( key, value ) ) != this->v_Edges.end();
 		}
 
-	template<class _Ty, uint _Flags, class _Alloc>
-	inline std::pair<typename DirectedGraph<_Ty,_Flags,_Alloc>::iterator,typename DirectedGraph<_Ty,_Flags,_Alloc>::iterator> 
-		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) 
+	template<class _Ty, uint _Flags, class _SetTy>
+	inline std::pair<typename DirectedGraph<_Ty,_Flags,_SetTy>::iterator,typename DirectedGraph<_Ty,_Flags,_SetTy>::iterator> 
+		DirectedGraph<_Ty,_Flags,_SetTy>::GetSuccessors( const node_type &key ) 
 		{
 		return std::pair<iterator, iterator> (
 			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,data_type_information<_Ty>::inf) ),
@@ -91,9 +90,9 @@ namespace ISD
 			); 
 		}
 
-	template<class _Ty, uint _Flags, class _Alloc>
-	inline std::pair<typename DirectedGraph<_Ty,_Flags,_Alloc>::const_iterator,typename DirectedGraph<_Ty,_Flags,_Alloc>::const_iterator> 
-		DirectedGraph<_Ty,_Flags,_Alloc>::GetSuccessors( const node_type &key ) const 
+	template<class _Ty, uint _Flags, class _SetTy>
+	inline std::pair<typename DirectedGraph<_Ty,_Flags,_SetTy>::const_iterator,typename DirectedGraph<_Ty,_Flags,_SetTy>::const_iterator> 
+		DirectedGraph<_Ty,_Flags,_SetTy>::GetSuccessors( const node_type &key ) const 
 		{
 		return std::pair<const_iterator, const_iterator> (
 			this->v_Edges.lower_bound( std::pair<_Ty,_Ty>(key,data_type_information<_Ty>::inf) ),
@@ -106,10 +105,10 @@ namespace ISD
 	class EntityReader;
 	class EntityValidator;
 
-	template<class _Ty, uint _Flags, class _Alloc>
-	class DirectedGraph<_Ty,_Flags,_Alloc>::MF
+	template<class _Ty, uint _Flags, class _SetTy>
+	class DirectedGraph<_Ty,_Flags,_SetTy>::MF
 		{
-		using _MgmCl = DirectedGraph<_Ty,_Flags,_Alloc>;
+		using _MgmCl = DirectedGraph<_Ty,_Flags,_SetTy>;
 
 		inline static bool set_contains( const std::set<_Ty> &set, const _Ty &val )
 			{

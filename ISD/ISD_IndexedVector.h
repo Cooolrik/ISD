@@ -7,10 +7,12 @@
 
 namespace ISD
 	{
-	template <class _Ty, class _Alloc = std::allocator<_Ty>, class _IdxAlloc = std::allocator<i32>>
-	class IndexedVector : public idx_vector<_Ty,_Alloc,_IdxAlloc>
+	template <class _Ty, class _Base = idx_vector<_Ty,std::allocator<_Ty>,std::allocator<i32>>>
+	class IndexedVector : public _Base
 		{
 		public:
+			using base_type = _Base;
+
 			class MF;
 			friend MF;
 
@@ -31,10 +33,10 @@ namespace ISD
 	class EntityReader;
 	class EntityValidator;
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	class IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF
+	template<class _Ty, class _Base>
+	class IndexedVector<_Ty,_Base>::MF
 		{
-		using _MgmCl = IndexedVector<_Ty,_Alloc,_IdxAlloc>;
+		using _MgmCl = IndexedVector<_Ty,_Base>;
 
 		public:
 			static void Clear( _MgmCl &obj );
@@ -47,14 +49,14 @@ namespace ISD
 			static bool Validate( const _MgmCl &obj, EntityValidator &validator );
 		};
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	void IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF::Clear( _MgmCl &obj )
+	template<class _Ty, class _Base>
+	void IndexedVector<_Ty,_Base>::MF::Clear( _MgmCl &obj )
 		{
 		obj.clear();
 		}
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	void IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF::DeepCopy( _MgmCl &dest, const _MgmCl *source )
+	template<class _Ty, class _Base>
+	void IndexedVector<_Ty,_Base>::MF::DeepCopy( _MgmCl &dest, const _MgmCl *source )
 		{
 		MF::Clear( dest );
 		if( !source )
@@ -62,8 +64,8 @@ namespace ISD
 		dest = *source;
 		}
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	bool IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF::Equals( const _MgmCl *lval, const _MgmCl *rval )
+	template<class _Ty, class _Base>
+	bool IndexedVector<_Ty,_Base>::MF::Equals( const _MgmCl *lval, const _MgmCl *rval )
 		{
 		// early out if the pointers are equal (includes nullptr)
 		if( lval == rval )
@@ -74,31 +76,31 @@ namespace ISD
 			return false;
 
 		// deep compare the values
-		const idx_vector<_Ty, _Alloc, _IdxAlloc> &_lval = *lval;
-		const idx_vector<_Ty, _Alloc, _IdxAlloc> &_rval = *rval;
-		return _lval == _rval;
+		const IndexedVector<_Ty,_Base>::base_type &_lval = *lval;
+		const IndexedVector<_Ty,_Base>::base_type &_rval = *rval;
+		return (_lval == _rval);
 		}
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	bool IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF::Write( const _MgmCl &obj, EntityWriter &writer )
+	template<class _Ty, class _Base>
+	bool IndexedVector<_Ty,_Base>::MF::Write( const _MgmCl &obj, EntityWriter &writer )
 		{
-		const idx_vector<_Ty, _Alloc, _IdxAlloc> &_obj = obj;
+		const IndexedVector<_Ty,_Base>::base_type &_obj = obj;
 		if( !writer.Write( ISDKeyMacro("Values"), _obj ) )
 			return false;
 		return true;
 		}
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	bool IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF::Read( _MgmCl &obj , EntityReader &reader )
+	template<class _Ty, class _Base>
+	bool IndexedVector<_Ty,_Base>::MF::Read( _MgmCl &obj , EntityReader &reader )
 		{
-		idx_vector<_Ty, _Alloc, _IdxAlloc> &_obj = obj;
+		IndexedVector<_Ty,_Base>::base_type &_obj = obj;
 		if( !reader.Read( ISDKeyMacro("Values"), _obj ) )
 			return false;
 		return true;
 		}
 
-	template<class _Ty, class _Alloc, class _IdxAlloc>
-	bool IndexedVector<_Ty,_Alloc,_IdxAlloc>::MF::Validate( const _MgmCl &obj , EntityValidator &validator )
+	template<class _Ty, class _Base>
+	bool IndexedVector<_Ty,_Base>::MF::Validate( const _MgmCl &obj , EntityValidator &validator )
 		{
 		if( obj.values().size() > (size_t)i32_sup )
 			{

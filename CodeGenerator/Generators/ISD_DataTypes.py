@@ -8,66 +8,6 @@ float_type_range = ['float','double']
 vector_dimension_range = [2,3,4] 
 nonconst_const_range = ['','const ']
 
-def print_UUID_header():
-	lines = []
-	lines.append('// include GUID stuff from windows')
-	lines.append('#ifdef _WIN32')
-	lines.append('#define __INLINE_ISEQUAL_GUID')
-	lines.append('#include <guiddef.h>')
-	lines.append('#endif//_WIN32')
-	lines.append('')
-	lines.append('// define UUID')
-	lines.append('#ifndef UUID_DEFINED')
-	lines.append('#define UUID_DEFINED')
-	lines.append('typedef GUID UUID;')
-	lines.append('#ifdef _WIN32')
-	lines.append('#ifndef uuid_t')
-	lines.append('#define uuid_t UUID')
-	lines.append('#endif//uuid_t')
-	lines.append('#endif//_WIN32')
-	lines.append('inline bool operator<( const UUID &Left, const UUID &Right ) ')
-	lines.append('\t{')
-	lines.append('\treturn memcmp( &Left, &Right, sizeof( UUID ) ) < 0;')
-	lines.append('\t};')
-	lines.append('std::ostream &operator<<( std::ostream &os, const UUID &_uuid );')
-	lines.append('#endif//UUID_DEFINED')
-	return lines
-
-def print_hash_header():
-	lines = []
-	lines.append('// define hash for sha256 message digests')
-	lines.append('#ifndef HASH_DEFINED')
-	lines.append('#define HASH_DEFINED')
-	lines.append('struct hash')
-	lines.append('\t{')
-	lines.append('\tunion')
-	lines.append('\t\t{')
-	lines.append('\t\tstd::uint64_t _digest_q[4];')
-	lines.append('\t\tstd::uint8_t digest[32];')
-	lines.append('\t\t};')
-	lines.append('\t};')
-	lines.append('inline bool operator<( const hash &Left, const hash &Right ) ')
-	lines.append('\t{')
-	lines.append('\treturn memcmp( &Left, &Right, sizeof( hash ) ) < 0;')
-	lines.append('\t};')
-	lines.append('inline bool operator==( const hash &Left, const hash &Right ) ')
-	lines.append('\t{')
-	lines.append('\treturn (Left._digest_q[0] == Right._digest_q[0])')
-	lines.append('\t    && (Left._digest_q[1] == Right._digest_q[1])')
-	lines.append('\t    && (Left._digest_q[2] == Right._digest_q[2])')
-	lines.append('\t    && (Left._digest_q[3] == Right._digest_q[3]);')
-	lines.append('\t};')
-	lines.append('inline bool operator!=( const hash &Left, const hash &Right ) ')
-	lines.append('\t{')
-	lines.append('\treturn (Left._digest_q[0] != Right._digest_q[0])')
-	lines.append('\t    || (Left._digest_q[1] != Right._digest_q[1])')
-	lines.append('\t    || (Left._digest_q[2] != Right._digest_q[2])')
-	lines.append('\t    || (Left._digest_q[3] != Right._digest_q[3]);')
-	lines.append('\t};')
-	lines.append('std::ostream &operator<<( std::ostream &os, const hash &_hash );')
-	lines.append('#endif//HASH_DEFINED')
-	return lines
-
 def print_type_information_header( type , value , value_count ):
 	lines = []
 	lines.append(f'\ttemplate<> struct data_type_information<{type}>')
@@ -94,9 +34,7 @@ def ISD_DataTypes_h():
 	lines.append('')
 	lines.append('#ifndef ISD_SKIP_UUID_AND_HASH')
 	lines.append('')
-	lines.extend(print_UUID_header())
-	lines.append('')
-	lines.extend(print_hash_header())
+	lines.extend( hlp.inline_file( 'InlinedCode/uuid_hash_header.inl' ) )
 	lines.append('')
 	lines.append('#endif//ISD_SKIP_UUID_AND_HASH')
 	lines.append('')
@@ -114,7 +52,7 @@ def ISD_DataTypes_h():
 	lines.append('')
 	lines.append(f"\ttypedef std::string string;")
 	lines.append(f"\ttypedef UUID uuid;")
-	lines.append(f"\ttypedef ::hash hash;")
+	lines.append(f"\ttypedef HASH hash;")
 	lines.append('')
 
 	# const min/max values of the standard types
@@ -264,18 +202,32 @@ def ISD_DataTypes_h():
 	# string info
 	lines.extend(print_type_information_header('string','string',1))
 
-	# end of file
+	# end of ISD namespace
 	lines.append('    };')
-	hlp.write_lines_to_file("../ISD/ISD_DataTypes.h",lines)
-
-def print_UUID_source():
-	lines = []
-	lines.append('std::ostream &operator<<( std::ostream &os, const UUID &guid )')
-	lines.append('    {')
-	lines.append('    return os;')
-	lines.append('    }')
+	
+	# define stuff in std namespace
 	lines.append('')
-	return lines
+	lines.append('// inject hash functions into std')
+	lines.append('template<>')
+	lines.append('struct std::hash<ISD::entity_ref>')
+	lines.append('    {')
+	lines.append('    std::size_t operator()(ISD::entity_ref const& val) const noexcept')
+	lines.append('        {')
+	lines.append('        return std::hash<UUID>{}( UUID( val ) );')
+	lines.append('        }')
+	lines.append('    };')
+	lines.append('')
+	lines.append('template<>')
+	lines.append('struct std::hash<ISD::package_ref>')
+	lines.append('    {')
+	lines.append('    std::size_t operator()(ISD::package_ref const& val) const noexcept')
+	lines.append('        {')
+	lines.append('        return std::hash<HASH>{}( HASH( val ) );')
+	lines.append('        }')
+	lines.append('    };')
+
+	# end of file
+	hlp.write_lines_to_file("../ISD/ISD_DataTypes.h",lines)
 
 def print_type_information_source( type , value , value_count ):
 	lines = []
@@ -307,7 +259,7 @@ def ISD_DataTypes_cpp():
 	lines.append('')
 	lines.append('#include "ISD_Types.h"')
 	lines.append('')
-	lines.extend(print_UUID_source())
+	lines.extend( hlp.inline_file( 'InlinedCode/uuid_hash_source.inl' ) )
 	lines.append('')
 	lines.append('namespace ISD')
 	lines.append('    {')

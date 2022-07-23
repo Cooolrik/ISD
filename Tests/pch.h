@@ -12,6 +12,10 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <unordered_set>
+#include <map>
+#include <unordered_map>
+#include <algorithm>
 
 const size_t global_number_of_passes = 1;
 

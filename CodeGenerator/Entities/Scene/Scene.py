@@ -7,9 +7,9 @@ from Entities import *
 Entities.append(
     Entity(
         name = "Scene", 
-        dependencies = [ Dependency("Dictionary", include_in_header = True),
+        dependencies = [ Dependency("EntityTable", include_in_header = True),
                          Dependency("SceneLayer", include_in_header = True) ],
-        templates = [ Template("scene_layers", template = "Dictionary", types = ["package_ref","SceneLayer"] ) ],
+        templates = [ Template("scene_layers", template = "EntityTable", types = ["package_ref","SceneLayer"] ) ],
         variables = [ Variable("scene_layers" , "Layers") ]
         )
     )

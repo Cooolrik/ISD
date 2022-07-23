@@ -405,6 +405,76 @@ namespace TypeTests
 			Assert::IsTrue( !(ref2 < ref) ); 
 			}
 
+		template<typename K, typename V>
+		std::map<V, K> inverse_map(std::map<K, V> &map)
+			{
+			std::map<V, K> inv;
+			std::for_each(map.begin(), map.end(),
+				[&inv] (const std::pair<K, V> &p) {
+				inv.emplace(p.second, p.first);
+				});
+			return inv;
+			}
+
+		// this tests the hash function, the less than operator and the equals operator
+		template<class K> void TestSetAndMapWithKey()
+			{ 
+			const size_t item_count = 100;
+
+			std::map<K, size_t> mmap;
+			std::unordered_map<K, size_t> umap;
+			std::set<K> mset;
+			std::unordered_set<K> uset;
+			for( size_t i = 0; i < item_count; ++i )
+				{
+				K key = random_value<K>();
+				mmap.emplace( key, i );
+				umap.emplace( key, i );
+				mset.emplace( key );
+				uset.emplace( key );
+				}
+			
+			Assert::AreEqual( item_count , mmap.size() );
+			Assert::AreEqual( item_count , umap.size() );
+			Assert::AreEqual( item_count , mset.size() );
+			Assert::AreEqual( item_count , uset.size() );
+
+			auto lookup = inverse_map( mmap );
+
+			for( size_t i = 0; i < item_count; ++i )
+				{
+				// lookup key from value
+				bool found = lookup.find(i) != lookup.end();
+				Assert::IsTrue( found );
+				K key = lookup[i];
+			
+				// make sure that the key is in map and umap, and returns same value
+				found = mmap.find( key ) != mmap.end();
+				Assert::IsTrue( found );
+				Assert::IsTrue( mmap[key] == i );
+				found = umap.find( key ) != umap.end();
+				Assert::IsTrue( found );
+				Assert::IsTrue( umap[key] == i );
+
+				// make sure the key is in the two sets
+				found = mset.find( key ) != mset.end();
+				Assert::IsTrue( found );
+				found = uset.find( key ) != uset.end();
+				Assert::IsTrue( found );
+				}
+			}
+
+		TEST_METHOD( Test_functors )
+			{
+			setup_random_seed();
+
+			for( uint pass_index = 0; pass_index < global_number_of_passes; ++pass_index )
+				{
+				TestSetAndMapWithKey<uuid>();
+				TestSetAndMapWithKey<hash>();
+				}
+			}
+
 		class uint_string_map_test_class
 			{
 			thread_safe_map<uint, std::string> *object = nullptr;

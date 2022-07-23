@@ -7,48 +7,47 @@
 
 namespace ISD
 	{
-	enum DictionaryFlags : uint
+	enum RegistryFlags : uint
 		{
-		NoZeroKeys = 0x1, // if set, validation will fail if a key has a zero value (0 for ints, all 0 in a uuids, empty strings) 
-		NoNullEntities = 0x2, // if set, validation will fail if null entities exist in the dictionary
+		ZeroKeys = 0x1, // if set, validation will allow zero value keys (0 for ints, all 0 in a uuids, empty strings) 
+		NullEntities = 0x2, // if set, validation will allow that null entities exist in the registry
 		};
 
-	template<class _Kty, class _Ty, uint _Flags = 0, class _Pr = std::less<_Kty>, class _Alloc = std::allocator<std::pair<const _Kty, std::unique_ptr<_Ty>>>>
-	class Dictionary
+	// EntityTable holds a map of key values to unique memory mapped objects. This is the main holder of most objects in ISD.
+	template<class _Kty, class _Ty, uint _Flags = 0, class _MapTy = std::unordered_map<_Kty, std::unique_ptr<_Ty>>>
+	class EntityTable
 		{
 		public:
 			using key_type = _Kty;
 			using mapped_type = _Ty;
-			using key_compare = _Pr;
-			using allocator_type = _Alloc;
+			using map_type = _MapTy;
 
-			using map_type = std::map<_Kty, std::unique_ptr<_Ty>, _Pr, _Alloc>;
 			using value_type = typename map_type::value_type;
 			using iterator = typename map_type::iterator;
 
-			static const bool type_no_zero_keys = (_Flags & DictionaryFlags::NoZeroKeys) != 0;
-			static const bool type_no_null_entities = (_Flags & DictionaryFlags::NoNullEntities) != 0;
+			static const bool type_no_zero_keys = (_Flags & RegistryFlags::ZeroKeys) == 0;
+			static const bool type_no_null_entities = (_Flags & RegistryFlags::NullEntities) == 0;
 
 			class MF;
 			friend MF;
 
 			// ctors/dtor and copy/move operators
-			Dictionary() = default;
-			Dictionary( const Dictionary &rval ) { MF::DeepCopy( *this , &rval ); }
-			Dictionary &operator=( const Dictionary &rval ) { MF::DeepCopy( *this , &rval ); return *this; }
-			Dictionary( Dictionary &&rval ) = default;
-			Dictionary &operator=( Dictionary &&rval ) = default;
-			~Dictionary() = default;
+			EntityTable() = default;
+			EntityTable( const EntityTable &rval ) { MF::DeepCopy( *this , &rval ); }
+			EntityTable &operator=( const EntityTable &rval ) { MF::DeepCopy( *this , &rval ); return *this; }
+			EntityTable( EntityTable &&rval ) = default;
+			EntityTable &operator=( EntityTable &&rval ) = default;
+			~EntityTable() = default;
 
 			// value compare operators
-			bool operator==( const Dictionary &rval ) const { return MF::Equals( this, &rval ); }
-			bool operator!=( const Dictionary &rval ) const { return !(MF::Equals( this, &rval )); }
+			bool operator==( const EntityTable &rval ) const { return MF::Equals( this, &rval ); }
+			bool operator!=( const EntityTable &rval ) const { return !(MF::Equals( this, &rval )); }
 
 		private:
 			map_type v_Entries;
 
 		public:
-			// returns the number of entries in the Dictionary
+			// returns the number of entries in the EntityTable
 			size_t Size() const noexcept { return this->v_Entries.size(); }
 
 			// direct access to the Entries map
@@ -67,10 +66,10 @@ namespace ISD
 	class EntityReader;
 	class EntityValidator;
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	class Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	class EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF
 		{
-		using _MgmCl = Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>;
+		using _MgmCl = EntityTable<_Kty,_Ty,_Flags,_MapTy>;
 
 		public:
 			static void Clear( _MgmCl &obj );
@@ -83,14 +82,14 @@ namespace ISD
 			static bool Validate( const _MgmCl &obj, EntityValidator &validator );
 		};
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	void Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF::Clear( _MgmCl &obj )
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	void EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF::Clear( _MgmCl &obj )
 		{
 		obj.v_Entries.clear();
 		}
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	void Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF::DeepCopy( _MgmCl &dest, const _MgmCl *source )
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	void EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF::DeepCopy( _MgmCl &dest, const _MgmCl *source )
 		{
 		MF::Clear( dest );
 		if( !source )
@@ -103,8 +102,8 @@ namespace ISD
 			}
 		}
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	bool Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF::Equals( const _MgmCl *lval, const _MgmCl *rval )
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	bool EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF::Equals( const _MgmCl *lval, const _MgmCl *rval )
 		{
 		// early out if the pointers are equal (includes nullptr)
 		if( lval == rval )
@@ -120,11 +119,11 @@ namespace ISD
 
 		// compare all the entries
 		auto lval_it = lval->v_Entries.begin();
-		auto rval_it = rval->v_Entries.begin();
 		while( lval_it != lval->v_Entries.end() )
 			{
-			// compare keys, should always match
-			if( lval_it->first != rval_it->first )
+			// find the key in the right object, should always find
+			auto rval_it = rval->v_Entries.find( lval_it->first );
+			if( rval_it == rval->v_Entries.end() )
 				return false;
 
 			// compare values ptrs 
@@ -144,15 +143,14 @@ namespace ISD
 
 			// step
 			++lval_it;
-			++rval_it;
 			}
 
 		return true;
 		}
 
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	bool Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF::Write( const _MgmCl &obj, EntityWriter &writer )
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	bool EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF::Write( const _MgmCl &obj, EntityWriter &writer )
 		{
 		// collect the keys into a vector, and store in stream as an array
 		std::vector<_Kty> keys(obj.v_Entries.size());
@@ -196,8 +194,8 @@ namespace ISD
 		return true;
 		}
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	bool Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF::Read( _MgmCl &obj , EntityReader &reader )
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	bool EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF::Read( _MgmCl &obj , EntityReader &reader )
 		{
 		EntityReader *section_reader = {};
 		size_t map_size = {};
@@ -216,7 +214,7 @@ namespace ISD
 		ISDSanityCheckDebugMacro( section_reader );
 		if( map_size != keys.size() )
 			{
-			ISDErrorLog << "Invalid size in Dictionary, the Keys and Entities arrays do not match in size." << ISDErrorLogEnd;
+			ISDErrorLog << "Invalid size in EntityTable, the Keys and Entities arrays do not match in size." << ISDErrorLogEnd;
 			return false;
 			}
 
@@ -235,7 +233,7 @@ namespace ISD
 
 			if( !success )
 				{
-				ISDErrorLog << "Failed inserting key-value pair in Dictionary" << ISDErrorLogEnd;
+				ISDErrorLog << "Failed inserting key-value pair in EntityTable" << ISDErrorLogEnd;
 				return false;
 				}
 
@@ -256,8 +254,8 @@ namespace ISD
 		return true;
 		}
 
-	template<class _Kty, class _Ty, uint _Flags, class _Pr, class _Alloc>
-	bool Dictionary<_Kty,_Ty,_Flags,_Pr,_Alloc>::MF::Validate( const _MgmCl &obj , EntityValidator &validator )
+	template<class _Kty, class _Ty, uint _Flags, class _MapTy>
+	bool EntityTable<_Kty,_Ty,_Flags,_MapTy>::MF::Validate( const _MgmCl &obj , EntityValidator &validator )
 		{
 		// check if a zero key exists in the dictionary
 		if( _MgmCl::type_no_zero_keys )

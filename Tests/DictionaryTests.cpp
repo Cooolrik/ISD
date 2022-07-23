@@ -11,7 +11,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 #include "..\ISD\ISD_MemoryWriteStream.h"
 #include "..\ISD\ISD_EntityWriter.h"
 #include "..\ISD\ISD_EntityReader.h"
-#include "..\ISD\ISD_Dictionary.h"
+#include "..\ISD\ISD_EntityTable.h"
 #include "..\ISD\ISD_EntityValidator.h"
 
 #include "..\TestHelpers\structure_generation.h"
@@ -25,7 +25,7 @@ namespace BasicEntitiesTests
 			// check with no validation
 			if( true )
 				{
-				typedef Dictionary<_Kty, TestEntity> Dict;
+				typedef EntityTable<_Kty, TestEntity, RegistryFlags::NullEntities | RegistryFlags::ZeroKeys> Dict;
 				Dict dict;
 
 				EntityValidator validator;
@@ -43,7 +43,7 @@ namespace BasicEntitiesTests
 			// check zero key validation
 			if( true )
 				{
-				typedef Dictionary<_Kty, TestEntity, (uint)DictionaryFlags::NoZeroKeys> Dict;
+				typedef EntityTable<_Kty, TestEntity, ~RegistryFlags::ZeroKeys> Dict;
 				Dict dict;
 
 				EntityValidator validator;
@@ -61,7 +61,7 @@ namespace BasicEntitiesTests
 			// check null value validation
 			if( true )
 				{
-				typedef Dictionary<_Kty, TestEntity, (uint)DictionaryFlags::NoNullEntities> Dict;
+				typedef EntityTable<_Kty, TestEntity, ~RegistryFlags::NullEntities> Dict;
 				Dict dict;
 
 				EntityValidator validator;
@@ -79,7 +79,7 @@ namespace BasicEntitiesTests
 			// check all validations
 			if( true )
 				{
-				typedef Dictionary < _Kty, TestEntity, DictionaryFlags::NoNullEntities | DictionaryFlags::NoZeroKeys > Dict;
+				typedef EntityTable < _Kty, TestEntity, ~(RegistryFlags::NullEntities | RegistryFlags::ZeroKeys) > Dict;
 				Dict dict;
 
 				EntityValidator validator;
@@ -103,7 +103,7 @@ namespace BasicEntitiesTests
 			// test copying and moving contents of one dictionary to another 
 			if( true )
 				{
-				typedef Dictionary<_Kty, TestEntity> Dict;
+				typedef EntityTable<_Kty, TestEntity> Dict;
 				Dict dict;
 
 				// add a number of random values, record the pointers
@@ -168,7 +168,7 @@ namespace BasicEntitiesTests
 
 		template<class T> void DictionaryReadWriteTests_TestKeyType( const MemoryWriteStream &ws, EntityWriter &ew )
 			{
-			typedef Dictionary<T, TestEntity> Dict;
+			typedef EntityTable<T, TestEntity> Dict;
 
 			Dict random_dict;
 
@@ -197,12 +197,14 @@ namespace BasicEntitiesTests
 			Assert::IsTrue( Dict::MF::Validate( readback_dict , validator ) );
 			Assert::IsTrue( validator.GetErrorCount() == 0 );
 
-			// compare the values in the dictionaries
+			// compare the values in the registries
 			Assert::IsTrue( random_dict.Entries().size() == readback_dict.Entries().size() );
 			Dict::iterator it1 = random_dict.Entries().begin();
-			Dict::iterator it2 = readback_dict.Entries().begin();
 			while( it1 != random_dict.Entries().end() )
 				{
+				Dict::iterator it2 = readback_dict.Entries().find( it1->first );
+				Assert::IsTrue( it2 != readback_dict.Entries().end() );
+
 				bool has_1 = it1->second != nullptr;
 				bool has_2 = it2->second != nullptr;
 			
@@ -213,7 +215,6 @@ namespace BasicEntitiesTests
 					}
 			
 				++it1;
-				++it2;
 				}
 			}
 
